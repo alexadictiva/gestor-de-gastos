@@ -1,73 +1,199 @@
-# React + TypeScript + Vite
+# 💸 Control de Gastos - Panel Administrativo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web para el control de ingresos y gastos personales, construida con **React + Vite + TypeScript + TailwindCSS**.
 
-Currently, two official plugins are available:
+El objetivo del proyecto es **aprender a desarrollar una aplicación completa desde cero**, incluyendo:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* UI tipo panel administrativo
+* manejo de estado en React
+* lógica de negocio (cálculos financieros)
+* integración futura con base de datos SQL
+* autenticación
+* exportación/importación de datos
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Tecnologías utilizadas
 
-## Expanding the ESLint configuration
+* ⚛️ React
+* ⚡ Vite
+* 🟦 TypeScript
+* 🎨 TailwindCSS
+* 🔀 React Router
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🎯 Objetivo del proyecto
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Construir una aplicación que permita:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+* registrar ingresos y gastos
+* visualizar transacciones
+* calcular balance total
+* ver resúmenes semanales y mensuales
+* representar datos con gráficos (más adelante)
+* exportar e importar datos en Excel (más adelante)
+* implementar login y autenticación (más adelante)
+* persistir datos en base de datos SQL (más adelante)
+
+---
+
+## 📊 Funcionalidades actuales
+
+* Layout tipo panel administrativo (sidebar + header)
+* Dashboard con:
+
+  * balance total
+  * ingresos
+  * gastos
+  * ahorro
+* Listado de transacciones
+* Formulario para agregar nuevas transacciones
+* Manejo de estado con `useState`
+* Render dinámico de datos (`map`, `filter`, `reduce`)
+
+---
+
+## 🧠 Qué se está aprendiendo en este proyecto
+
+### React
+
+* Componentes
+* Props
+* Hooks (`useState`)
+* Renderizado dinámico
+* Manejo de formularios
+* Eventos (`onChange`, `onSubmit`)
+
+### TypeScript
+
+* Tipado de datos
+* Interfaces
+* Tipado de eventos
+
+### TailwindCSS
+
+* Layout con flex y grid
+* Estilos utilitarios
+* Responsive design
+
+### Lógica de negocio
+
+* Cálculo de ingresos y gastos
+* Balance financiero
+* Manipulación de arrays
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+src/
+  components/
+    layout/        # Sidebar, Header, Layout
+  pages/           # Vistas principales
+  data/            # Datos mock
+  types/           # Tipos TypeScript
+  router/          # Configuración de rutas
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛠️ Instalación
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clonar el repositorio:
+
+```bash
+git clone TU_REPO_URL
+cd control-gastos
 ```
+
+2. Instalar dependencias:
+
+```bash
+npm install
+```
+
+3. Ejecutar el proyecto:
+
+```bash
+npm run dev
+```
+
+---
+
+## 🧪 Uso de la aplicación
+
+### ➤ Ver dashboard
+
+Al iniciar la app, verás un resumen general con:
+
+* balance total
+* ingresos
+* gastos
+
+---
+
+### ➤ Agregar una transacción
+
+1. Ir a **Transacciones**
+2. Hacer clic en **"Nueva transacción"**
+3. Completar:
+
+   * descripción
+   * monto
+   * tipo (ingreso o gasto)
+   * categoría
+   * fecha
+4. Guardar
+
+👉 La transacción aparecerá en la tabla inmediatamente.
+
+---
+
+### ➤ Ver transacciones
+
+En la tabla puedes ver:
+
+* descripción
+* categoría
+* tipo (con color)
+* monto
+* fecha
+
+---
+
+## ⚠️ Estado actual
+
+* Los datos **no se guardan permanentemente**
+* Se pierden al recargar la página
+* Se utilizan datos mock en memoria
+
+---
+
+## 🔜 Próximos pasos
+
+* Eliminar transacciones
+* Compartir estado entre páginas
+* Persistencia de datos (Supabase o backend propio)
+* Sistema de autenticación
+* Dashboard con gráficos
+* Filtros por fecha
+* Importación/exportación a Excel
+
+---
+
+## 👩‍💻 Autor
+
+Proyecto creado como práctica de desarrollo frontend para mejorar habilidades en:
+
+* React
+* TypeScript
+* Arquitectura de aplicaciones
+* UI/UX tipo SaaS
+
+---
+
+## 📌 Notas
+
+Este proyecto está pensado como aprendizaje progresivo, por lo que las funcionalidades se irán agregando en etapas.
