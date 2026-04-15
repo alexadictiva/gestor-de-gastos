@@ -1,12 +1,18 @@
 import DashboardLayout from '../components/layout/DashboardLayout'
-import { mockTransactions } from '../data/mockTransactions'
+import type { Transaction } from '../types/transaction'
 
-export default function DashboardPage() {
-  const incomeTotal = mockTransactions
+interface DashboardPageProps {
+  transactions: Transaction[]
+}
+
+export default function DashboardPage({
+  transactions,
+}: DashboardPageProps) {
+  const incomeTotal = transactions
     .filter((transaction) => transaction.type === 'income')
     .reduce((acc, transaction) => acc + transaction.amount, 0)
 
-  const expenseTotal = mockTransactions
+  const expenseTotal = transactions
     .filter((transaction) => transaction.type === 'expense')
     .reduce((acc, transaction) => acc + transaction.amount, 0)
 
@@ -62,23 +68,38 @@ export default function DashboardPage() {
             </thead>
 
             <tbody>
-              {mockTransactions.map((transaction) => (
-                <tr key={transaction.id} className="border-b">
-                  <td className="py-2">{transaction.description}</td>
-                  <td>${transaction.amount}</td>
-                  <td
-                    className={
-                      transaction.type === 'expense'
-                        ? 'text-red-500'
-                        : 'text-green-600'
-                    }
-                  >
-                    {transaction.type === 'expense' ? 'Gasto' : 'Ingreso'}
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="font-medium text-slate-600">
+                        No hay transacciones aún
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        Agrega tu primera transacción para comenzar
+                      </p>
+                    </div>
                   </td>
-                  <td>{transaction.category}</td>
-                  <td>{transaction.date}</td>
                 </tr>
-              ))}
+              ) : (
+                transactions.map((transaction) => (
+                  <tr key={transaction.id} className="border-b last:border-b-0">
+                    <td className="py-2">{transaction.description}</td>
+                    <td>${transaction.amount}</td>
+                    <td
+                      className={
+                        transaction.type === 'expense'
+                          ? 'text-red-500'
+                          : 'text-green-600'
+                      }
+                    >
+                      {transaction.type === 'expense' ? 'Gasto' : 'Ingreso'}
+                    </td>
+                    <td>{transaction.category}</td>
+                    <td>{transaction.date}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

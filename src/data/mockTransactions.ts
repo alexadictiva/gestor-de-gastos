@@ -33,12 +33,4 @@ export const mockTransactions: Transaction[] = [
     category: 'Trabajo',
     date: '2026-04-10',
   },
-  {
-    id: '5',
-    description: 'Freelance',
-    amount: 1000,
-    type: 'income',
-    category: 'Trabajo',
-    date: '2026-04-10',
-  },
 ]

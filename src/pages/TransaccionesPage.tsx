@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent, type FormEvent, type Dispatch, type SetStateAction } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
-import { mockTransactions } from '../data/mockTransactions'
 import type { Transaction, TransactionType } from '../types/transaction'
+import Modal from '../components/layout/Modal'
 
 interface NewTransactionForm {
   description: string
@@ -9,6 +9,11 @@ interface NewTransactionForm {
   type: TransactionType
   category: string
   date: string
+}
+
+interface TransaccionesPageProps {
+  transactions: Transaction[]
+  setTransactions: Dispatch<SetStateAction<Transaction[]>>
 }
 
 const initialForm: NewTransactionForm = {
@@ -19,13 +24,18 @@ const initialForm: NewTransactionForm = {
   date: '',
 }
 
-export default function TransaccionesPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions)
+export default function TransaccionesPage({
+  transactions,
+  setTransactions,
+}: TransaccionesPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<NewTransactionForm>(initialForm)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
+  
 
   const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = event.target
 
@@ -35,7 +45,7 @@ export default function TransaccionesPage() {
     }))
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (
@@ -60,6 +70,26 @@ export default function TransaccionesPage() {
     setTransactions((prev) => [newTransaction, ...prev])
     setForm(initialForm)
     setShowForm(false)
+  }
+
+  const openDeleteModal = (transactionId: string) => {
+    setTransactionToDelete(transactionId)
+    setIsDeleteModalOpen(true)
+  }
+
+  const closeDeleteModal = () => {
+    setTransactionToDelete(null)
+    setIsDeleteModalOpen(false)
+  }
+
+  const confirmDelete = () => {
+    if (!transactionToDelete) return
+
+    setTransactions((prev) =>
+      prev.filter((transaction) => transaction.id !== transactionToDelete)
+    )
+
+    closeDeleteModal()
   }
 
   return (
@@ -90,9 +120,15 @@ export default function TransaccionesPage() {
               Agregar transacción
             </h2>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <form
+              onSubmit={handleSubmit}
+              className="grid grid-cols-1 gap-4 md:grid-cols-2"
+            >
               <div className="flex flex-col gap-2">
-                <label htmlFor="description" className="text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="description"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Descripción
                 </label>
                 <input
@@ -107,7 +143,10 @@ export default function TransaccionesPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor="amount" className="text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="amount"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Monto
                 </label>
                 <input
@@ -122,7 +161,10 @@ export default function TransaccionesPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor="type" className="text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="type"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Tipo
                 </label>
                 <select
@@ -138,7 +180,10 @@ export default function TransaccionesPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label htmlFor="category" className="text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="category"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Categoría
                 </label>
                 <input
@@ -153,7 +198,10 @@ export default function TransaccionesPage() {
               </div>
 
               <div className="flex flex-col gap-2 md:col-span-2">
-                <label htmlFor="date" className="text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="date"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Fecha
                 </label>
                 <input
@@ -166,7 +214,7 @@ export default function TransaccionesPage() {
                 />
               </div>
 
-              <div className="md:col-span-2 flex justify-end">
+              <div className="flex justify-end md:col-span-2">
                 <button
                   type="submit"
                   className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -188,39 +236,94 @@ export default function TransaccionesPage() {
                   <th className="py-3">Tipo</th>
                   <th className="py-3">Monto</th>
                   <th className="py-3">Fecha</th>
+                  <th className="py-3">Acciones</th>
                 </tr>
               </thead>
 
               <tbody>
-                {transactions.map((transaction) => (
-                  <tr key={transaction.id} className="border-b last:border-b-0">
-                    <td className="py-3 text-slate-800">
-                      {transaction.description}
-                    </td>
-                    <td className="py-3 text-slate-600">
-                      {transaction.category}
-                    </td>
-                    <td
-                      className={`py-3 font-medium ${
-                        transaction.type === 'expense'
-                          ? 'text-red-500'
-                          : 'text-green-600'
-                      }`}
-                    >
-                      {transaction.type === 'expense' ? 'Gasto' : 'Ingreso'}
-                    </td>
-                    <td className="py-3 text-slate-800">
-                      ${transaction.amount}
-                    </td>
-                    <td className="py-3 text-slate-600">
-                      {transaction.date}
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <p className="font-medium text-slate-600">
+                          No hay transacciones aún
+                        </p>
+                        <p className="text-sm text-slate-400">
+                          Agrega tu primera transacción para comenzar
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  transactions.map((transaction) => (
+                    <tr key={transaction.id} className="border-b last:border-b-0">
+                      <td className="py-3 text-slate-800">
+                        {transaction.description}
+                      </td>
+                      <td className="py-3 text-slate-600">
+                        {transaction.category}
+                      </td>
+                      <td
+                        className={`py-3 font-medium ${
+                          transaction.type === 'expense'
+                            ? 'text-red-500'
+                            : 'text-green-600'
+                        }`}
+                      >
+                        {transaction.type === 'expense' ? 'Gasto' : 'Ingreso'}
+                      </td>
+                      <td className="py-3 text-slate-800">
+                        ${transaction.amount}
+                      </td>
+                      <td className="py-3 text-slate-600">
+                        {transaction.date}
+                      </td>
+                      <td className="py-3">
+                        <button
+                          type="button"
+                          onClick={() => openDeleteModal(transaction.id)}
+                          className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-200"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
+
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={closeDeleteModal}
+          title="Confirmar eliminación"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-slate-600">
+              ¿Seguro que quieres eliminar esta transacción?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </DashboardLayout>
   )
