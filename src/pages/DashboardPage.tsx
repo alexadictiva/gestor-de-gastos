@@ -104,7 +104,7 @@ export default function DashboardPage({
                       {transaction.type === 'expense' ? 'Gasto' : 'Ingreso'}
                     </td>
                     <td>{transaction.category}</td>
-                    <td>{transaction.date}</td>
+                    <td>{transaction.date.slice(0, 10)}</td>
                   </tr>
                 ))
               )}
