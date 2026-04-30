@@ -1,6 +1,8 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma'
+import jwt from 'jsonwebtoken'
+import { authMiddleware, type AuthRequest } from '../middlewares/auth.middleware'
 
 const router = Router()
 
@@ -116,9 +118,20 @@ router.post('/login', async (req, res) => {
       })
     }
 
+    const token = jwt.sign({
+      userId: user.id,
+      email: user.email,
+      },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+      }
+    )
+
     return res.json({
       ok: true,
       message: 'Login correcto',
+      token,
       user: {
         id: user.id,
         name: user.name,
@@ -128,6 +141,48 @@ router.post('/login', async (req, res) => {
     })
   } catch (error) {
     console.error('Error en login:', error)
+
+    return res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor',
+    })
+  }
+})
+
+router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        ok: false,
+        message: 'Usuario no autenticado',
+      })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+      },
+    })
+
+    if (!user) {
+      return res.status(404).json({
+        ok: false,
+        message: 'Usuario no encontrado',
+      })
+    }
+
+    return res.json({
+      ok: true,
+      user,
+    })
+  } catch (error) {
+    console.error('Error en /me:', error)
 
     return res.status(500).json({
       ok: false,
