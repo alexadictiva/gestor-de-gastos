@@ -1,56 +1,99 @@
 # 💸 Control de Gastos - Panel Administrativo
 
-Aplicación web para el control de ingresos y gastos personales, construida con **React + Vite + TypeScript + TailwindCSS**.
+Aplicación web para el control de ingresos y gastos personales, construida como proyecto de aprendizaje desde cero.
 
-El objetivo del proyecto es **aprender a desarrollar una aplicación completa desde cero**, incluyendo:
-
-* UI tipo panel administrativo
-* manejo de estado en React
-* lógica de negocio (cálculos financieros)
-* integración futura con base de datos SQL
-* autenticación
-* exportación/importación de datos
+El proyecto incluye un **frontend en React** y un **backend propio con Express**, con autenticación, rutas protegidas y persistencia de datos en una base SQLite usando Prisma.
 
 ---
 
 ## 🚀 Tecnologías utilizadas
 
-* ⚛️ React
-* ⚡ Vite
-* 🟦 TypeScript
-* 🎨 TailwindCSS
-* 🔀 React Router
+### Frontend
+
+- ⚛️ React
+- ⚡ Vite
+- 🟦 TypeScript
+- 🎨 TailwindCSS
+- 🔀 React Router
+
+### Backend
+
+- 🟩 Node.js
+- 🚂 Express
+- 🟦 TypeScript
+- 🗃️ SQLite
+- 🔺 Prisma ORM
+- 🔐 JWT
+- 🔑 bcryptjs
 
 ---
 
 ## 🎯 Objetivo del proyecto
 
-Construir una aplicación que permita:
+Construir una aplicación completa que permita:
 
-* registrar ingresos y gastos
-* visualizar transacciones
-* calcular balance total
-* ver resúmenes semanales y mensuales
-* representar datos con gráficos (más adelante)
-* exportar e importar datos en Excel (más adelante)
-* implementar login y autenticación (más adelante)
-* persistir datos en base de datos SQL (más adelante)
+- registrar usuarios
+- iniciar sesión
+- cerrar sesión
+- proteger rutas privadas
+- registrar ingresos y gastos
+- visualizar transacciones por usuario
+- calcular balance total
+- ver ingresos, gastos y ahorro
+- persistir datos en base de datos SQL
+- aprender estructura real frontend/backend
+- preparar la app para futuros reportes, gráficos e importación/exportación Excel
 
 ---
 
 ## 📊 Funcionalidades actuales
 
-* Layout tipo panel administrativo (sidebar + header)
-* Dashboard con:
+### Autenticación
 
-  * balance total
-  * ingresos
-  * gastos
-  * ahorro
-* Listado de transacciones
-* Formulario para agregar nuevas transacciones
-* Manejo de estado con `useState`
-* Render dinámico de datos (`map`, `filter`, `reduce`)
+- Registro de usuarios desde el frontend
+- Login con email y contraseña
+- Logout
+- Hash de contraseña con `bcryptjs`
+- Generación de token JWT
+- Ruta protegida `/api/auth/me`
+- Persistencia de sesión con token en `localStorage`
+- Protección de rutas privadas en React
+
+---
+
+### Transacciones
+
+- Crear transacciones
+- Listar transacciones
+- Eliminar transacciones
+- Confirmación de eliminación con modal reutilizable
+- Empty state cuando no hay transacciones
+- Persistencia en base de datos
+- Cada usuario ve únicamente sus propias transacciones
+
+---
+
+### Dashboard
+
+- Balance total
+- Total de ingresos
+- Total de gastos
+- Ahorro
+- Tabla de últimas transacciones
+- Cálculos dinámicos desde las transacciones reales del usuario
+
+---
+
+### UI / Layout
+
+- Panel administrativo inspirado en AdminLTE
+- Sidebar
+- Header
+- Layout privado
+- Cards de métricas
+- Tabla responsive
+- Modal reutilizable
+- Estilos con TailwindCSS
 
 ---
 
@@ -58,142 +101,109 @@ Construir una aplicación que permita:
 
 ### React
 
-* Componentes
-* Props
-* Hooks (`useState`)
-* Renderizado dinámico
-* Manejo de formularios
-* Eventos (`onChange`, `onSubmit`)
+- Componentes
+- Props
+- Hooks
+- `useState`
+- `useEffect`
+- Context API
+- Custom hooks
+- Formularios controlados
+- Renderizado condicional
+- Rutas protegidas
+- Manejo de sesión en frontend
+
+---
 
 ### TypeScript
 
-* Tipado de datos
-* Interfaces
-* Tipado de eventos
+- Tipado de props
+- Interfaces
+- Tipos reutilizables
+- Tipado de eventos
+- Tipado de respuestas de API
+- Tipado de estado global
+
+---
 
 ### TailwindCSS
 
-* Layout con flex y grid
-* Estilos utilitarios
-* Responsive design
-
-### Lógica de negocio
-
-* Cálculo de ingresos y gastos
-* Balance financiero
-* Manipulación de arrays
+- Layout con `flex` y `grid`
+- Responsive design
+- Estados visuales
+- Cards
+- Tablas
+- Formularios
+- Modales
 
 ---
 
-## 📁 Estructura del proyecto
+### Backend
 
-```
-src/
-  components/
-    layout/        # Sidebar, Header, Layout
-  pages/           # Vistas principales
-  data/            # Datos mock
-  types/           # Tipos TypeScript
-  router/          # Configuración de rutas
-```
-
----
-
-## 🛠️ Instalación
-
-1. Clonar el repositorio:
-
-```bash
-git clone TU_REPO_URL
-cd control-gastos
-```
-
-2. Instalar dependencias:
-
-```bash
-npm install
-```
-
-3. Ejecutar el proyecto:
-
-```bash
-npm run dev
-```
+- Crear servidor con Express
+- Crear rutas REST
+- Separar rutas por responsabilidad
+- Middlewares
+- Validación básica de datos
+- Manejo de errores
+- Uso de variables de entorno
+- Conexión con base de datos
 
 ---
 
-## 🧪 Uso de la aplicación
+### Base de datos / Prisma
 
-### ➤ Ver dashboard
-
-Al iniciar la app, verás un resumen general con:
-
-* balance total
-* ingresos
-* gastos
-
----
-
-### ➤ Agregar una transacción
-
-1. Ir a **Transacciones**
-2. Hacer clic en **"Nueva transacción"**
-3. Completar:
-
-   * descripción
-   * monto
-   * tipo (ingreso o gasto)
-   * categoría
-   * fecha
-4. Guardar
-
-👉 La transacción aparecerá en la tabla inmediatamente.
+- Configurar Prisma con SQLite
+- Crear modelos
+- Crear migraciones
+- Relación uno a muchos entre usuarios y transacciones
+- Consultas con Prisma Client
+- Crear registros
+- Buscar registros
+- Eliminar registros
+- Filtrar datos por usuario autenticado
 
 ---
 
-### ➤ Ver transacciones
+### Seguridad básica
 
-En la tabla puedes ver:
-
-* descripción
-* categoría
-* tipo (con color)
-* monto
-* fecha
-
----
-
-## ⚠️ Estado actual
-
-* Los datos **no se guardan permanentemente**
-* Se pierden al recargar la página
-* Se utilizan datos mock en memoria
+- No guardar contraseñas en texto plano
+- Hashear passwords con `bcryptjs`
+- Comparar passwords con `bcrypt.compare`
+- Generar JWT al iniciar sesión
+- Validar JWT con middleware
+- Proteger endpoints privados
+- Evitar devolver passwords en respuestas del backend
 
 ---
 
-## 🔜 Próximos pasos
+## 📁 Estructura general del proyecto
 
-* Eliminar transacciones
-* Compartir estado entre páginas
-* Persistencia de datos (Supabase o backend propio)
-* Sistema de autenticación
-* Dashboard con gráficos
-* Filtros por fecha
-* Importación/exportación a Excel
+```txt
+control-gastos/
+  src/
+    components/
+      auth/
+      layout/
+      ui/
+    context/
+    hooks/
+    pages/
+    router/
+    services/
+    types/
+    data/
 
----
-
-## 👩‍💻 Autor
-
-Proyecto creado como práctica de desarrollo frontend para mejorar habilidades en:
-
-* React
-* TypeScript
-* Arquitectura de aplicaciones
-* UI/UX tipo SaaS
-
----
-
-## 📌 Notas
-
-Este proyecto está pensado como aprendizaje progresivo, por lo que las funcionalidades se irán agregando en etapas.
+  server/
+    prisma/
+      schema.prisma
+      migrations/
+    src/
+      lib/
+      middlewares/
+      routes/
+      index.ts
+    .env
+    prisma.config.ts
+    package.json
+    tsconfig.json
