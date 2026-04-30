@@ -77,4 +77,63 @@ router.post('/register', async (req, res) => {
   }
 })
 
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    if (!email || !password) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Email y contraseña son obligatorios',
+      })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const trimmedPassword = String(password).trim()
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    })
+
+    if (!user) {
+      return res.status(401).json({
+        ok: false,
+        message: 'Credenciales inválidas',
+      })
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      trimmedPassword,
+      user.password
+    )
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        ok: false,
+        message: 'Credenciales inválidas',
+      })
+    }
+
+    return res.json({
+      ok: true,
+      message: 'Login correcto',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    })
+  } catch (error) {
+    console.error('Error en login:', error)
+
+    return res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor',
+    })
+  }
+})
+
 export default router
