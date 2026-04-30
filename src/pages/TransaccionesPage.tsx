@@ -2,6 +2,8 @@ import { useState, type ChangeEvent, type FormEvent, type Dispatch, type SetStat
 import DashboardLayout from '../components/layout/DashboardLayout'
 import type { Transaction, TransactionType } from '../types/transaction'
 import Modal from '../components/layout/Modal'
+import { useAuth } from '../hooks/useAuth'
+import { createTransactionRequest, deleteTransactionRequest } from '../services/transactionService'
 
 interface NewTransactionForm {
   description: string
@@ -14,6 +16,7 @@ interface NewTransactionForm {
 interface TransaccionesPageProps {
   transactions: Transaction[]
   setTransactions: Dispatch<SetStateAction<Transaction[]>>
+  isLoadingTransactions: boolean
 }
 
 const initialForm: NewTransactionForm = {
@@ -44,9 +47,20 @@ export default function TransaccionesPage({
       [name]: value,
     }))
   }
+  
+  const { token } = useAuth()
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setErrorMessage('')
+
+    if (!token) {
+      setErrorMessage('No hay sesión activa')
+      return
+    }
 
     if (
       !form.description.trim() ||
@@ -54,22 +68,40 @@ export default function TransaccionesPage({
       !form.category.trim() ||
       !form.date.trim()
     ) {
-      alert('Completa todos los campos')
+      setErrorMessage('Completa todos los campos')
       return
     }
 
-    const newTransaction: Transaction = {
-      id: crypto.randomUUID(),
-      description: form.description.trim(),
-      amount: Number(form.amount),
-      type: form.type,
-      category: form.category.trim(),
-      date: form.date,
+    const parsedAmount = Number(form.amount)
+
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setErrorMessage('El monto debe ser mayor a cero')
+      return
     }
 
-    setTransactions((prev) => [newTransaction, ...prev])
-    setForm(initialForm)
-    setShowForm(false)
+    try {
+      setIsSaving(true)
+
+      const savedTransaction = await createTransactionRequest(token, {
+        description: form.description.trim(),
+        amount: parsedAmount,
+        type: form.type,
+        category: form.category.trim(),
+        date: form.date,
+      })
+
+      setTransactions((prev) => [savedTransaction, ...prev])
+      setForm(initialForm)
+      setShowForm(false)
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('Error al guardar transacción')
+      }
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const openDeleteModal = (transactionId: string) => {
@@ -82,14 +114,28 @@ export default function TransaccionesPage({
     setIsDeleteModalOpen(false)
   }
 
-  const confirmDelete = () => {
-    if (!transactionToDelete) return
+  const confirmDelete = async () => {
+    if (!transactionToDelete || !token) return
 
-    setTransactions((prev) =>
-      prev.filter((transaction) => transaction.id !== transactionToDelete)
-    )
+    try {
+      setIsDeleting(true)
 
-    closeDeleteModal()
+      await deleteTransactionRequest(token, transactionToDelete)
+
+      setTransactions((prev) =>
+        prev.filter((transaction) => transaction.id !== transactionToDelete)
+      )
+
+      closeDeleteModal()
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('Error al eliminar transacción')
+      }
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -113,6 +159,12 @@ export default function TransaccionesPage({
             {showForm ? 'Cerrar formulario' : 'Nueva transacción'}
           </button>
         </div>
+
+        {errorMessage && (
+          <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            {errorMessage}
+          </div>
+        )}
 
         {showForm && (
           <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -217,9 +269,10 @@ export default function TransaccionesPage({
               <div className="flex justify-end md:col-span-2">
                 <button
                   type="submit"
-                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  disabled={isSaving}
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Guardar transacción
+                  {isSaving ? 'Guardando...' : 'Guardar transacción'}
                 </button>
               </div>
             </form>
@@ -276,7 +329,7 @@ export default function TransaccionesPage({
                         ${transaction.amount}
                       </td>
                       <td className="py-3 text-slate-600">
-                        {transaction.date}
+                        {transaction.date.slice(0, 10)}
                       </td>
                       <td className="py-3">
                         <button
@@ -317,9 +370,10 @@ export default function TransaccionesPage({
               <button
                 type="button"
                 onClick={confirmDelete}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                disabled={isDeleting}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Aceptar
+                {isDeleting ? 'Eliminando...' : 'Aceptar'}
               </button>
             </div>
           </div>

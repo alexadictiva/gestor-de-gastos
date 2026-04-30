@@ -12,6 +12,12 @@ export interface LoginResponse {
   user: AuthUser
 }
 
+export interface RegisterResponse {
+  ok: boolean
+  message: string
+  user: AuthUser
+}
+
 export interface MeResponse {
   ok: boolean
   user: AuthUser

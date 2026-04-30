@@ -9,26 +9,32 @@ import ResumenSemanalPage from '../pages/ResumenSemanalPage'
 import ResumenMensualPage from '../pages/ResumenMensualPage'
 import type { Transaction } from '../types/transaction'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
+import RegisterPage from '../pages/RegisterPage'
 
 interface AppRouterProps {
   transactions: Transaction[]
   setTransactions: Dispatch<SetStateAction<Transaction[]>>
+  isLoadingTransactions: boolean
 }
 
 export default function AppRouter({
   transactions,
   setTransactions,
+  isLoadingTransactions,
 }: AppRouterProps) {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/registro" element={<RegisterPage />} />
 
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <DashboardPage transactions={transactions} />
+              <DashboardPage 
+              transactions={transactions} 
+              isLoadingTransactions={isLoadingTransactions} />
             </ProtectedRoute>
           }
         />
@@ -40,6 +46,7 @@ export default function AppRouter({
               <TransaccionesPage
                 transactions={transactions}
                 setTransactions={setTransactions}
+                isLoadingTransactions={isLoadingTransactions}
               />
             </ProtectedRoute>
           }

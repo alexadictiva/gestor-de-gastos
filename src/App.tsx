@@ -1,36 +1,50 @@
 import { useEffect, useState } from 'react'
 import AppRouter from './router/AppRouter'
-import { mockTransactions } from './data/mockTransactions'
 import type { Transaction } from './types/transaction'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider } from './context/AuthProvider'
+import { useAuth } from './hooks/useAuth'
+import { getTransactionsRequest } from './services/transactionService'
 
-const STORAGE_KEY = 'control-gastos-transactions'
+function AppContent() {
+  const { token, isAuthenticated } = useAuth()
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false)
 
-function App() {
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const savedTransactions = localStorage.getItem(STORAGE_KEY)
+  useEffect(() => {
+    async function loadTransactions() {
+      if (!token || !isAuthenticated) {
+        setTransactions([])
+        return
+      }
 
-    if (savedTransactions) {
       try {
-        return JSON.parse(savedTransactions) as Transaction[]
+        setIsLoadingTransactions(true)
+        const data = await getTransactionsRequest(token)
+        setTransactions(data)
       } catch (error) {
-        console.error('Error al leer transacciones desde localStorage:', error)
+        console.error('Error cargando transacciones:', error)
+        setTransactions([])
+      } finally {
+        setIsLoadingTransactions(false)
       }
     }
 
-    return mockTransactions
-  })
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions))
-  }, [transactions])
+    loadTransactions()
+  }, [token, isAuthenticated])
 
   return (
+    <AppRouter
+      transactions={transactions}
+      setTransactions={setTransactions}
+      isLoadingTransactions={isLoadingTransactions}
+    />
+  )
+}
+
+function App() {
+  return (
     <AuthProvider>
-      <AppRouter
-        transactions={transactions}
-        setTransactions={setTransactions}
-      />
+      <AppContent />
     </AuthProvider>
   )
 }

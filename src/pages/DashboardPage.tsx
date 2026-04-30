@@ -3,10 +3,12 @@ import type { Transaction } from '../types/transaction'
 
 interface DashboardPageProps {
   transactions: Transaction[]
+  isLoadingTransactions: boolean
 }
 
 export default function DashboardPage({
   transactions,
+  isLoadingTransactions,
 }: DashboardPageProps) {
   const incomeTotal = transactions
     .filter((transaction) => transaction.type === 'income')
@@ -68,7 +70,13 @@ export default function DashboardPage({
             </thead>
 
             <tbody>
-              {transactions.length === 0 ? (
+              {isLoadingTransactions ? (
+                <tr>
+                  <td colSpan={5} className="py-10 text-center text-slate-500">
+                    Cargando transacciones...
+                  </td>
+                </tr>
+              ) : transactions.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-10 text-center">
                     <div className="flex flex-col items-center gap-2">
