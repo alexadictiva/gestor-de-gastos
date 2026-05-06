@@ -4,6 +4,7 @@ import type { Transaction, TransactionType } from '../types/transaction'
 import Modal from '../components/layout/Modal'
 import { useAuth } from '../hooks/useAuth'
 import { createTransactionRequest, deleteTransactionRequest } from '../services/transactionService'
+import type { Category } from '../types/category'
 
 interface NewTransactionForm {
   description: string
@@ -17,6 +18,7 @@ interface TransaccionesPageProps {
   transactions: Transaction[]
   setTransactions: Dispatch<SetStateAction<Transaction[]>>
   isLoadingTransactions: boolean
+  categories: Category[]
 }
 
 const initialForm: NewTransactionForm = {
@@ -30,6 +32,7 @@ const initialForm: NewTransactionForm = {
 export default function TransaccionesPage({
   transactions,
   setTransactions,
+  categories
 }: TransaccionesPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<NewTransactionForm>(initialForm)
@@ -45,6 +48,7 @@ export default function TransaccionesPage({
     setForm((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === 'type' ? { category: '' } : {}),
     }))
   }
   
@@ -137,6 +141,10 @@ export default function TransaccionesPage({
       setIsDeleting(false)
     }
   }
+
+  const availableCategories = categories.filter(
+  (category) => category.type === form.type
+)
 
   return (
     <DashboardLayout>
@@ -238,15 +246,27 @@ export default function TransaccionesPage({
                 >
                   Categoría
                 </label>
-                <input
+                <select
                   id="category"
                   name="category"
-                  type="text"
                   value={form.category}
                   onChange={handleChange}
                   className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
-                  placeholder="Ej: Comida"
-                />
+                >
+                  <option value="">Selecciona una categoría</option>
+
+                  {availableCategories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+
+                {availableCategories.length === 0 && (
+                  <p className="text-xs text-slate-500">
+                    No tienes categorías para este tipo. Crea una desde la sección Categorías.
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-2 md:col-span-2">

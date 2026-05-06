@@ -8,6 +8,7 @@ import CategoriasPage from '../pages/CategoriasPage'
 import ResumenSemanalPage from '../pages/ResumenSemanalPage'
 import ResumenMensualPage from '../pages/ResumenMensualPage'
 import type { Transaction } from '../types/transaction'
+import type { Category } from '../types/category'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 import RegisterPage from '../pages/RegisterPage'
 
@@ -15,12 +16,18 @@ interface AppRouterProps {
   transactions: Transaction[]
   setTransactions: Dispatch<SetStateAction<Transaction[]>>
   isLoadingTransactions: boolean
+  categories: Category[]
+  setCategories: Dispatch<SetStateAction<Category[]>>
+  isLoadingCategories: boolean
 }
 
 export default function AppRouter({
   transactions,
   setTransactions,
   isLoadingTransactions,
+  categories,
+  setCategories,
+  isLoadingCategories,
 }: AppRouterProps) {
   return (
     <BrowserRouter>
@@ -47,6 +54,7 @@ export default function AppRouter({
                 transactions={transactions}
                 setTransactions={setTransactions}
                 isLoadingTransactions={isLoadingTransactions}
+                categories={categories}
               />
             </ProtectedRoute>
           }
@@ -56,7 +64,11 @@ export default function AppRouter({
           path="/categorias"
           element={
             <ProtectedRoute>
-              <CategoriasPage />
+              <CategoriasPage
+                categories={categories}
+                setCategories={setCategories}
+                isLoadingCategories={isLoadingCategories}
+              />
             </ProtectedRoute>
           }
         />
