@@ -3,6 +3,7 @@ import cors from 'cors'
 import { prisma } from './lib/prisma'
 import authRoutes from './routes/auth.routes'
 import transactionRoutes from './routes/transaction.routes'
+import categoryRoutes from './routes/category.routes'
 
 const app = express()
 const PORT = 4000
@@ -37,6 +38,7 @@ app.get('/api/health', async (_req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/transactions', transactionRoutes)
+app.use('/api/categories', categoryRoutes)
 
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`)
