@@ -93,11 +93,28 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       },
     })
 
+    const categoryExists = await prisma.category.findFirst({
+      where: {
+        userId: req.user.userId,
+        name: String(category).trim(),
+        type,
+      },
+    })
+
+    if (!categoryExists) {
+      return res.status(400).json({
+        ok: false,
+        message: 'La categoría seleccionada no es válida',
+      })
+    }
+
     return res.status(201).json({
       ok: true,
       message: 'Transacción creada correctamente',
       transaction,
     })
+
+    
   } catch (error) {
     console.error('Error creando transacción:', error)
 
