@@ -67,7 +67,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
-    if (normalizedType !== 'income' && normalizedType !== 'expense') {
+    if (normalizedType !== 'income' && normalizedType !== 'expense' && normalizedType !== 'investments') {
       return res.status(400).json({
         ok: false,
         message: 'El tipo de categoría no es válido',

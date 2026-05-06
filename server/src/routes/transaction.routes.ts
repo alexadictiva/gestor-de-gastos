@@ -57,7 +57,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
-    if (type !== 'income' && type !== 'expense') {
+    if (type !== 'income' && type !== 'expense' && type !== 'investments') {
       return res.status(400).json({
         ok: false,
         message: 'El tipo de transacción no es válido',
@@ -176,5 +176,7 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
     })
   }
 })
+
+/* router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {}) */
 
 export default router

@@ -27,9 +27,9 @@ export const mockTransactions: Transaction[] = [
   },
   {
     id: '4',
-    description: 'Freelance',
+    description: 'Buy Dollar',
     amount: 1000,
-    type: 'income',
+    type: 'investments',
     category: 'Trabajo',
     date: '2026-04-10',
   },

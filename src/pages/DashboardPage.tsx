@@ -18,7 +18,11 @@ export default function DashboardPage({
     .filter((transaction) => transaction.type === 'expense')
     .reduce((acc, transaction) => acc + transaction.amount, 0)
 
-  const balanceTotal = incomeTotal - expenseTotal
+  const investmentsTotal = transactions
+    .filter((transaction) => transaction.type === 'investments')
+    .reduce((acc, transaction) => acc + transaction.amount, 0)
+
+  const balanceTotal = incomeTotal - expenseTotal - investmentsTotal
 
   return (
     <DashboardLayout>
@@ -42,6 +46,13 @@ export default function DashboardPage({
             <p className="text-sm text-slate-500">Gastos</p>
             <h2 className="text-2xl font-bold text-red-600">
               ${expenseTotal}
+            </h2>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <p className="text-sm text-slate-500">Inversiónes</p>
+            <h2 className="text-2xl font-bold text-purple-600">
+              ${investmentsTotal}
             </h2>
           </div>
 
@@ -101,7 +112,7 @@ export default function DashboardPage({
                           : 'text-green-600'
                       }
                     >
-                      {transaction.type === 'expense' ? 'Gasto' : 'Ingreso'}
+                      {transaction.type === 'expense' ? 'Gasto' : transaction.type === 'income' ? 'Ingreso' : 'Inversión'}
                     </td>
                     <td>{transaction.category}</td>
                     <td>{transaction.date.slice(0, 10)}</td>

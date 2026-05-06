@@ -236,6 +236,7 @@ export default function TransaccionesPage({
                 >
                   <option value="expense">Gasto</option>
                   <option value="income">Ingreso</option>
+                  <option value="investments">Inversión</option>
                 </select>
               </div>
 
@@ -343,7 +344,7 @@ export default function TransaccionesPage({
                             : 'text-green-600'
                         }`}
                       >
-                        {transaction.type === 'expense' ? 'Gasto' : 'Ingreso'}
+                        {transaction.type === 'expense' ? 'Gasto' : transaction.type === 'income' ? 'Ingreso' : 'Inversión'}
                       </td>
                       <td className="py-3 text-slate-800">
                         ${transaction.amount}

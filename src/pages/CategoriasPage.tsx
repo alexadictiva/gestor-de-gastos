@@ -193,6 +193,7 @@ export default function CategoriasPage({
                 >
                   <option value="expense">Gasto</option>
                   <option value="income">Ingreso</option>
+                  <option value="investments">Inversión</option>
                 </select>
               </div>
 
@@ -274,14 +275,8 @@ export default function CategoriasPage({
                       <td className="py-3 font-medium text-slate-800">
                         {category.name}
                       </td>
-                      <td
-                        className={`py-3 font-medium ${
-                          category.type === 'expense'
-                            ? 'text-red-500'
-                            : 'text-green-600'
-                        }`}
-                      >
-                        {category.type === 'expense' ? 'Gasto' : 'Ingreso'}
+                      <td className={`py-3 font-medium ${category.type === 'expense' ? 'text-red-500': 'text-green-600'}`}>
+                        {category.type === 'expense' ? 'Gasto' : category.type === 'income' ? 'Ingreso' : 'Inversión'}
                       </td>
                       <td className="py-3">
                         <button
