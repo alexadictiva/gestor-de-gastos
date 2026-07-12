@@ -1,4 +1,5 @@
 import DashboardLayout from '../components/layout/DashboardLayout'
+import VoiceAssistant from '../components/ui/VoiceAssistant'
 import type { Transaction } from '../types/transaction'
 
 interface DashboardPageProps {
@@ -63,6 +64,13 @@ export default function DashboardPage({
             </h2>
           </div>
         </div>
+
+        <VoiceAssistant
+          balanceTotal={balanceTotal}
+          incomeTotal={incomeTotal}
+          expenseTotal={expenseTotal}
+          investmentsTotal={investmentsTotal}
+        />
 
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-semibold text-slate-800">

@@ -12,9 +12,14 @@ model User {
   name         String
   email        String        @unique
   password     String
+  telegramChatId String?     @unique
+  telegramLinkCode String?
+  telegramLinkCodeExpiresAt DateTime?
   createdAt    DateTime      @default(now())
   transactions Transaction[]
   categories Category[]
+
+  @@index([telegramLinkCode])
 }
 
 model Transaction {

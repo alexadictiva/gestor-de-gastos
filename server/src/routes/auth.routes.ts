@@ -13,10 +13,27 @@ const authUserSelect = {
   name: true,
   email: true,
   createdAt: true,
+  telegramChatId: true,
 } as const
+
+interface AuthUserRecord {
+  id: string
+  name: string
+  email: string
+  createdAt: Date
+  telegramChatId: string | null
+}
 
 function generateTemporaryPassword(length = 10) {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+
+  return Array.from({ length }, () =>
+    alphabet[randomInt(0, alphabet.length)]
+  ).join('')
+}
+
+function generateTelegramLinkCode(length = 8) {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
   return Array.from({ length }, () =>
     alphabet[randomInt(0, alphabet.length)]
@@ -42,6 +59,16 @@ function createAuthToken(userId: string, email: string) {
       expiresIn,
     }
   )
+}
+
+function serializeAuthUser(user: AuthUserRecord) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+    telegramConnected: Boolean(user.telegramChatId),
+  }
 }
 
 router.post('/register', async (req, res) => {
@@ -100,7 +127,7 @@ router.post('/register', async (req, res) => {
     return res.status(201).json({
       ok: true,
       message: 'Usuario registrado correctamente',
-      user: newUser,
+      user: serializeAuthUser(newUser),
     })
   } catch (error) {
     console.error('Error en register:', error)
@@ -177,12 +204,7 @@ router.post('/login', async (req, res) => {
       ok: true,
       message: 'Login correcto',
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
+      user: serializeAuthUser(user),
     })
   } catch (error) {
     console.error('Error en login:', error)
@@ -380,7 +402,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
         ? 'Cuenta actualizada correctamente'
         : 'Perfil actualizado correctamente',
       token,
-      user: updatedUser,
+      user: serializeAuthUser(updatedUser),
     })
   } catch (error) {
     console.error('Error en /profile:', error)
@@ -391,6 +413,125 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
     })
   }
 })
+
+router.post(
+  '/telegram/link-code',
+  authMiddleware,
+  async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          ok: false,
+          message: 'Usuario no autenticado',
+        })
+      }
+
+      if (!process.env.TELEGRAM_BOT_TOKEN) {
+        return res.status(503).json({
+          ok: false,
+          message: 'Telegram no esta configurado en el backend',
+        })
+      }
+
+      const currentUser = await prisma.user.findUnique({
+        where: {
+          id: req.user.userId,
+        },
+      })
+
+      if (!currentUser) {
+        return res.status(404).json({
+          ok: false,
+          message: 'Usuario no encontrado',
+        })
+      }
+
+      const code = generateTelegramLinkCode()
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
+
+      await prisma.user.update({
+        where: {
+          id: currentUser.id,
+        },
+        data: {
+          telegramLinkCode: code,
+          telegramLinkCodeExpiresAt: expiresAt,
+        },
+      })
+
+      return res.json({
+        ok: true,
+        message: 'Codigo generado correctamente',
+        code,
+        expiresAt: expiresAt.toISOString(),
+        botUsername: process.env.TELEGRAM_BOT_USERNAME || null,
+      })
+    } catch (error) {
+      console.error('Error en /telegram/link-code:', error)
+
+      return res.status(500).json({
+        ok: false,
+        message: 'No se pudo generar el codigo de vinculacion',
+      })
+    }
+  }
+)
+
+router.delete(
+  '/telegram/link',
+  authMiddleware,
+  async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          ok: false,
+          message: 'Usuario no autenticado',
+        })
+      }
+
+      const currentUser = await prisma.user.findUnique({
+        where: {
+          id: req.user.userId,
+        },
+      })
+
+      if (!currentUser) {
+        return res.status(404).json({
+          ok: false,
+          message: 'Usuario no encontrado',
+        })
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: {
+          id: currentUser.id,
+        },
+        data: {
+          telegramChatId: null,
+          telegramLinkCode: null,
+          telegramLinkCodeExpiresAt: null,
+        },
+        select: authUserSelect,
+      })
+
+      const token = createAuthToken(updatedUser.id, updatedUser.email)
+
+      return res.json({
+        ok: true,
+        message: 'Telegram desvinculado correctamente',
+        token,
+        user: serializeAuthUser(updatedUser),
+      })
+    } catch (error) {
+      console.error('Error en /telegram/link:', error)
+
+      return res.status(500).json({
+        ok: false,
+        message: 'No se pudo desvincular Telegram',
+      })
+    }
+  }
+)
 
 router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   try {
@@ -417,7 +558,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
 
     return res.json({
       ok: true,
-      user,
+      user: serializeAuthUser(user),
     })
   } catch (error) {
     console.error('Error en /me:', error)

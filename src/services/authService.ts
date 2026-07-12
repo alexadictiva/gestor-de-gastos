@@ -3,6 +3,7 @@ import type {
   LoginResponse,
   MeResponse,
   RegisterResponse,
+  TelegramLinkCodeResponse,
   UpdateProfileResponse,
 } from '../types/auth'
 
@@ -124,6 +125,44 @@ export async function updateProfileRequest(
 
   if (!response.ok) {
     throw new Error(data.message || 'Error al actualizar la cuenta')
+  }
+
+  return data
+}
+
+export async function generateTelegramLinkCodeRequest(
+  token: string
+): Promise<TelegramLinkCodeResponse> {
+  const response = await fetch(`${API_URL}/auth/telegram/link-code`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Error al generar el codigo de Telegram')
+  }
+
+  return data
+}
+
+export async function unlinkTelegramRequest(
+  token: string
+): Promise<UpdateProfileResponse> {
+  const response = await fetch(`${API_URL}/auth/telegram/link`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Error al desvincular Telegram')
   }
 
   return data

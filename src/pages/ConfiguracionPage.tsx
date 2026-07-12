@@ -1,7 +1,12 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../hooks/useAuth'
-import { updateProfileRequest } from '../services/authService'
+import {
+  generateTelegramLinkCodeRequest,
+  meRequest,
+  unlinkTelegramRequest,
+  updateProfileRequest,
+} from '../services/authService'
 
 interface ProfileForm {
   name: string
@@ -31,8 +36,17 @@ export default function ConfiguracionPage() {
   const [profileSuccess, setProfileSuccess] = useState('')
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState('')
+  const [telegramError, setTelegramError] = useState('')
+  const [telegramSuccess, setTelegramSuccess] = useState('')
+  const [telegramLinkCode, setTelegramLinkCode] = useState('')
+  const [telegramLinkExpiresAt, setTelegramLinkExpiresAt] = useState('')
+  const [telegramBotUsername, setTelegramBotUsername] = useState('')
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [isSavingPassword, setIsSavingPassword] = useState(false)
+  const [isGeneratingTelegramCode, setIsGeneratingTelegramCode] = useState(false)
+  const [isRefreshingTelegramStatus, setIsRefreshingTelegramStatus] =
+    useState(false)
+  const [isUnlinkingTelegram, setIsUnlinkingTelegram] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -42,6 +56,17 @@ export default function ConfiguracionPage() {
       email: user.email,
     })
   }, [user])
+
+  const formattedTelegramExpiration = useMemo(() => {
+    if (!telegramLinkExpiresAt) return ''
+
+    return new Date(telegramLinkExpiresAt).toLocaleString('es-AR')
+  }, [telegramLinkExpiresAt])
+
+  const clearTelegramFeedback = () => {
+    setTelegramError('')
+    setTelegramSuccess('')
+  }
 
   const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -139,13 +164,95 @@ export default function ConfiguracionPage() {
     }
   }
 
+  const handleGenerateTelegramCode = async () => {
+    clearTelegramFeedback()
+
+    if (!token) {
+      setTelegramError('No hay sesion activa')
+      return
+    }
+
+    try {
+      setIsGeneratingTelegramCode(true)
+      const response = await generateTelegramLinkCodeRequest(token)
+      setTelegramLinkCode(response.code)
+      setTelegramLinkExpiresAt(response.expiresAt)
+      setTelegramBotUsername(response.botUsername || '')
+      setTelegramSuccess(
+        'Codigo generado. Envia el comando /link al bot para vincular tu cuenta.'
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        setTelegramError(error.message)
+      } else {
+        setTelegramError('No se pudo generar el codigo de Telegram')
+      }
+    } finally {
+      setIsGeneratingTelegramCode(false)
+    }
+  }
+
+  const handleRefreshTelegramStatus = async () => {
+    clearTelegramFeedback()
+
+    if (!token) {
+      setTelegramError('No hay sesion activa')
+      return
+    }
+
+    try {
+      setIsRefreshingTelegramStatus(true)
+      const response = await meRequest(token)
+      updateSession(response.user, token)
+      setTelegramSuccess(
+        response.user.telegramConnected
+          ? 'Telegram ya esta vinculado a tu cuenta.'
+          : 'Aun no detecté una vinculación activa.'
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        setTelegramError(error.message)
+      } else {
+        setTelegramError('No se pudo actualizar el estado de Telegram')
+      }
+    } finally {
+      setIsRefreshingTelegramStatus(false)
+    }
+  }
+
+  const handleUnlinkTelegram = async () => {
+    clearTelegramFeedback()
+
+    if (!token) {
+      setTelegramError('No hay sesion activa')
+      return
+    }
+
+    try {
+      setIsUnlinkingTelegram(true)
+      const response = await unlinkTelegramRequest(token)
+      updateSession(response.user, response.token)
+      setTelegramLinkCode('')
+      setTelegramLinkExpiresAt('')
+      setTelegramSuccess('Telegram fue desvinculado correctamente.')
+    } catch (error) {
+      if (error instanceof Error) {
+        setTelegramError(error.message)
+      } else {
+        setTelegramError('No se pudo desvincular Telegram')
+      }
+    } finally {
+      setIsUnlinkingTelegram(false)
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Configuracion</h1>
           <p className="text-slate-600">
-            Actualiza tu informacion personal y la seguridad de tu cuenta.
+            Actualiza tu informacion personal, tu seguridad y tus integraciones.
           </p>
         </div>
 
@@ -324,6 +431,154 @@ export default function ConfiguracionPage() {
             </form>
           </section>
         </div>
+
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">
+                Integracion con Telegram
+              </h2>
+              <p className="text-sm text-slate-500">
+                Vincula tu cuenta para registrar movimientos enviando mensajes al bot.
+              </p>
+            </div>
+
+            <span
+              className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${
+                user?.telegramConnected
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-slate-100 text-slate-600'
+              }`}
+            >
+              {user?.telegramConnected ? 'Vinculado' : 'Sin vincular'}
+            </span>
+          </div>
+
+          {telegramError && (
+            <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+              {telegramError}
+            </div>
+          )}
+
+          {telegramSuccess && (
+            <div className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+              {telegramSuccess}
+            </div>
+          )}
+
+          <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-2xl border border-slate-200 p-5">
+              <h3 className="text-base font-semibold text-slate-800">
+                Vinculacion
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Genera un codigo en la app y envialo por Telegram con el comando
+                <span className="font-medium text-slate-700"> /link CODIGO</span>.
+              </p>
+
+              {telegramLinkCode && (
+                <div className="mt-4 rounded-xl bg-slate-900 p-4 text-white">
+                  <p className="text-xs uppercase tracking-wide text-slate-300">
+                    Codigo actual
+                  </p>
+                  <p className="mt-2 text-2xl font-bold tracking-[0.25em]">
+                    {telegramLinkCode}
+                  </p>
+                  {formattedTelegramExpiration && (
+                    <p className="mt-2 text-sm text-slate-300">
+                      Expira: {formattedTelegramExpiration}
+                    </p>
+                  )}
+                  <p className="mt-2 text-sm text-slate-300">
+                    {telegramBotUsername
+                      ? `Busca a @${telegramBotUsername} y envia /link ${telegramLinkCode}`
+                      : `Envia /link ${telegramLinkCode} a tu bot de Telegram`}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleGenerateTelegramCode}
+                  disabled={isGeneratingTelegramCode}
+                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isGeneratingTelegramCode
+                    ? 'Generando...'
+                    : 'Generar codigo'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRefreshTelegramStatus}
+                  disabled={isRefreshingTelegramStatus || !token}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isRefreshingTelegramStatus
+                    ? 'Verificando...'
+                    : 'Actualizar estado'}
+                </button>
+
+                {user?.telegramConnected && (
+                  <button
+                    type="button"
+                    onClick={handleUnlinkTelegram}
+                    disabled={isUnlinkingTelegram}
+                    className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isUnlinkingTelegram
+                      ? 'Desvinculando...'
+                      : 'Desvincular'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 p-5">
+              <h3 className="text-base font-semibold text-slate-800">
+                Formatos de mensaje
+              </h3>
+              <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
+                <p>
+                  <span className="font-medium text-slate-800">Gasto:</span>{' '}
+                  <code>gasto 2500 comida - Supermercado</code>
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">
+                    Gasto con fecha:
+                  </span>{' '}
+                  <code>gasto 2500 comida - Supermercado - 2026-07-12</code>
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Ingreso:</span>{' '}
+                  <code>ingreso 120000 sueldo - Salario julio</code>
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">
+                    Ingreso con fecha:
+                  </span>{' '}
+                  <code>
+                    ingreso 120000 sueldo - Salario julio fecha:2026-07-12
+                  </code>
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Inversion:</span>{' '}
+                  <code>inversion 30000 cedears - Compra mensual</code>
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Formato completo:</span>{' '}
+                  <code>
+                    gasto 2500 categoria:comida descripcion:super fecha:2026-07-12
+                  </code>
+                </p>
+                <p className="text-xs text-slate-500">
+                  La fecha es opcional. Si no la envias, el bot usa la fecha actual. La categoria debe existir en tu cuenta para ese tipo de movimiento.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </DashboardLayout>
   )

@@ -29,6 +29,9 @@ export type UserMinAggregateOutputType = {
   name: string | null
   email: string | null
   password: string | null
+  telegramChatId: string | null
+  telegramLinkCode: string | null
+  telegramLinkCodeExpiresAt: Date | null
   createdAt: Date | null
 }
 
@@ -37,6 +40,9 @@ export type UserMaxAggregateOutputType = {
   name: string | null
   email: string | null
   password: string | null
+  telegramChatId: string | null
+  telegramLinkCode: string | null
+  telegramLinkCodeExpiresAt: Date | null
   createdAt: Date | null
 }
 
@@ -45,6 +51,9 @@ export type UserCountAggregateOutputType = {
   name: number
   email: number
   password: number
+  telegramChatId: number
+  telegramLinkCode: number
+  telegramLinkCodeExpiresAt: number
   createdAt: number
   _all: number
 }
@@ -55,6 +64,9 @@ export type UserMinAggregateInputType = {
   name?: true
   email?: true
   password?: true
+  telegramChatId?: true
+  telegramLinkCode?: true
+  telegramLinkCodeExpiresAt?: true
   createdAt?: true
 }
 
@@ -63,6 +75,9 @@ export type UserMaxAggregateInputType = {
   name?: true
   email?: true
   password?: true
+  telegramChatId?: true
+  telegramLinkCode?: true
+  telegramLinkCodeExpiresAt?: true
   createdAt?: true
 }
 
@@ -71,6 +86,9 @@ export type UserCountAggregateInputType = {
   name?: true
   email?: true
   password?: true
+  telegramChatId?: true
+  telegramLinkCode?: true
+  telegramLinkCodeExpiresAt?: true
   createdAt?: true
   _all?: true
 }
@@ -152,6 +170,9 @@ export type UserGroupByOutputType = {
   name: string
   email: string
   password: string
+  telegramChatId: string | null
+  telegramLinkCode: string | null
+  telegramLinkCodeExpiresAt: Date | null
   createdAt: Date
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
@@ -181,6 +202,9 @@ export type UserWhereInput = {
   name?: Prisma.StringFilter<"User"> | string
   email?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringFilter<"User"> | string
+  telegramChatId?: Prisma.StringNullableFilter<"User"> | string | null
+  telegramLinkCode?: Prisma.StringNullableFilter<"User"> | string | null
+  telegramLinkCodeExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   transactions?: Prisma.TransactionListRelationFilter
   categories?: Prisma.CategoryListRelationFilter
@@ -191,6 +215,9 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  telegramChatId?: Prisma.SortOrderInput | Prisma.SortOrder
+  telegramLinkCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  telegramLinkCodeExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   categories?: Prisma.CategoryOrderByRelationAggregateInput
@@ -199,21 +226,27 @@ export type UserOrderByWithRelationInput = {
 export type UserWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   email?: string
+  telegramChatId?: string
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   name?: Prisma.StringFilter<"User"> | string
   password?: Prisma.StringFilter<"User"> | string
+  telegramLinkCode?: Prisma.StringNullableFilter<"User"> | string | null
+  telegramLinkCodeExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   transactions?: Prisma.TransactionListRelationFilter
   categories?: Prisma.CategoryListRelationFilter
-}, "id" | "email">
+}, "id" | "email" | "telegramChatId">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  telegramChatId?: Prisma.SortOrderInput | Prisma.SortOrder
+  telegramLinkCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  telegramLinkCodeExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -228,6 +261,9 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"User"> | string
   email?: Prisma.StringWithAggregatesFilter<"User"> | string
   password?: Prisma.StringWithAggregatesFilter<"User"> | string
+  telegramChatId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  telegramLinkCode?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  telegramLinkCodeExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
 
@@ -236,6 +272,9 @@ export type UserCreateInput = {
   name: string
   email: string
   password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
@@ -246,6 +285,9 @@ export type UserUncheckedCreateInput = {
   name: string
   email: string
   password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
@@ -256,6 +298,9 @@ export type UserUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
@@ -266,6 +311,9 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
@@ -276,6 +324,9 @@ export type UserCreateManyInput = {
   name: string
   email: string
   password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -284,6 +335,9 @@ export type UserUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -292,6 +346,9 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -300,6 +357,9 @@ export type UserCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  telegramChatId?: Prisma.SortOrder
+  telegramLinkCode?: Prisma.SortOrder
+  telegramLinkCodeExpiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -308,6 +368,9 @@ export type UserMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  telegramChatId?: Prisma.SortOrder
+  telegramLinkCode?: Prisma.SortOrder
+  telegramLinkCodeExpiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -316,6 +379,9 @@ export type UserMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   email?: Prisma.SortOrder
   password?: Prisma.SortOrder
+  telegramChatId?: Prisma.SortOrder
+  telegramLinkCode?: Prisma.SortOrder
+  telegramLinkCodeExpiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -326,6 +392,14 @@ export type UserScalarRelationFilter = {
 
 export type StringFieldUpdateOperationsInput = {
   set?: string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -365,6 +439,9 @@ export type UserCreateWithoutTransactionsInput = {
   name: string
   email: string
   password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
 }
@@ -374,6 +451,9 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   name: string
   email: string
   password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
 }
@@ -399,6 +479,9 @@ export type UserUpdateWithoutTransactionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
 }
@@ -408,6 +491,9 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -417,6 +503,9 @@ export type UserCreateWithoutCategoriesInput = {
   name: string
   email: string
   password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
 }
@@ -426,6 +515,9 @@ export type UserUncheckedCreateWithoutCategoriesInput = {
   name: string
   email: string
   password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
 }
@@ -451,6 +543,9 @@ export type UserUpdateWithoutCategoriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
 }
@@ -460,6 +555,9 @@ export type UserUncheckedUpdateWithoutCategoriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -509,6 +607,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   email?: boolean
   password?: boolean
+  telegramChatId?: boolean
+  telegramLinkCode?: boolean
+  telegramLinkCodeExpiresAt?: boolean
   createdAt?: boolean
   transactions?: boolean | Prisma.User$transactionsArgs<ExtArgs>
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
@@ -520,6 +621,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   email?: boolean
   password?: boolean
+  telegramChatId?: boolean
+  telegramLinkCode?: boolean
+  telegramLinkCodeExpiresAt?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -528,6 +632,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   email?: boolean
   password?: boolean
+  telegramChatId?: boolean
+  telegramLinkCode?: boolean
+  telegramLinkCodeExpiresAt?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -536,10 +643,13 @@ export type UserSelectScalar = {
   name?: boolean
   email?: boolean
   password?: boolean
+  telegramChatId?: boolean
+  telegramLinkCode?: boolean
+  telegramLinkCodeExpiresAt?: boolean
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "telegramChatId" | "telegramLinkCode" | "telegramLinkCodeExpiresAt" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactions?: boolean | Prisma.User$transactionsArgs<ExtArgs>
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
@@ -559,6 +669,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string
     email: string
     password: string
+    telegramChatId: string | null
+    telegramLinkCode: string | null
+    telegramLinkCodeExpiresAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["user"]>
   composites: {}
@@ -989,6 +1102,9 @@ export interface UserFieldRefs {
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly email: Prisma.FieldRef<"User", 'String'>
   readonly password: Prisma.FieldRef<"User", 'String'>
+  readonly telegramChatId: Prisma.FieldRef<"User", 'String'>
+  readonly telegramLinkCode: Prisma.FieldRef<"User", 'String'>
+  readonly telegramLinkCodeExpiresAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }
     

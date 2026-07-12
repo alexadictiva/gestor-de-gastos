@@ -3,6 +3,7 @@ export interface AuthUser {
   name: string
   email: string
   createdAt: string
+  telegramConnected?: boolean
 }
 
 export interface LoginResponse {
@@ -34,4 +35,12 @@ export interface UpdateProfileResponse {
   message: string
   token: string
   user: AuthUser
+}
+
+export interface TelegramLinkCodeResponse {
+  ok: boolean
+  message: string
+  code: string
+  expiresAt: string
+  botUsername: string | null
 }

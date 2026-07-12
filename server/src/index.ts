@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import { prisma } from './lib/prisma'
+import { startTelegramPolling } from './lib/telegram'
 import authRoutes from './routes/auth.routes'
 import transactionRoutes from './routes/transaction.routes'
 import categoryRoutes from './routes/category.routes'
@@ -42,4 +43,5 @@ app.use('/api/categories', categoryRoutes)
 
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`)
+  void startTelegramPolling()
 })
