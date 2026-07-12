@@ -1,4 +1,8 @@
-import type { Category, CreateCategoryPayload } from '../types/category'
+import type {
+  Category,
+  CreateCategoryPayload,
+  UpdateCategoryPayload,
+} from '../types/category'
 
 const API_URL = 'http://localhost:4000/api'
 
@@ -13,9 +17,38 @@ interface CreateCategoryResponse {
   category: Category
 }
 
+interface UpdateCategoryResponse {
+  ok: boolean
+  message: string
+  category: Category
+}
+
 interface DeleteCategoryResponse {
   ok: boolean
   message: string
+}
+
+export async function updateCategoryRequest(
+  token: string,
+  categoryId: string,
+  payload: UpdateCategoryPayload
+): Promise<Category> {
+  const response = await fetch(`${API_URL}/categories/${categoryId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data: UpdateCategoryResponse = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Error al actualizar categoria')
+  }
+
+  return data.category
 }
 
 export async function getCategoriesRequest(token: string): Promise<Category[]> {

@@ -1,4 +1,4 @@
-export type CategoryType = 'income' | 'expense'
+export type CategoryType = 'income' | 'expense' | 'investments'
 
 export interface Category {
   id: string
@@ -13,5 +13,10 @@ export interface Category {
 export interface CreateCategoryPayload {
   name: string
   type: CategoryType
+  color: string
+}
+
+export interface UpdateCategoryPayload {
+  name: string
   color: string
 }

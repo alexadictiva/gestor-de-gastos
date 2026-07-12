@@ -3,15 +3,18 @@ import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
 import { useAuth } from '../hooks/useAuth'
 import type { Category, CategoryType } from '../types/category'
+import type { Transaction } from '../types/transaction'
 import {
   createCategoryRequest,
   deleteCategoryRequest,
+  updateCategoryRequest,
 } from '../services/categoryService'
 
 interface CategoriasPageProps {
   categories: Category[]
   setCategories: Dispatch<SetStateAction<Category[]>>
   isLoadingCategories: boolean
+  setTransactions: Dispatch<SetStateAction<Transaction[]>>
 }
 
 interface CategoryForm {
@@ -30,17 +33,46 @@ export default function CategoriasPage({
   categories,
   setCategories,
   isLoadingCategories,
+  setTransactions,
 }: CategoriasPageProps) {
   const { token } = useAuth()
 
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<CategoryForm>(initialForm)
+  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const sortCategories = (items: Category[]) =>
+    [...items].sort((a, b) => a.name.localeCompare(b.name))
+
+  const resetFormState = () => {
+    setForm(initialForm)
+    setCategoryToEdit(null)
+    setShowForm(false)
+  }
+
+  const openCreateForm = () => {
+    setErrorMessage('')
+    setForm(initialForm)
+    setCategoryToEdit(null)
+    setShowForm(true)
+  }
+
+  const openEditForm = (category: Category) => {
+    setErrorMessage('')
+    setCategoryToEdit(category)
+    setForm({
+      name: category.name,
+      type: category.type,
+      color: category.color,
+    })
+    setShowForm(true)
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -58,16 +90,51 @@ export default function CategoriasPage({
 
     try {
       setIsSaving(true)
+      const trimmedName = form.name.trim()
 
-      const savedCategory = await createCategoryRequest(token, {
-        name: form.name.trim(),
-        type: form.type,
-        color: form.color,
-      })
+      if (categoryToEdit) {
+        const previousName = categoryToEdit.name
+        const updatedCategory = await updateCategoryRequest(
+          token,
+          categoryToEdit.id,
+          {
+            name: trimmedName,
+            color: form.color,
+          }
+        )
 
-      setCategories((prev) => [...prev, savedCategory])
-      setForm(initialForm)
-      setShowForm(false)
+        setCategories((prev) =>
+          sortCategories(
+            prev.map((category) =>
+              category.id === updatedCategory.id ? updatedCategory : category
+            )
+          )
+        )
+
+        if (previousName !== updatedCategory.name) {
+          setTransactions((prev) =>
+            prev.map((transaction) =>
+              transaction.type === updatedCategory.type &&
+              transaction.category === previousName
+                ? {
+                    ...transaction,
+                    category: updatedCategory.name,
+                  }
+                : transaction
+            )
+          )
+        }
+      } else {
+        const savedCategory = await createCategoryRequest(token, {
+          name: trimmedName,
+          type: form.type,
+          color: form.color,
+        })
+
+        setCategories((prev) => sortCategories([...prev, savedCategory]))
+      }
+
+      resetFormState()
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message)
@@ -101,6 +168,10 @@ export default function CategoriasPage({
         prev.filter((category) => category.id !== categoryToDelete)
       )
 
+      if (categoryToEdit?.id === categoryToDelete) {
+        resetFormState()
+      }
+
       closeDeleteModal()
     } catch (error) {
       if (error instanceof Error) {
@@ -128,7 +199,14 @@ export default function CategoriasPage({
 
           <button
             type="button"
-            onClick={() => setShowForm((prev) => !prev)}
+            onClick={() => {
+              if (showForm) {
+                resetFormState()
+                return
+              }
+
+              openCreateForm()
+            }}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             {showForm ? 'Cerrar formulario' : 'Nueva categoría'}
@@ -183,18 +261,25 @@ export default function CategoriasPage({
                 <select
                   id="type"
                   value={form.type}
+                  disabled={Boolean(categoryToEdit)}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
                       type: event.target.value as CategoryType,
                     }))
                   }
-                  className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                  className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                 >
                   <option value="expense">Gasto</option>
                   <option value="income">Ingreso</option>
                   <option value="investments">Inversión</option>
                 </select>
+
+                {categoryToEdit && (
+                  <p className="text-xs text-slate-500">
+                    El tipo no se puede editar por ahora.
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -218,7 +303,14 @@ export default function CategoriasPage({
                 />
               </div>
 
-              <div className="flex justify-end md:col-span-3">
+              <div className="flex justify-end gap-3 md:col-span-3">
+                <button
+                  type="button"
+                  onClick={resetFormState}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Cancelar
+                </button>
                 <button
                   type="submit"
                   disabled={isSaving}
@@ -279,6 +371,13 @@ export default function CategoriasPage({
                         {category.type === 'expense' ? 'Gasto' : category.type === 'income' ? 'Ingreso' : 'Inversión'}
                       </td>
                       <td className="py-3">
+                        <button
+                          type="button"
+                          onClick={() => openEditForm(category)}
+                          className="mr-2 rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                        >
+                          Editar
+                        </button>
                         <button
                           type="button"
                           onClick={() => openDeleteModal(category.id)}

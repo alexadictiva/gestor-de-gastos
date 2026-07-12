@@ -7,6 +7,7 @@ import TransaccionesPage from '../pages/TransaccionesPage'
 import CategoriasPage from '../pages/CategoriasPage'
 import ResumenSemanalPage from '../pages/ResumenSemanalPage'
 import ResumenMensualPage from '../pages/ResumenMensualPage'
+import ConfiguracionPage from '../pages/ConfiguracionPage'
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
@@ -68,10 +69,11 @@ export default function AppRouter({
                 categories={categories}
                 setCategories={setCategories}
                 isLoadingCategories={isLoadingCategories}
+                setTransactions={setTransactions}
               />
             </ProtectedRoute>
           }
-        />
+        />        
 
         <Route
           path="/resumen-semanal"
@@ -87,6 +89,15 @@ export default function AppRouter({
           element={
             <ProtectedRoute>
               <ResumenMensualPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/configuracion"
+          element={
+            <ProtectedRoute>
+              <ConfiguracionPage />
             </ProtectedRoute>
           }
         />

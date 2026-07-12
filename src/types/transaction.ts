@@ -19,3 +19,11 @@ export interface CreateTransactionPayload {
   category: string
   date: string
 }
+
+export interface UpdateTransactionPayload {
+  description: string
+  amount: number
+  type: TransactionType
+  category: string
+  date: string
+}

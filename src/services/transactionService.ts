@@ -1,6 +1,7 @@
 import type {
   CreateTransactionPayload,
   Transaction,
+  UpdateTransactionPayload,
 } from '../types/transaction'
 
 const API_URL = 'http://localhost:4000/api'
@@ -11,6 +12,35 @@ interface TransactionsResponse {
 }
 
 interface CreateTransactionResponse {
+  ok: boolean
+  message: string
+  transaction: Transaction
+}
+
+export async function updateTransactionRequest(
+  token: string,
+  transactionId: string,
+  payload: UpdateTransactionPayload
+): Promise<Transaction> {
+  const response = await fetch(`${API_URL}/transactions/${transactionId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const data: UpdateTransactionResponse = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Error al actualizar transaccion')
+  }
+
+  return data.transaction
+}
+
+interface UpdateTransactionResponse {
   ok: boolean
   message: string
   transaction: Transaction

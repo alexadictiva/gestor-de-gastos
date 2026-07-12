@@ -47,12 +47,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loadUser()
   }, [token])
 
+  const updateSession = (nextUser: AuthUser, nextToken: string) => {
+    localStorage.setItem(TOKEN_KEY, nextToken)
+    setToken(nextToken)
+    setUser(nextUser)
+  }
+
   const login = async (email: string, password: string) => {
     const data = await loginRequest({ email, password })
 
-    localStorage.setItem(TOKEN_KEY, data.token)
-    setToken(data.token)
-    setUser(data.user)
+    updateSession(data.user, data.token)
   }
 
   const logout = () => {
@@ -69,6 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthenticated,
         isLoading,
         login,
+        updateSession,
         logout,
       }}
     >

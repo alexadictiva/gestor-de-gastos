@@ -22,3 +22,16 @@ export interface MeResponse {
   ok: boolean
   user: AuthUser
 }
+
+export interface ForgotPasswordResponse {
+  ok: boolean
+  message: string
+  delivery: 'email' | 'console'
+}
+
+export interface UpdateProfileResponse {
+  ok: boolean
+  message: string
+  token: string
+  user: AuthUser
+}

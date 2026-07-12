@@ -3,7 +3,11 @@ import DashboardLayout from '../components/layout/DashboardLayout'
 import type { Transaction, TransactionType } from '../types/transaction'
 import Modal from '../components/layout/Modal'
 import { useAuth } from '../hooks/useAuth'
-import { createTransactionRequest, deleteTransactionRequest } from '../services/transactionService'
+import {
+  createTransactionRequest,
+  deleteTransactionRequest,
+  updateTransactionRequest,
+} from '../services/transactionService'
 import type { Category } from '../types/category'
 
 interface NewTransactionForm {
@@ -32,10 +36,14 @@ const initialForm: NewTransactionForm = {
 export default function TransaccionesPage({
   transactions,
   setTransactions,
-  categories
+  isLoadingTransactions,
+  categories,
 }: TransaccionesPageProps) {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<NewTransactionForm>(initialForm)
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(
+    null
+  )
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
   
@@ -56,6 +64,32 @@ export default function TransaccionesPage({
   const [errorMessage, setErrorMessage] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const resetFormState = () => {
+    setForm(initialForm)
+    setTransactionToEdit(null)
+    setShowForm(false)
+  }
+
+  const openCreateForm = () => {
+    setErrorMessage('')
+    setForm(initialForm)
+    setTransactionToEdit(null)
+    setShowForm(true)
+  }
+
+  const openEditForm = (transaction: Transaction) => {
+    setErrorMessage('')
+    setTransactionToEdit(transaction)
+    setForm({
+      description: transaction.description,
+      amount: String(transaction.amount),
+      type: transaction.type,
+      category: transaction.category,
+      date: transaction.date.slice(0, 10),
+    })
+    setShowForm(true)
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -86,17 +120,35 @@ export default function TransaccionesPage({
     try {
       setIsSaving(true)
 
-      const savedTransaction = await createTransactionRequest(token, {
+      const payload = {
         description: form.description.trim(),
         amount: parsedAmount,
         type: form.type,
         category: form.category.trim(),
         date: form.date,
-      })
+      }
 
-      setTransactions((prev) => [savedTransaction, ...prev])
-      setForm(initialForm)
-      setShowForm(false)
+      if (transactionToEdit) {
+        const updatedTransaction = await updateTransactionRequest(
+          token,
+          transactionToEdit.id,
+          payload
+        )
+
+        setTransactions((prev) =>
+          prev.map((transaction) =>
+            transaction.id === updatedTransaction.id
+              ? updatedTransaction
+              : transaction
+          )
+        )
+      } else {
+        const savedTransaction = await createTransactionRequest(token, payload)
+
+        setTransactions((prev) => [savedTransaction, ...prev])
+      }
+
+      resetFormState()
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message)
@@ -130,6 +182,10 @@ export default function TransaccionesPage({
         prev.filter((transaction) => transaction.id !== transactionToDelete)
       )
 
+      if (transactionToEdit?.id === transactionToDelete) {
+        resetFormState()
+      }
+
       closeDeleteModal()
     } catch (error) {
       if (error instanceof Error) {
@@ -161,7 +217,14 @@ export default function TransaccionesPage({
 
           <button
             type="button"
-            onClick={() => setShowForm((prev) => !prev)}
+            onClick={() => {
+              if (showForm) {
+                resetFormState()
+                return
+              }
+
+              openCreateForm()
+            }}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             {showForm ? 'Cerrar formulario' : 'Nueva transacción'}
@@ -287,7 +350,14 @@ export default function TransaccionesPage({
                 />
               </div>
 
-              <div className="flex justify-end md:col-span-2">
+              <div className="flex justify-end gap-3 md:col-span-2">
+                <button
+                  type="button"
+                  onClick={resetFormState}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Cancelar
+                </button>
                 <button
                   type="submit"
                   disabled={isSaving}
@@ -315,7 +385,13 @@ export default function TransaccionesPage({
               </thead>
 
               <tbody>
-                {transactions.length === 0 ? (
+                {isLoadingTransactions ? (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-slate-500">
+                      Cargando transacciones...
+                    </td>
+                  </tr>
+                ) : transactions.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
@@ -353,6 +429,13 @@ export default function TransaccionesPage({
                         {transaction.date.slice(0, 10)}
                       </td>
                       <td className="py-3">
+                        <button
+                          type="button"
+                          onClick={() => openEditForm(transaction)}
+                          className="mr-2 rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                        >
+                          Editar
+                        </button>
                         <button
                           type="button"
                           onClick={() => openDeleteModal(transaction.id)}

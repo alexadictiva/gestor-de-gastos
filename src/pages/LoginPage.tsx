@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import Modal from '../components/layout/Modal'
+import { forgotPasswordRequest } from '../services/authService'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -10,6 +12,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false)
+  const [recoveryEmail, setRecoveryEmail] = useState('')
+  const [recoveryMessage, setRecoveryMessage] = useState('')
+  const [recoveryError, setRecoveryError] = useState('')
+  const [isRecoveringPassword, setIsRecoveringPassword] = useState(false)
 
   if (isLoading) {
     return (
@@ -44,6 +51,48 @@ export default function LoginPage() {
       }
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const openRecoveryModal = () => {
+    setRecoveryEmail(email.trim().toLowerCase())
+    setRecoveryMessage('')
+    setRecoveryError('')
+    setIsRecoveryModalOpen(true)
+  }
+
+  const closeRecoveryModal = () => {
+    setRecoveryMessage('')
+    setRecoveryError('')
+    setIsRecoveryModalOpen(false)
+  }
+
+  const handleRecoverySubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setRecoveryMessage('')
+    setRecoveryError('')
+
+    const normalizedRecoveryEmail = recoveryEmail.trim().toLowerCase()
+
+    if (!normalizedRecoveryEmail) {
+      setRecoveryError('Debes ingresar tu email')
+      return
+    }
+
+    try {
+      setIsRecoveringPassword(true)
+      const response = await forgotPasswordRequest({
+        email: normalizedRecoveryEmail,
+      })
+      setRecoveryMessage(response.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        setRecoveryError(error.message)
+      } else {
+        setRecoveryError('No se pudo recuperar la contrasena')
+      }
+    } finally {
+      setIsRecoveringPassword(false)
     }
   }
 
@@ -100,6 +149,16 @@ export default function LoginPage() {
             />
           </div>
 
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={openRecoveryModal}
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline"
+            >
+              Recuperar contrasena
+            </button>
+          </div>
+
           <button
             type="submit"
             disabled={isSubmitting}
@@ -117,6 +176,65 @@ export default function LoginPage() {
             Regístrate
         </Link>
       </p>
+
+      <Modal
+        isOpen={isRecoveryModalOpen}
+        onClose={closeRecoveryModal}
+        title="Recuperar contrasena"
+      >
+        <form onSubmit={handleRecoverySubmit} className="flex flex-col gap-4">
+          <p className="text-sm text-slate-600">
+            Confirma tu email para enviarte una contrasena temporal.
+          </p>
+
+          {recoveryError && (
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+              {recoveryError}
+            </div>
+          )}
+
+          {recoveryMessage && (
+            <div className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+              {recoveryMessage}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="recovery-email"
+              className="text-sm font-medium text-slate-700"
+            >
+              Email
+            </label>
+            <input
+              id="recovery-email"
+              type="email"
+              value={recoveryEmail}
+              onChange={(event) => setRecoveryEmail(event.target.value)}
+              className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+              placeholder="alex@example.com"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeRecoveryModal}
+              className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Cerrar
+            </button>
+
+            <button
+              type="submit"
+              disabled={isRecoveringPassword}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isRecoveringPassword ? 'Enviando...' : 'Enviar contrasena'}
+            </button>
+          </div>
+        </form>
+      </Modal>
       </div>
     </div>
   )

@@ -1,11 +1,48 @@
 import { Router } from 'express'
+import { randomInt } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma'
 import jwt from 'jsonwebtoken'
 import type { SignOptions } from 'jsonwebtoken'
 import { authMiddleware, type AuthRequest } from '../middlewares/auth.middleware'
+import { sendPasswordRecoveryEmail } from '../lib/mailer'
 
 const router = Router()
+const authUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  createdAt: true,
+} as const
+
+function generateTemporaryPassword(length = 10) {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+
+  return Array.from({ length }, () =>
+    alphabet[randomInt(0, alphabet.length)]
+  ).join('')
+}
+
+function createAuthToken(userId: string, email: string) {
+  const jwtSecret = process.env.JWT_SECRET
+
+  if (!jwtSecret) {
+    throw new Error('JWT_SECRET no configurado')
+  }
+
+  const expiresIn = (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn']
+
+  return jwt.sign(
+    {
+      userId,
+      email,
+    },
+    jwtSecret,
+    {
+      expiresIn,
+    }
+  )
+}
 
 router.post('/register', async (req, res) => {
   try {
@@ -57,12 +94,7 @@ router.post('/register', async (req, res) => {
         email: normalizedEmail,
         password: hashedPassword,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
+      select: authUserSelect,
     })
 
     return res.status(201).json({
@@ -162,6 +194,204 @@ router.post('/login', async (req, res) => {
   }
 })
 
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({
+        ok: false,
+        message: 'El email es obligatorio',
+      })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+
+    if (!normalizedEmail) {
+      return res.status(400).json({
+        ok: false,
+        message: 'El email no puede estar vacio',
+      })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    })
+
+    if (!user) {
+      return res.status(404).json({
+        ok: false,
+        message: 'No existe un usuario con ese email',
+      })
+    }
+
+    const temporaryPassword = generateTemporaryPassword()
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10)
+    const delivery = await sendPasswordRecoveryEmail({
+      to: user.email,
+      userName: user.name,
+      temporaryPassword,
+    })
+
+    await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    })
+
+    return res.json({
+      ok: true,
+      message:
+        delivery === 'email'
+          ? 'Se envio una contrasena temporal a tu email'
+          : 'SMTP no configurado: la contrasena temporal se mostro en la consola del backend',
+      delivery,
+    })
+  } catch (error) {
+    console.error('Error en forgot-password:', error)
+
+    return res.status(500).json({
+      ok: false,
+      message: 'No se pudo recuperar la contrasena',
+    })
+  }
+})
+
+router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        ok: false,
+        message: 'Usuario no autenticado',
+      })
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        id: req.user.userId,
+      },
+    })
+
+    if (!existingUser) {
+      return res.status(404).json({
+        ok: false,
+        message: 'Usuario no encontrado',
+      })
+    }
+
+    const trimmedName = String(req.body.name ?? '').trim()
+    const normalizedEmail = String(req.body.email ?? '').trim().toLowerCase()
+    const currentPassword = String(req.body.currentPassword ?? '').trim()
+    const newPassword = String(req.body.newPassword ?? '').trim()
+
+    const shouldUpdateProfile = Boolean(trimmedName || normalizedEmail)
+    const shouldUpdatePassword = Boolean(currentPassword || newPassword)
+
+    if (!shouldUpdateProfile && !shouldUpdatePassword) {
+      return res.status(400).json({
+        ok: false,
+        message: 'No hay cambios para actualizar',
+      })
+    }
+
+    if (shouldUpdateProfile) {
+      if (!trimmedName || !normalizedEmail) {
+        return res.status(400).json({
+          ok: false,
+          message: 'Nombre y email son obligatorios',
+        })
+      }
+
+      const duplicatedUser = await prisma.user.findFirst({
+        where: {
+          email: normalizedEmail,
+          NOT: {
+            id: existingUser.id,
+          },
+        },
+      })
+
+      if (duplicatedUser) {
+        return res.status(409).json({
+          ok: false,
+          message: 'Ya existe un usuario con ese email',
+        })
+      }
+    }
+
+    if (shouldUpdatePassword) {
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          ok: false,
+          message: 'Debes completar la contrasena actual y la nueva',
+        })
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          ok: false,
+          message: 'La nueva contrasena debe tener al menos 6 caracteres',
+        })
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        existingUser.password
+      )
+
+      if (!isCurrentPasswordValid) {
+        return res.status(401).json({
+          ok: false,
+          message: 'La contrasena actual es incorrecta',
+        })
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: existingUser.id,
+      },
+      data: {
+        ...(shouldUpdateProfile
+          ? {
+              name: trimmedName,
+              email: normalizedEmail,
+            }
+          : {}),
+        ...(shouldUpdatePassword
+          ? {
+              password: await bcrypt.hash(newPassword, 10),
+            }
+          : {}),
+      },
+      select: authUserSelect,
+    })
+
+    const token = createAuthToken(updatedUser.id, updatedUser.email)
+
+    return res.json({
+      ok: true,
+      message: shouldUpdatePassword
+        ? 'Cuenta actualizada correctamente'
+        : 'Perfil actualizado correctamente',
+      token,
+      user: updatedUser,
+    })
+  } catch (error) {
+    console.error('Error en /profile:', error)
+
+    return res.status(500).json({
+      ok: false,
+      message: 'No se pudo actualizar la cuenta',
+    })
+  }
+})
+
 router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (!req.user) {
@@ -175,12 +405,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
       where: {
         id: req.user.userId,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
+      select: authUserSelect,
     })
 
     if (!user) {
