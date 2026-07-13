@@ -38,8 +38,14 @@ model Transaction {
 
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedObligationAccountId String?
+  linkedObligationAccount   ObligationAccount? @relation("TransactionLinkedObligationAccount", fields: [linkedObligationAccountId], references: [id], onDelete: SetNull)
+  linkedObligationPaymentId String?
+  linkedObligationPayment   ObligationPayment? @relation("TransactionLinkedObligationPayment", fields: [linkedObligationPaymentId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([linkedObligationAccountId])
+  @@index([linkedObligationPaymentId])
 }
 
 model Category{
@@ -96,6 +102,7 @@ model ObligationAccount {
   userId      String
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   obligations Obligation[]
+  linkedTransactions Transaction[] @relation("TransactionLinkedObligationAccount")
 
   @@index([userId])
 }
@@ -126,12 +133,14 @@ model ObligationPayment {
   id          String      @id @default(cuid())
   amount      Float
   paymentDate DateTime
+  paymentMethod String    @default("not_specified")
   notes       String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   obligationId String
   obligation   Obligation @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+  linkedTransactions Transaction[] @relation("TransactionLinkedObligationPayment")
 
   @@index([obligationId])
   @@index([paymentDate])

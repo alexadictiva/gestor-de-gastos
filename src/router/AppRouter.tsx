@@ -77,6 +77,7 @@ export default function AppRouter({
                 setTransactions={setTransactions}
                 isLoadingTransactions={isLoadingTransactions}
                 categories={categories}
+                setObligationAccounts={setObligationAccounts}
               />
             </ProtectedRoute>
           }
@@ -130,6 +131,7 @@ export default function AppRouter({
                 obligationAccounts={obligationAccounts}
                 setObligationAccounts={setObligationAccounts}
                 isLoadingObligationAccounts={isLoadingObligationAccounts}
+                setTransactions={setTransactions}
               />
             </ProtectedRoute>
           }

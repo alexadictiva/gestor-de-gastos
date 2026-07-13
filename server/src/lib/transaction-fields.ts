@@ -9,6 +9,7 @@ export const ALLOWED_PAYMENT_METHODS = [
   'cash',
   'bank',
   'credit',
+  'loan',
 ] as const
 
 export const ALLOWED_REIMBURSEMENT_STATUSES = [
@@ -84,6 +85,15 @@ export function normalizePaymentMethod(
     normalizedValue === 'tarjeta_credito'
   ) {
     return 'credit'
+  }
+
+  if (
+    normalizedValue === 'loan' ||
+    normalizedValue === 'prestamo' ||
+    normalizedValue === 'prestamo_personal' ||
+    normalizedValue === 'credito_personal'
+  ) {
+    return 'loan'
   }
 
   return null

@@ -19,11 +19,17 @@ import {
   updateObligationRequest,
   updateObligationAccountRequest,
 } from '../services/obligationAccountService'
+import type { Transaction } from '../types/transaction'
 import type {
   Obligation,
   ObligationAccount,
   ObligationAccountType,
 } from '../types/obligationAccount'
+import {
+  PAYMENT_METHOD_OPTIONS,
+  getPaymentMethodLabel,
+  type PaymentMethod,
+} from '../types/transaction'
 import {
   getObligationAccountTypeLabel,
   getObligationStatusLabel,
@@ -39,6 +45,7 @@ import {
   getObligationStatusTone,
   sortObligationAccounts,
 } from '../utils/obligationAccount'
+import { getPaymentMethodTone } from '../utils/transactionMetrics'
 
 interface AccountFormState {
   name: string
@@ -65,6 +72,7 @@ interface ObligationFormState {
 interface PaymentFormState {
   amount: string
   paymentDate: string
+  paymentMethod: PaymentMethod
   notes: string
 }
 
@@ -72,6 +80,7 @@ interface TarjetasPrestamosPageProps {
   obligationAccounts: ObligationAccount[]
   setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
   isLoadingObligationAccounts: boolean
+  setTransactions: Dispatch<SetStateAction<Transaction[]>>
 }
 
 interface DeleteTarget {
@@ -99,6 +108,18 @@ function getCurrentMonthKey(referenceDate = new Date()) {
   const month = String(referenceDate.getMonth() + 1).padStart(2, '0')
 
   return `${year}-${month}`
+}
+
+function supportsInstallmentPlan(type: ObligationAccountType) {
+  return (
+    type === 'credit_card' ||
+    type === 'loan_payable' ||
+    type === 'loan_receivable'
+  )
+}
+
+function requiresInstallmentPlan(type: ObligationAccountType) {
+  return type === 'loan_payable' || type === 'loan_receivable'
 }
 
 function createInitialAccountForm(): AccountFormState {
@@ -131,6 +152,7 @@ function createInitialPaymentForm(): PaymentFormState {
   return {
     amount: '',
     paymentDate: getLocalDateInputValue(),
+    paymentMethod: 'not_specified',
     notes: '',
   }
 }
@@ -152,18 +174,15 @@ function buildAccountPayload(form: AccountFormState) {
         ? Number(form.dueDay)
         : null,
     loanTotalAmount:
-      (form.type === 'loan_payable' || form.type === 'loan_receivable') &&
-      form.loanTotalAmount.trim()
+      supportsInstallmentPlan(form.type) && form.loanTotalAmount.trim()
         ? Number(form.loanTotalAmount)
         : null,
     installmentCount:
-      (form.type === 'loan_payable' || form.type === 'loan_receivable') &&
-      form.installmentCount.trim()
+      supportsInstallmentPlan(form.type) && form.installmentCount.trim()
         ? Number(form.installmentCount)
         : null,
     loanFirstDueDate:
-      (form.type === 'loan_payable' || form.type === 'loan_receivable') &&
-      form.loanFirstDueDate.trim()
+      supportsInstallmentPlan(form.type) && form.loanFirstDueDate.trim()
         ? form.loanFirstDueDate
         : null,
     notes: form.notes.trim() || null,
@@ -180,6 +199,25 @@ function replaceAccountItem(
     hasExistingAccount
       ? items.map((item) => (item.id === nextAccount.id ? nextAccount : item))
       : [nextAccount, ...items]
+  )
+}
+
+function replaceTransactionItem(
+  items: Transaction[],
+  nextTransaction: Transaction
+) {
+  const hasExistingTransaction = items.some(
+    (item) => item.id === nextTransaction.id
+  )
+
+  return [...(hasExistingTransaction
+    ? items.map((item) =>
+        item.id === nextTransaction.id ? nextTransaction : item
+      )
+    : [nextTransaction, ...items])].sort(
+    (transactionA, transactionB) =>
+      new Date(transactionB.date).getTime() -
+      new Date(transactionA.date).getTime()
   )
 }
 
@@ -212,6 +250,7 @@ export default function TarjetasPrestamosPage({
   obligationAccounts,
   setObligationAccounts,
   isLoadingObligationAccounts,
+  setTransactions,
 }: TarjetasPrestamosPageProps) {
   const { token } = useAuth()
 
@@ -296,18 +335,15 @@ export default function TarjetasPrestamosPage({
           creditLimit: nextType === 'credit_card' ? prev.creditLimit : '',
           closingDay: nextType === 'credit_card' ? prev.closingDay : '',
           dueDay: nextType === 'credit_card' ? prev.dueDay : '',
-          loanTotalAmount:
-            nextType === 'loan_payable' || nextType === 'loan_receivable'
-              ? prev.loanTotalAmount
-              : '',
-          installmentCount:
-            nextType === 'loan_payable' || nextType === 'loan_receivable'
-              ? prev.installmentCount
-              : '',
-          loanFirstDueDate:
-            nextType === 'loan_payable' || nextType === 'loan_receivable'
-              ? prev.loanFirstDueDate
-              : getLocalDateInputValue(),
+          loanTotalAmount: supportsInstallmentPlan(nextType)
+            ? prev.loanTotalAmount
+            : '',
+          installmentCount: supportsInstallmentPlan(nextType)
+            ? prev.installmentCount
+            : '',
+          loanFirstDueDate: supportsInstallmentPlan(nextType)
+            ? prev.loanFirstDueDate
+            : getLocalDateInputValue(),
         }
       }
 
@@ -330,7 +366,7 @@ export default function TarjetasPrestamosPage({
   }
 
   const handlePaymentInputChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = event.target
 
@@ -400,14 +436,28 @@ export default function TarjetasPrestamosPage({
     }
 
     if (
-      (accountForm.type === 'loan_payable' ||
-        accountForm.type === 'loan_receivable') &&
+      requiresInstallmentPlan(accountForm.type) &&
       (!accountForm.loanTotalAmount.trim() ||
         !accountForm.installmentCount.trim() ||
         !accountForm.loanFirstDueDate.trim())
     ) {
       setErrorMessage(
         'Completa el monto total, la cantidad de cuotas y la fecha de la primera cuota para el prestamo'
+      )
+      return
+    }
+
+    if (
+      accountForm.type === 'credit_card' &&
+      (accountForm.loanTotalAmount.trim() ||
+        accountForm.installmentCount.trim() ||
+        accountForm.loanFirstDueDate.trim() !== getLocalDateInputValue()) &&
+      (!accountForm.loanTotalAmount.trim() ||
+        !accountForm.installmentCount.trim() ||
+        !accountForm.loanFirstDueDate.trim())
+    ) {
+      setErrorMessage(
+        'Si esta tarjeta representa una compra financiada, completa monto total, cuotas y fecha de la primera cuota'
       )
       return
     }
@@ -522,20 +572,30 @@ export default function TarjetasPrestamosPage({
       return
     }
 
+    if (paymentForm.paymentMethod === 'not_specified') {
+      setErrorMessage('Selecciona con que medio registraste este movimiento')
+      return
+    }
+
     try {
       setActivePaymentObligationId(obligationId)
 
-      const updatedAccount = await createObligationPaymentRequest(
+      const { account: updatedAccount, linkedTransaction } =
+        await createObligationPaymentRequest(
         token,
         obligationId,
         {
           amount: Number(paymentForm.amount),
           paymentDate: paymentForm.paymentDate,
+          paymentMethod: paymentForm.paymentMethod,
           notes: paymentForm.notes.trim() || null,
         }
       )
 
       setObligationAccounts((prev) => replaceAccountItem(prev, updatedAccount))
+      if (linkedTransaction) {
+        setTransactions((prev) => replaceTransactionItem(prev, linkedTransaction))
+      }
       setSuccessMessage('Movimiento registrado correctamente')
       resetPaymentForm()
     } catch (error) {
@@ -575,7 +635,8 @@ export default function TarjetasPrestamosPage({
       clearFeedback()
 
         if (deleteTarget.kind === 'account') {
-          const deletedAccountId = await deleteObligationAccountRequest(
+          const { deletedAccountId, deletedLinkedTransactionIds } =
+            await deleteObligationAccountRequest(
             token,
             deleteTarget.id
           )
@@ -583,6 +644,14 @@ export default function TarjetasPrestamosPage({
           setObligationAccounts((prev) =>
             prev.filter((account) => account.id !== deletedAccountId)
           )
+          if (deletedLinkedTransactionIds.length > 0) {
+            setTransactions((prev) =>
+              prev.filter(
+                (transaction) =>
+                  !deletedLinkedTransactionIds.includes(transaction.id)
+              )
+            )
+          }
           if (accountToEdit?.id === deletedAccountId) {
             resetAccountForm()
           }
@@ -590,9 +659,20 @@ export default function TarjetasPrestamosPage({
           resetPaymentForm()
           setSuccessMessage('Cuenta eliminada correctamente')
       } else if (deleteTarget.kind === 'obligation') {
-        const updatedAccount = await deleteObligationRequest(token, deleteTarget.id)
+        const {
+          account: updatedAccount,
+          deletedLinkedTransactionIds,
+        } = await deleteObligationRequest(token, deleteTarget.id)
 
         setObligationAccounts((prev) => replaceAccountItem(prev, updatedAccount))
+        if (deletedLinkedTransactionIds.length > 0) {
+          setTransactions((prev) =>
+            prev.filter(
+              (transaction) =>
+                !deletedLinkedTransactionIds.includes(transaction.id)
+            )
+          )
+        }
 
         if (paymentFormObligationId === deleteTarget.id) {
           resetPaymentForm()
@@ -603,12 +683,23 @@ export default function TarjetasPrestamosPage({
 
         setSuccessMessage('Obligacion eliminada correctamente')
       } else {
-        const updatedAccount = await deleteObligationPaymentRequest(
+        const {
+          account: updatedAccount,
+          deletedLinkedTransactionIds,
+        } = await deleteObligationPaymentRequest(
           token,
           deleteTarget.id
         )
 
         setObligationAccounts((prev) => replaceAccountItem(prev, updatedAccount))
+        if (deletedLinkedTransactionIds.length > 0) {
+          setTransactions((prev) =>
+            prev.filter(
+              (transaction) =>
+                !deletedLinkedTransactionIds.includes(transaction.id)
+            )
+          )
+        }
         setSuccessMessage('Abono eliminado correctamente')
       }
 
@@ -630,14 +721,14 @@ export default function TarjetasPrestamosPage({
     }
 
     if (deleteTarget.kind === 'account') {
-      return `Se eliminara la cuenta "${deleteTarget.label}" junto con todas sus obligaciones y abonos.`
+      return `Se eliminara la cuenta "${deleteTarget.label}" junto con todas sus obligaciones, abonos y transacciones sincronizadas.`
     }
 
     if (deleteTarget.kind === 'obligation') {
-      return `Se eliminara la obligacion "${deleteTarget.label}" junto con todos sus abonos.`
+      return `Se eliminara la obligacion "${deleteTarget.label}" junto con todos sus abonos y transacciones sincronizadas.`
     }
 
-    return `Se eliminara el abono "${deleteTarget.label}".`
+    return `Se eliminara el abono "${deleteTarget.label}" y tambien su transaccion sincronizada.`
   }
 
   return (
@@ -830,15 +921,16 @@ export default function TarjetasPrestamosPage({
                 </>
               )}
 
-              {(accountForm.type === 'loan_payable' ||
-                accountForm.type === 'loan_receivable') && (
+              {supportsInstallmentPlan(accountForm.type) && (
                 <>
                   <div className="flex flex-col gap-2">
                     <label
                       htmlFor="account-loanTotalAmount"
                       className="text-sm font-medium text-slate-700"
                     >
-                      Monto total del prestamo
+                      {accountForm.type === 'credit_card'
+                        ? 'Monto total financiado'
+                        : 'Monto total del prestamo'}
                     </label>
                     <input
                       id="account-loanTotalAmount"
@@ -886,8 +978,9 @@ export default function TarjetasPrestamosPage({
                       className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
                     />
                     <p className="text-xs text-slate-500">
-                      Las obligaciones se generaran mes a mes a partir de esta
-                      fecha y luego podras editarlas individualmente.
+                      {accountForm.type === 'credit_card'
+                        ? 'Completa estos datos si esta cuenta representa una compra en cuotas. Se generaran las cuotas automaticamente y luego podras editarlas individualmente.'
+                        : 'Las obligaciones se generaran mes a mes a partir de esta fecha y luego podras editarlas individualmente.'}
                     </p>
                   </div>
                 </>
@@ -985,30 +1078,25 @@ export default function TarjetasPrestamosPage({
                       {account.type === 'credit_card' && account.dueDay && (
                         <span>Vence: dia {account.dueDay}</span>
                       )}
-                      {(account.type === 'loan_payable' ||
-                        account.type === 'loan_receivable') &&
-                        account.loanTotalAmount && (
+                      {account.loanTotalAmount && (
                           <span>
-                            Monto total: {formatCurrency(account.loanTotalAmount)}
+                            {account.type === 'credit_card'
+                              ? 'Monto financiado: '
+                              : 'Monto total: '}
+                            {formatCurrency(account.loanTotalAmount)}
                           </span>
                         )}
-                      {(account.type === 'loan_payable' ||
-                        account.type === 'loan_receivable') &&
-                        account.installmentCount && (
+                      {account.installmentCount && (
                           <span>
                             Cuotas pactadas: {account.installmentCount}
                           </span>
                         )}
-                      {(account.type === 'loan_payable' ||
-                        account.type === 'loan_receivable') &&
-                        account.loanFirstDueDate && (
+                      {account.loanFirstDueDate && (
                           <span>
                             Primera cuota: {account.loanFirstDueDate.slice(0, 10)}
                           </span>
                         )}
-                      {(account.type === 'loan_payable' ||
-                        account.type === 'loan_receivable') &&
-                        account.loanTotalAmount &&
+                      {account.loanTotalAmount &&
                         account.installmentCount && (
                           <span>
                             Valor promedio por cuota:{' '}
@@ -1471,6 +1559,33 @@ export default function TarjetasPrestamosPage({
                                   />
                                 </div>
 
+                                <div className="flex flex-col gap-2">
+                                  <label
+                                    htmlFor={`payment-method-${obligation.id}`}
+                                    className="text-sm font-medium text-slate-700"
+                                  >
+                                    {account.type === 'loan_receivable'
+                                      ? 'Medio de cobro'
+                                      : 'Medio de pago'}
+                                  </label>
+                                  <select
+                                    id={`payment-method-${obligation.id}`}
+                                    name="paymentMethod"
+                                    value={paymentForm.paymentMethod}
+                                    onChange={handlePaymentInputChange}
+                                    className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                                  >
+                                    <option value="not_specified">
+                                      Selecciona un medio
+                                    </option>
+                                    {PAYMENT_METHOD_OPTIONS.map((option) => (
+                                      <option key={option.value} value={option.value}>
+                                        {option.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
                                 <div className="flex flex-col gap-2 md:col-span-3">
                                   <label
                                     htmlFor={`payment-notes-${obligation.id}`}
@@ -1534,6 +1649,13 @@ export default function TarjetasPrestamosPage({
                                       <p className="font-medium text-slate-800">
                                         {formatCurrency(payment.amount)}
                                       </p>
+                                      <div className="mt-1">
+                                        <span
+                                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getPaymentMethodTone(payment.paymentMethod)}`}
+                                        >
+                                          {getPaymentMethodLabel(payment.paymentMethod)}
+                                        </span>
+                                      </div>
                                       <p className="text-sm text-slate-500">
                                         {buildPaymentActivityLabel(
                                           account.type,

@@ -17,6 +17,7 @@ import {
 import {
   buildTransactionMetrics,
   getPaymentMethodTone,
+  isExpenseTransaction,
 } from '../utils/transactionMetrics'
 import { getPaymentMethodLabel } from '../types/transaction'
 
@@ -64,11 +65,15 @@ export default function DashboardPage({
 }: DashboardPageProps) {
   const {
     incomeTotal,
+    debtCollectionTotal,
     personalExpenseTotal,
+    financedPersonalExpenseTotal,
     reimbursablePendingTotal,
     reimbursableRecoveredTotal,
+    debtPaymentTotal,
     investmentsTotal,
     personalBalanceTotal,
+    availableLiquidityTotal,
   } = buildTransactionMetrics(transactions)
 
   const nextMonthItems = filterPlannedMovementsByMonth(
@@ -98,9 +103,18 @@ export default function DashboardPage({
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           <StatCard
-            label="Balance personal"
+            label="Liquidez disponible"
+            value={formatCurrency(availableLiquidityTotal)}
+            tone={
+              availableLiquidityTotal >= 0 ? 'text-slate-800' : 'text-red-600'
+            }
+          />
+          <StatCard
+            label="Balance operativo"
             value={formatCurrency(personalBalanceTotal)}
-            tone="text-slate-800"
+            tone={
+              personalBalanceTotal >= 0 ? 'text-slate-800' : 'text-red-600'
+            }
           />
           <StatCard
             label="Ingresos"
@@ -111,6 +125,21 @@ export default function DashboardPage({
             label="Gastos personales"
             value={formatCurrency(personalExpenseTotal)}
             tone="text-red-600"
+          />
+          <StatCard
+            label="Consumo financiado"
+            value={formatCurrency(financedPersonalExpenseTotal)}
+            tone="text-amber-600"
+          />
+          <StatCard
+            label="Pagos de deuda"
+            value={formatCurrency(debtPaymentTotal)}
+            tone="text-sky-600"
+          />
+          <StatCard
+            label="Cobros de deuda"
+            value={formatCurrency(debtCollectionTotal)}
+            tone="text-emerald-600"
           />
           <StatCard
             label="Por cobrar"
@@ -130,9 +159,11 @@ export default function DashboardPage({
         </div>
 
         <VoiceAssistant
-          balanceTotal={personalBalanceTotal}
+          availableLiquidityTotal={availableLiquidityTotal}
+          operatingBalanceTotal={personalBalanceTotal}
           incomeTotal={incomeTotal}
           expenseTotal={personalExpenseTotal}
+          financedExpenseTotal={financedPersonalExpenseTotal}
           investmentsTotal={investmentsTotal}
           reimbursablePendingTotal={reimbursablePendingTotal}
         />
@@ -180,7 +211,7 @@ export default function DashboardPage({
                     transactions
                       .filter(
                         (transaction) =>
-                          transaction.type === 'expense' &&
+                          isExpenseTransaction(transaction) &&
                           transaction.paymentMethod !== 'not_specified'
                       )
                       .map((transaction) => transaction.paymentMethod)

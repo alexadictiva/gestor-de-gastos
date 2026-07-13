@@ -10,8 +10,10 @@ import {
   buildTransactionMetrics,
   getPaymentMethodTone,
   getReimbursementStatusTone,
-  getTransactionTypeLabel,
-  getTransactionTypeTone,
+  getSignedTransactionAmountLabel,
+  getTransactionAmountTone,
+  getTransactionDisplayLabel,
+  getTransactionDisplayTone,
   isExpenseTransaction,
   isPersonalExpenseTransaction,
 } from '../../utils/transactionMetrics'
@@ -45,6 +47,7 @@ const PAYMENT_METHOD_COLORS = {
   cash: '#16a34a',
   bank: '#0284c7',
   credit: '#7c3aed',
+  loan: '#d97706',
   not_specified: '#94a3b8',
 } as const
 
@@ -292,12 +295,16 @@ export default function PeriodSummary({
 
   const {
     incomeTotal,
+    debtCollectionTotal,
     personalExpenseTotal,
+    financedPersonalExpenseTotal,
     reimbursablePendingTotal,
     reimbursableRecoveredTotal,
+    debtPaymentTotal,
     totalExpenseOutflow,
     investmentsTotal,
     personalBalanceTotal,
+    availableLiquidityTotal,
   } = buildTransactionMetrics(periodTransactions)
 
   const expenseRatio =
@@ -313,9 +320,19 @@ export default function PeriodSummary({
         color: '#16a34a',
       },
       {
+        label: 'Cobros de deuda',
+        value: debtCollectionTotal,
+        color: '#059669',
+      },
+      {
         label: 'Gastos personales',
         value: personalExpenseTotal,
         color: '#dc2626',
+      },
+      {
+        label: 'Pagos de deuda',
+        value: debtPaymentTotal,
+        color: '#0284c7',
       },
       {
         label: 'Por cobrar',
@@ -335,7 +352,9 @@ export default function PeriodSummary({
     ],
     [
       incomeTotal,
+      debtCollectionTotal,
       personalExpenseTotal,
+      debtPaymentTotal,
       reimbursablePendingTotal,
       reimbursableRecoveredTotal,
       investmentsTotal,
@@ -444,9 +463,18 @@ export default function PeriodSummary({
         <>
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <StatCard
-              label="Balance personal"
+              label="Liquidez disponible"
+              value={formatCurrency(availableLiquidityTotal)}
+              tone={
+                availableLiquidityTotal >= 0 ? 'text-slate-800' : 'text-red-600'
+              }
+            />
+            <StatCard
+              label="Balance operativo"
               value={formatCurrency(personalBalanceTotal)}
-              tone="text-slate-800"
+              tone={
+                personalBalanceTotal >= 0 ? 'text-slate-800' : 'text-red-600'
+              }
             />
             <StatCard
               label="Ingresos"
@@ -457,6 +485,21 @@ export default function PeriodSummary({
               label="Gastos personales"
               value={formatCurrency(personalExpenseTotal)}
               tone="text-red-600"
+            />
+            <StatCard
+              label="Consumo financiado"
+              value={formatCurrency(financedPersonalExpenseTotal)}
+              tone="text-amber-600"
+            />
+            <StatCard
+              label="Pagos de deuda"
+              value={formatCurrency(debtPaymentTotal)}
+              tone="text-sky-600"
+            />
+            <StatCard
+              label="Cobros de deuda"
+              value={formatCurrency(debtCollectionTotal)}
+              tone="text-emerald-600"
             />
             <StatCard
               label="Por cobrar"
@@ -474,7 +517,7 @@ export default function PeriodSummary({
               tone="text-violet-600"
             />
             <StatCard
-              label="Salida total"
+              label="Salida operativa"
               value={formatCurrency(totalExpenseOutflow)}
               tone="text-sky-600"
             />
@@ -506,12 +549,14 @@ export default function PeriodSummary({
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
             <DonutChart
               title="Distribucion general"
-              subtitle="Separa ingresos, gastos personales, reembolsables e inversiones del periodo seleccionado."
+              subtitle="Separa ingresos reales, pagos y cobros de deuda, reembolsables e inversiones del periodo seleccionado."
               segments={movementSegments}
               centerLabel="Total"
               centerValue={formatCurrency(
                 incomeTotal +
+                  debtCollectionTotal +
                   personalExpenseTotal +
+                  debtPaymentTotal +
                   reimbursablePendingTotal +
                   reimbursableRecoveredTotal +
                   investmentsTotal
@@ -532,7 +577,7 @@ export default function PeriodSummary({
 
             <DonutChart
               title="Gastos por medio de pago"
-              subtitle="Incluye gastos personales y reembolsables segun como los pagaste."
+              subtitle="Incluye gastos personales y reembolsables, incluso los financiados. La liquidez disponible se calcula aparte."
               segments={paymentMethodSegments}
               centerLabel="Salidas"
               centerValue={formatCurrency(totalExpenseOutflow)}
@@ -594,12 +639,14 @@ export default function PeriodSummary({
                           {transaction.category}
                         </td>
                         <td
-                          className={`py-3 font-medium ${getTransactionTypeTone(transaction.type)}`}
+                          className={`py-3 font-medium ${getTransactionDisplayTone(transaction)}`}
                         >
-                          {getTransactionTypeLabel(transaction.type)}
+                          {getTransactionDisplayLabel(transaction)}
                         </td>
-                        <td className="py-3 text-slate-800">
-                          {formatCurrency(transaction.amount)}
+                        <td
+                          className={`py-3 font-semibold ${getTransactionAmountTone(transaction)}`}
+                        >
+                          {getSignedTransactionAmountLabel(transaction)}
                         </td>
                         <td className="py-3">
                           <span

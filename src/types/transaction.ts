@@ -1,5 +1,10 @@
 export type TransactionType = 'income' | 'expense' | 'investments'
-export type PaymentMethod = 'not_specified' | 'cash' | 'bank' | 'credit'
+export type PaymentMethod =
+  | 'not_specified'
+  | 'cash'
+  | 'bank'
+  | 'credit'
+  | 'loan'
 export type ReimbursementStatus =
   | 'not_applicable'
   | 'pending'
@@ -9,6 +14,7 @@ export const PAYMENT_METHOD_OPTIONS = [
   { value: 'cash', label: 'Efectivo' },
   { value: 'bank', label: 'Dinero en cuenta' },
   { value: 'credit', label: 'Tarjeta' },
+  { value: 'loan', label: 'Prestamo' },
 ] as const
 
 export const REIMBURSEMENT_STATUS_OPTIONS = [
@@ -24,6 +30,8 @@ export function getPaymentMethodLabel(paymentMethod: PaymentMethod) {
       return 'Dinero en cuenta'
     case 'credit':
       return 'Tarjeta'
+    case 'loan':
+      return 'Prestamo'
     default:
       return 'Sin definir'
   }
@@ -51,6 +59,8 @@ export interface Transaction {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: string
+  linkedObligationAccountId?: string | null
+  linkedObligationPaymentId?: string | null
   createdAt?: string
   updatedAt?: string
   userId?: string
@@ -64,6 +74,10 @@ export interface CreateTransactionPayload {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: string
+  createLinkedObligationAccount?: boolean
+  linkedObligationAccountName?: string | null
+  linkedObligationInstallmentCount?: number | null
+  linkedObligationFirstDueDate?: string | null
 }
 
 export interface UpdateTransactionPayload {

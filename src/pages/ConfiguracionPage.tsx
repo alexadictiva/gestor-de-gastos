@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../hooks/useTheme'
 import {
   generateTelegramLinkCodeRequest,
   meRequest,
@@ -19,8 +20,29 @@ interface PasswordForm {
   confirmPassword: string
 }
 
+const THEME_OPTIONS = [
+  {
+    value: 'light',
+    label: 'Tema claro',
+    description: 'Mantiene la interfaz limpia y luminosa para el uso diario.',
+    previewClass: 'theme-option-preview--light',
+    sidebarClass: 'theme-option-preview-sidebar--light',
+    cardClass: 'theme-option-preview-card--light',
+  },
+  {
+    value: 'dark',
+    label: 'Tema oscuro',
+    description:
+      'Activa una paleta oscura con acentos cian y azul inspirada en tu mockup.',
+    previewClass: 'theme-option-preview--dark',
+    sidebarClass: 'theme-option-preview-sidebar--dark',
+    cardClass: 'theme-option-preview-card--dark',
+  },
+] as const
+
 export default function ConfiguracionPage() {
   const { user, token, updateSession } = useAuth()
+  const { theme, setTheme } = useTheme()
 
   const [profileForm, setProfileForm] = useState<ProfileForm>({
     name: '',
@@ -255,6 +277,86 @@ export default function ConfiguracionPage() {
             Actualiza tu informacion personal, tu seguridad y tus integraciones.
           </p>
         </div>
+
+        <section className="rounded-2xl bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">
+                Apariencia
+              </h2>
+              <p className="text-sm text-slate-500">
+                Cambia entre el tema claro actual y el nuevo tema oscuro del panel.
+              </p>
+            </div>
+
+            <span className="inline-flex w-fit rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700">
+              {theme === 'dark' ? 'Modo oscuro activo' : 'Modo claro activo'}
+            </span>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+            {THEME_OPTIONS.map((option) => {
+              const isActive = theme === option.value
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setTheme(option.value)}
+                  aria-pressed={isActive}
+                  className={`theme-option-button ${
+                    isActive ? 'theme-option-button--active' : ''
+                  }`}
+                >
+                  <div className={`theme-option-preview ${option.previewClass}`}>
+                    <div className="theme-option-preview-top">
+                      <span className="theme-option-preview-dot" />
+                      <span className="theme-option-preview-dot" />
+                      <span className="theme-option-preview-dot" />
+                    </div>
+
+                    <div className="theme-option-preview-layout">
+                      <div
+                        className={`theme-option-preview-sidebar ${option.sidebarClass}`}
+                      />
+
+                      <div className="theme-option-preview-panel">
+                        <div
+                          className={`theme-option-preview-card ${option.cardClass}`}
+                        />
+                        <div
+                          className={`theme-option-preview-card ${option.cardClass}`}
+                        />
+                        <div className="theme-option-preview-accent" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-base font-semibold text-slate-800">
+                        {option.label}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {option.description}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                        isActive
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {isActive ? 'Activo' : 'Aplicar'}
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <section className="rounded-2xl bg-white p-6 shadow-sm">

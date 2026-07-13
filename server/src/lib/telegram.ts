@@ -17,6 +17,8 @@ interface ParsedTelegramTransaction {
   date: string
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
+  linkedObligationInstallmentCount?: number | null
+  linkedObligationFirstDueDate?: string | null
 }
 
 interface ResolvedTelegramTransaction {
@@ -27,6 +29,8 @@ interface ResolvedTelegramTransaction {
   date: Date
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
+  linkedObligationInstallmentCount?: number | null
+  linkedObligationFirstDueDate?: Date | null
 }
 
 type ParseTelegramResult =
@@ -38,6 +42,8 @@ type TelegramMetadataResult =
       details: string
       paymentMethod: PaymentMethod
       reimbursementStatus: ReimbursementStatus
+      linkedObligationInstallmentCount: number | null
+      linkedObligationFirstDueDate: string | null
     }
   | { error: string }
 
@@ -51,11 +57,14 @@ function getTelegramFormatsHelpMessage() {
     'Prueba alguno de estos formatos:',
     'gasto 2500 comida - Supermercado pago:efectivo',
     'gasto 264000 auto - GNC 3ra Cuota 11-06-2026 pago:tarjeta reembolso:pendiente',
+    'gasto 150000 hogar - Heladera fecha:2026-07-10 pago:prestamo cuotas:12 primera:2026-08-10',
+    'ingreso 500000 prestamos - Prestamo personal cuotas:10 primera:2026-08-10',
     'ingreso 120000 sueldo - Salario julio fecha:30-06-2026',
     'inversion 30000 cedears - Compra mensual',
     'gasto 2500 categoria:comida descripcion:supermercado fecha:2026-06-30 pago:cuenta',
     'Tambien puedes pegar varias lineas en un solo mensaje.',
     'Si no indicas pago:, el gasto queda como sin definir.',
+    'Si agregas cuotas: y primera:, tambien creo la deuda vinculada.',
   ].join('\n')
 }
 
@@ -82,6 +91,10 @@ function getTodayDateString() {
   const day = String(now.getDate()).padStart(2, '0')
 
   return `${year}-${month}-${day}`
+}
+
+function roundAmount(value: number) {
+  return Number(value.toFixed(2))
 }
 
 function parseDateString(value: string) {
@@ -111,10 +124,68 @@ function parseDateString(value: string) {
   return parsedDate
 }
 
+function isFinancingPaymentMethod(paymentMethod: PaymentMethod) {
+  return paymentMethod === 'credit' || paymentMethod === 'loan'
+}
+
+function buildLinkedAccountType(
+  transaction: ResolvedTelegramTransaction
+): 'credit_card' | 'loan_payable' {
+  if (transaction.type === 'income' || transaction.paymentMethod === 'loan') {
+    return 'loan_payable'
+  }
+
+  return 'credit_card'
+}
+
+function buildReferenceMonthFromDate(date: Date) {
+  const year = date.getUTCFullYear()
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+
+  return `${year}-${month}`
+}
+
+function buildInstallmentDueDate(sourceDate: Date, installmentIndex: number) {
+  const sourceDay = sourceDate.getUTCDate()
+  const targetYear = sourceDate.getUTCFullYear()
+  const targetMonthIndex = sourceDate.getUTCMonth() + installmentIndex
+  const targetMonthStart = new Date(Date.UTC(targetYear, targetMonthIndex, 1))
+  const safeYear = targetMonthStart.getUTCFullYear()
+  const safeMonthIndex = targetMonthStart.getUTCMonth()
+  const lastDayOfMonth = new Date(
+    Date.UTC(safeYear, safeMonthIndex + 1, 0)
+  ).getUTCDate()
+  const safeDay = Math.min(sourceDay, lastDayOfMonth)
+
+  return new Date(Date.UTC(safeYear, safeMonthIndex, safeDay))
+}
+
+function splitAmountAcrossInstallments(
+  totalAmount: number,
+  installmentCount: number
+) {
+  const totalCents = Math.round(totalAmount * 100)
+  const baseInstallmentCents = Math.floor(totalCents / installmentCount)
+  let remainderCents = totalCents - baseInstallmentCents * installmentCount
+
+  return Array.from({ length: installmentCount }, () => {
+    const currentInstallmentCents =
+      baseInstallmentCents + (remainderCents > 0 ? 1 : 0)
+
+    if (remainderCents > 0) {
+      remainderCents -= 1
+    }
+
+    return currentInstallmentCents / 100
+  })
+}
+
 function extractTelegramMetadata(details: string): TelegramMetadataResult {
   const tokens = details.trim().split(/\s+/)
   let paymentMethod: PaymentMethod = 'not_specified'
   let reimbursementStatus: ReimbursementStatus = 'not_applicable'
+  let linkedObligationInstallmentCount: number | null = null
+  let linkedObligationFirstDueDate: string | null = null
 
   while (tokens.length > 0) {
     const lastToken = tokens[tokens.length - 1]
@@ -131,7 +202,9 @@ function extractTelegramMetadata(details: string): TelegramMetadataResult {
     if (
       normalizedKey !== 'pago' &&
       normalizedKey !== 'reembolso' &&
-      normalizedKey !== 'reembolsable'
+      normalizedKey !== 'reembolsable' &&
+      normalizedKey !== 'cuotas' &&
+      normalizedKey !== 'primera'
     ) {
       break
     }
@@ -148,11 +221,39 @@ function extractTelegramMetadata(details: string): TelegramMetadataResult {
       if (!normalizedMethod) {
         return {
           error:
-            'El medio de pago no es valido. Usa pago:efectivo, pago:cuenta o pago:tarjeta.',
+            'El medio de pago no es valido. Usa pago:efectivo, pago:cuenta, pago:tarjeta o pago:prestamo.',
         }
       }
 
       paymentMethod = normalizedMethod
+      tokens.pop()
+      continue
+    }
+
+    if (normalizedKey === 'cuotas') {
+      const installmentCount = Number(rawValue)
+
+      if (!Number.isInteger(installmentCount) || installmentCount <= 0) {
+        return {
+          error:
+            'La cantidad de cuotas no es valida. Usa cuotas:6, cuotas:10, etc.',
+        }
+      }
+
+      linkedObligationInstallmentCount = installmentCount
+      tokens.pop()
+      continue
+    }
+
+    if (normalizedKey === 'primera') {
+      if (!parseDateString(rawValue)) {
+        return {
+          error:
+            'La fecha de primera cuota no es valida. Usa primera:2026-08-10 o primera:10-08-2026.',
+        }
+      }
+
+      linkedObligationFirstDueDate = rawValue.trim()
       tokens.pop()
       continue
     }
@@ -170,10 +271,27 @@ function extractTelegramMetadata(details: string): TelegramMetadataResult {
     tokens.pop()
   }
 
+  const requestedLinkedObligation =
+    linkedObligationInstallmentCount !== null ||
+    linkedObligationFirstDueDate !== null
+
+  if (
+    requestedLinkedObligation &&
+    (linkedObligationInstallmentCount === null ||
+      linkedObligationFirstDueDate === null)
+  ) {
+    return {
+      error:
+        'Para crear la deuda vinculada debes enviar cuotas: y primera: juntos.',
+    }
+  }
+
   return {
     details: tokens.join(' ').trim(),
     paymentMethod,
     reimbursementStatus,
+    linkedObligationInstallmentCount,
+    linkedObligationFirstDueDate,
   }
 }
 
@@ -284,6 +402,10 @@ function parseTelegramTransaction(text: string): ParseTelegramResult {
           type === 'expense'
             ? extractedMetadata.reimbursementStatus
             : 'not_applicable',
+        linkedObligationInstallmentCount:
+          extractedMetadata.linkedObligationInstallmentCount,
+        linkedObligationFirstDueDate:
+          extractedMetadata.linkedObligationFirstDueDate,
       },
     }
   }
@@ -305,6 +427,10 @@ function parseTelegramTransaction(text: string): ParseTelegramResult {
           type === 'expense'
             ? extractedMetadata.reimbursementStatus
             : 'not_applicable',
+        linkedObligationInstallmentCount:
+          extractedMetadata.linkedObligationInstallmentCount,
+        linkedObligationFirstDueDate:
+          extractedMetadata.linkedObligationFirstDueDate,
       },
     }
   }
@@ -330,6 +456,10 @@ function parseTelegramTransaction(text: string): ParseTelegramResult {
         type === 'expense'
           ? extractedMetadata.reimbursementStatus
           : 'not_applicable',
+      linkedObligationInstallmentCount:
+        extractedMetadata.linkedObligationInstallmentCount,
+      linkedObligationFirstDueDate:
+        extractedMetadata.linkedObligationFirstDueDate,
     },
   }
 }
@@ -370,6 +500,21 @@ function resolveTelegramTransaction(
     }
   }
 
+  const parsedLinkedObligationFirstDueDate =
+    transaction.linkedObligationFirstDueDate
+      ? parseDateString(transaction.linkedObligationFirstDueDate)
+      : null
+
+  if (
+    transaction.linkedObligationFirstDueDate &&
+    !parsedLinkedObligationFirstDueDate
+  ) {
+    return {
+      error:
+        'La fecha de la primera cuota no es valida. Usa DD-MM-YYYY o YYYY-MM-DD.',
+    }
+  }
+
   return {
     transaction: {
       type: transaction.type,
@@ -379,6 +524,9 @@ function resolveTelegramTransaction(
       date: parsedDate,
       paymentMethod: transaction.paymentMethod,
       reimbursementStatus: transaction.reimbursementStatus,
+      linkedObligationInstallmentCount:
+        transaction.linkedObligationInstallmentCount ?? null,
+      linkedObligationFirstDueDate: parsedLinkedObligationFirstDueDate,
     },
   }
 }
@@ -542,18 +690,97 @@ async function handleTransactionMessage(chatId: string, text: string) {
 
     const transaction = resolvedTransaction.transaction
 
-    await prisma.transaction.create({
-      data: {
-        description: transaction.description,
-        amount: transaction.amount,
-        type: transaction.type,
-        category: transaction.category,
-        paymentMethod: transaction.paymentMethod,
-        reimbursementStatus: transaction.reimbursementStatus,
-        date: transaction.date,
-        userId: user.id,
-      },
-    })
+    const shouldCreateLinkedObligation =
+      transaction.linkedObligationInstallmentCount !== null &&
+      transaction.linkedObligationInstallmentCount !== undefined &&
+      transaction.linkedObligationFirstDueDate !== null &&
+      transaction.linkedObligationFirstDueDate !== undefined
+
+    if (shouldCreateLinkedObligation) {
+      const canCreateLinkedObligation =
+        transaction.type === 'income' ||
+        (transaction.type === 'expense' &&
+          isFinancingPaymentMethod(transaction.paymentMethod))
+
+      if (!canCreateLinkedObligation) {
+        failedLines.push(
+          `Linea ${index + 1}: Solo puedes crear deuda vinculada con un ingreso por prestamo o un gasto pagado con tarjeta o prestamo.`
+        )
+        continue
+      }
+
+      const linkedObligationInstallmentCount =
+        transaction.linkedObligationInstallmentCount as number
+      const linkedObligationFirstDueDate =
+        transaction.linkedObligationFirstDueDate as Date
+
+      await prisma.$transaction(async (transactionClient) => {
+        const createdAccount = await transactionClient.obligationAccount.create({
+          data: {
+            name: transaction.description,
+            type: buildLinkedAccountType(transaction),
+            loanTotalAmount: roundAmount(transaction.amount),
+            installmentCount: linkedObligationInstallmentCount,
+            loanFirstDueDate: linkedObligationFirstDueDate,
+            notes: `Generada automaticamente desde el bot a partir del ${transaction.type === 'income' ? 'ingreso' : 'gasto'} "${transaction.description}" del ${transaction.date.toISOString().slice(0, 10)}`,
+            userId: user.id,
+          },
+        })
+
+        const installmentAmounts = splitAmountAcrossInstallments(
+          transaction.amount,
+          linkedObligationInstallmentCount
+        )
+
+        await transactionClient.obligation.createMany({
+          data: installmentAmounts.map((installmentAmount, installmentIndex) => {
+            const dueDate = buildInstallmentDueDate(
+              linkedObligationFirstDueDate,
+              installmentIndex
+            )
+
+            return {
+              title: `${transaction.description} - Cuota ${installmentIndex + 1} de ${linkedObligationInstallmentCount}`,
+              referenceMonth: buildReferenceMonthFromDate(dueDate),
+              principalAmount: roundAmount(installmentAmount),
+              interestAmount: 0,
+              minimumPayment: null,
+              dueDate,
+              status: 'open',
+              notes: `Generada automaticamente desde el bot con el mensaje "${line}"`,
+              accountId: createdAccount.id,
+            }
+          }),
+        })
+
+        await transactionClient.transaction.create({
+          data: {
+            description: transaction.description,
+            amount: transaction.amount,
+            type: transaction.type,
+            category: transaction.category,
+            paymentMethod: transaction.paymentMethod,
+            reimbursementStatus: transaction.reimbursementStatus,
+            date: transaction.date,
+            userId: user.id,
+            linkedObligationAccountId: createdAccount.id,
+          },
+        })
+      })
+    } else {
+      await prisma.transaction.create({
+        data: {
+          description: transaction.description,
+          amount: transaction.amount,
+          type: transaction.type,
+          category: transaction.category,
+          paymentMethod: transaction.paymentMethod,
+          reimbursementStatus: transaction.reimbursementStatus,
+          date: transaction.date,
+          userId: user.id,
+        },
+      })
+    }
 
     savedTransactions.push(transaction)
   }
@@ -628,8 +855,11 @@ async function processTelegramUpdate(update: any) {
         '2. Registra movimientos con mensajes como:',
         'gasto 2500 comida - Supermercado pago:efectivo',
         'gasto 264000 auto - GNC 3ra Cuota 11-06-2026 pago:tarjeta reembolso:pendiente',
+        'gasto 150000 hogar - Heladera pago:prestamo cuotas:12 primera:2026-08-10',
+        'ingreso 500000 prestamos - Prestamo personal cuotas:10 primera:2026-08-10',
         'ingreso 120000 sueldo - Salario',
         'Si no envias fecha, uso la fecha actual.',
+        'Si agregas cuotas y primera, creo tambien la deuda vinculada.',
         'Tambien puedes enviar varias lineas en un solo mensaje.',
       ].join('\n')
     )

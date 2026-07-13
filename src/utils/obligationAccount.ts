@@ -4,6 +4,7 @@ import type {
   ObligationAccountType,
   ObligationPayment,
 } from '../types/obligationAccount'
+import { getPaymentMethodLabel } from '../types/transaction'
 
 function roundAmount(value: number) {
   return Number(value.toFixed(2))
@@ -237,8 +238,9 @@ export function buildPaymentActivityLabel(
   payment: ObligationPayment
 ) {
   const dateLabel = payment.paymentDate.slice(0, 10)
+  const paymentMethodLabel = getPaymentMethodLabel(payment.paymentMethod)
 
   return accountType === 'loan_receivable'
-    ? `Cobro parcial del ${dateLabel}`
-    : `Abono registrado el ${dateLabel}`
+    ? `Cobro parcial del ${dateLabel} por ${paymentMethodLabel.toLowerCase()}`
+    : `Abono registrado el ${dateLabel} con ${paymentMethodLabel.toLowerCase()}`
 }

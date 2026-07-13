@@ -5,6 +5,7 @@ import type { Category } from './types/category'
 import type { ObligationAccount } from './types/obligationAccount'
 import type { PlannedMovement } from './types/plannedMovement'
 import { AuthProvider } from './context/AuthProvider'
+import { ThemeProvider } from './context/ThemeProvider'
 import { useAuth } from './hooks/useAuth'
 import { getTransactionsRequest } from './services/transactionService'
 import { getCategoriesRequest } from './services/categoryService'
@@ -189,9 +190,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

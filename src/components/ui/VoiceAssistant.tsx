@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 interface VoiceAssistantProps {
-  balanceTotal: number
+  availableLiquidityTotal: number
+  operatingBalanceTotal: number
   incomeTotal: number
   expenseTotal: number
+  financedExpenseTotal: number
   investmentsTotal: number
   reimbursablePendingTotal: number
 }
@@ -21,9 +23,11 @@ function formatAmount(value: number) {
 }
 
 export default function VoiceAssistant({
-  balanceTotal,
+  availableLiquidityTotal,
+  operatingBalanceTotal,
   incomeTotal,
   expenseTotal,
+  financedExpenseTotal,
   investmentsTotal,
   reimbursablePendingTotal,
 }: VoiceAssistantProps) {
@@ -65,10 +69,17 @@ export default function VoiceAssistant({
       normalizedTranscript.includes('queda para gastar') ||
       normalizedTranscript.includes('me queda para gastar') ||
       normalizedTranscript.includes('cuanto tengo disponible') ||
-      normalizedTranscript.includes('cual es mi balance') ||
-      normalizedTranscript.includes('cual es mi saldo')
+      normalizedTranscript.includes('cual es mi saldo') ||
+      normalizedTranscript.includes('cuanta liquidez tengo')
     ) {
-      return `Te quedan ${formatAmount(balanceTotal)} para gastar.`
+      return `Tu liquidez disponible es ${formatAmount(availableLiquidityTotal)} para gastar sin contar consumos financiados pendientes.`
+    }
+
+    if (
+      normalizedTranscript.includes('cual es mi balance') ||
+      normalizedTranscript.includes('resultado operativo')
+    ) {
+      return `Tu balance operativo es ${formatAmount(operatingBalanceTotal)}.`
     }
 
     if (normalizedTranscript.includes('cuanto gaste')) {
@@ -94,7 +105,14 @@ export default function VoiceAssistant({
       return `Tienes ${formatAmount(reimbursablePendingTotal)} pendiente de cobro.`
     }
 
-    return 'Puedo responder tu saldo, tus ingresos, tus gastos, tus inversiones o cuanto te deben.'
+    if (
+      normalizedTranscript.includes('cuanto tengo financiado') ||
+      normalizedTranscript.includes('cuanto debo financiado')
+    ) {
+      return `Llevas ${formatAmount(financedExpenseTotal)} en consumo financiado.`
+    }
+
+    return 'Puedo responder tu liquidez disponible, tu balance operativo, tus ingresos, tus gastos, tus inversiones o cuanto te deben.'
   }
 
   const startListening = () => {
@@ -154,7 +172,7 @@ export default function VoiceAssistant({
         <div>
           <h2 className="text-lg font-semibold">Asistente de voz</h2>
           <p className="text-sm text-slate-300">
-            Preguntame cosas como "cuanto me queda para gastar".
+            Preguntame cosas como "cuanto me queda para gastar" o "cual es mi balance operativo".
           </p>
         </div>
 
@@ -199,10 +217,16 @@ export default function VoiceAssistant({
           "cuanto me queda para gastar"
         </span>
         <span className="rounded-full bg-slate-800 px-3 py-1">
+          "cual es mi balance operativo"
+        </span>
+        <span className="rounded-full bg-slate-800 px-3 py-1">
           "cuanto gaste"
         </span>
         <span className="rounded-full bg-slate-800 px-3 py-1">
           "cuanto ingrese"
+        </span>
+        <span className="rounded-full bg-slate-800 px-3 py-1">
+          "cuanto tengo financiado"
         </span>
         <span className="rounded-full bg-slate-800 px-3 py-1">
           "cuanto me deben"

@@ -1,3 +1,5 @@
+import type { PaymentMethod, Transaction } from './transaction'
+
 export type ObligationAccountType =
   | 'credit_card'
   | 'loan_payable'
@@ -9,6 +11,8 @@ export interface ObligationPayment {
   id: string
   amount: number
   paymentDate: string
+  paymentMethod: PaymentMethod
+  linkedTransactions?: Transaction[]
   notes?: string | null
   createdAt?: string
   updatedAt?: string
@@ -92,6 +96,7 @@ export interface CreateObligationPayload {
 export interface CreateObligationPaymentPayload {
   amount: number
   paymentDate: string
+  paymentMethod: PaymentMethod
   notes?: string | null
 }
 

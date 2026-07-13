@@ -1,6 +1,10 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma'
 import {
+  normalizePaymentMethod,
+  type PaymentMethod,
+} from '../lib/transaction-fields'
+import {
   authMiddleware,
   type AuthRequest,
 } from '../middlewares/auth.middleware'
@@ -14,9 +18,14 @@ const ALLOWED_ACCOUNT_TYPES = [
 ] as const
 
 type ObligationAccountType = (typeof ALLOWED_ACCOUNT_TYPES)[number]
+type LinkedPaymentTransactionType = 'expense' | 'income'
 
 function isLoanAccountType(type: ObligationAccountType) {
   return type === 'loan_payable' || type === 'loan_receivable'
+}
+
+function supportsInstallmentPlanType(type: ObligationAccountType) {
+  return type === 'credit_card' || isLoanAccountType(type)
 }
 
 function buildObligationAccountInclude() {
@@ -136,6 +145,37 @@ function normalizeOptionalText(value: unknown) {
   const trimmedValue = String(value ?? '').trim()
 
   return trimmedValue ? trimmedValue : null
+}
+
+function getPaymentCategory(accountType: ObligationAccountType) {
+  switch (accountType) {
+    case 'credit_card':
+      return 'pagos de deuda'
+    case 'loan_payable':
+      return 'pagos de deuda'
+    default:
+      return 'cobros de deuda'
+  }
+}
+
+function buildLinkedPaymentTransactionType(
+  accountType: ObligationAccountType
+): LinkedPaymentTransactionType {
+  return accountType === 'loan_receivable' ? 'income' : 'expense'
+}
+
+function buildLinkedPaymentTransactionDescription(
+  accountName: string,
+  obligationTitle: string,
+  accountType: ObligationAccountType
+) {
+  const normalizedDetail = obligationTitle.startsWith(`${accountName} - `)
+    ? obligationTitle
+    : `${accountName} - ${obligationTitle}`
+
+  return accountType === 'loan_receivable'
+    ? `Cobro de deuda: ${normalizedDetail}`
+    : `Pago de deuda: ${normalizedDetail}`
 }
 
 function buildReferenceMonthFromDate(date: Date) {
@@ -275,6 +315,26 @@ function validateAccountInput(body: Record<string, unknown>) {
     }
   }
 
+  const hasSomeInstallmentPlanFields =
+    loanTotalAmount !== null ||
+    installmentCount !== null ||
+    loanFirstDueDate !== null
+  const hasAllInstallmentPlanFields =
+    loanTotalAmount !== null &&
+    installmentCount !== null &&
+    loanFirstDueDate !== null
+
+  if (
+    normalizedType === 'credit_card' &&
+    hasSomeInstallmentPlanFields &&
+    !hasAllInstallmentPlanFields
+  ) {
+    return {
+      error:
+        'Si la cuenta de tarjeta representa una compra financiada, debes completar monto total, cuotas y primera cuota',
+    }
+  }
+
   return {
     data: {
       name: trimmedName,
@@ -282,14 +342,54 @@ function validateAccountInput(body: Record<string, unknown>) {
       creditLimit: normalizedType === 'credit_card' ? creditLimit : null,
       closingDay: normalizedType === 'credit_card' ? closingDay : null,
       dueDay: normalizedType === 'credit_card' ? dueDay : null,
-      loanTotalAmount: isLoanAccountType(normalizedType) ? loanTotalAmount : null,
-      installmentCount: isLoanAccountType(normalizedType) ? installmentCount : null,
-      loanFirstDueDate: isLoanAccountType(normalizedType)
+      loanTotalAmount: supportsInstallmentPlanType(normalizedType)
+        ? loanTotalAmount
+        : null,
+      installmentCount: supportsInstallmentPlanType(normalizedType)
+        ? installmentCount
+        : null,
+      loanFirstDueDate: supportsInstallmentPlanType(normalizedType)
         ? loanFirstDueDate
         : null,
       notes,
     },
   }
+}
+
+async function deleteLinkedTransactionsForPaymentIds(
+  paymentIds: string[],
+  userId: string,
+  transactionClient: Pick<typeof prisma, 'transaction'> = prisma
+) {
+  if (paymentIds.length === 0) {
+    return []
+  }
+
+  const linkedTransactions = await transactionClient.transaction.findMany({
+    where: {
+      userId,
+      linkedObligationPaymentId: {
+        in: paymentIds,
+      },
+    },
+    select: {
+      id: true,
+    },
+  })
+
+  if (linkedTransactions.length === 0) {
+    return []
+  }
+
+  await transactionClient.transaction.deleteMany({
+    where: {
+      id: {
+        in: linkedTransactions.map((transaction) => transaction.id),
+      },
+    },
+  })
+
+  return linkedTransactions.map((transaction) => transaction.id)
 }
 
 function validateObligationInput(body: Record<string, unknown>) {
@@ -360,14 +460,24 @@ function validateObligationInput(body: Record<string, unknown>) {
   }
 }
 
-function validatePaymentInput(body: Record<string, unknown>, maxAllowedAmount: number) {
+function validatePaymentInput(
+  body: Record<string, unknown>,
+  maxAllowedAmount: number
+) {
   const paymentAmount = Number(body.amount)
   const paymentDate = parseDate(body.paymentDate)
+  const rawPaymentMethod = String(body.paymentMethod ?? '').trim()
+  const paymentMethod = normalizePaymentMethod(rawPaymentMethod)
   const notes = normalizeOptionalText(body.notes)
 
-  if (body.amount === undefined || body.amount === null || !body.paymentDate) {
+  if (
+    body.amount === undefined ||
+    body.amount === null ||
+    !body.paymentDate ||
+    !rawPaymentMethod
+  ) {
     return {
-      error: 'Debes completar el monto y la fecha del abono',
+      error: 'Debes completar el monto, la fecha y el medio del movimiento',
     }
   }
 
@@ -383,6 +493,12 @@ function validatePaymentInput(body: Record<string, unknown>, maxAllowedAmount: n
     }
   }
 
+  if (!paymentMethod || paymentMethod === 'not_specified') {
+    return {
+      error: 'Debes indicar un medio de pago o cobro valido',
+    }
+  }
+
   if (paymentAmount > maxAllowedAmount + 0.01) {
     return {
       error: 'El abono no puede superar el saldo pendiente',
@@ -393,6 +509,7 @@ function validatePaymentInput(body: Record<string, unknown>, maxAllowedAmount: n
     data: {
       amount: roundAmount(paymentAmount),
       paymentDate,
+      paymentMethod,
       notes,
     },
   }
@@ -461,7 +578,6 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       })
 
       if (
-        isLoanAccountType(validation.data.type) &&
         validation.data.loanTotalAmount &&
         validation.data.installmentCount &&
         validation.data.loanFirstDueDate
@@ -616,6 +732,17 @@ router.post('/:accountId/obligations', authMiddleware, async (req: AuthRequest, 
     const account = await prisma.obligationAccount.findUnique({
       where: {
         id: accountId,
+      },
+      include: {
+        obligations: {
+          select: {
+            payments: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
       },
     })
 
@@ -779,6 +906,8 @@ router.post('/obligations/:obligationId/payments', authMiddleware, async (req: A
       })
     }
 
+    const userId = req.user.userId
+
     const { remainingAmount, totalAmount, paidAmount } =
       buildObligationTotals(obligation)
 
@@ -803,32 +932,58 @@ router.post('/obligations/:obligationId/payments', authMiddleware, async (req: A
       Math.max(totalAmount - nextPaidAmount, 0)
     )
 
-    await prisma.$transaction([
-      prisma.obligationPayment.create({
-        data: {
-          ...validation.data,
-          obligationId,
-        },
-      }),
-      prisma.obligation.update({
-        where: {
-          id: obligationId,
-        },
-        data: {
-          status: nextRemainingAmount <= 0.01 ? 'settled' : 'open',
-        },
-      }),
-    ])
+    const linkedTransaction = await prisma.$transaction(
+      async (transactionClient) => {
+        const payment = await transactionClient.obligationPayment.create({
+          data: {
+            ...validation.data,
+            obligationId,
+          },
+        })
+
+        await transactionClient.obligation.update({
+          where: {
+            id: obligationId,
+          },
+          data: {
+            status: nextRemainingAmount <= 0.01 ? 'settled' : 'open',
+          },
+        })
+
+        return transactionClient.transaction.create({
+          data: {
+            description: buildLinkedPaymentTransactionDescription(
+              obligation.account.name,
+              obligation.title,
+              obligation.account.type as ObligationAccountType
+            ),
+            amount: validation.data.amount,
+            type: buildLinkedPaymentTransactionType(
+              obligation.account.type as ObligationAccountType
+            ),
+            category: getPaymentCategory(
+              obligation.account.type as ObligationAccountType
+            ),
+            paymentMethod: validation.data.paymentMethod,
+            reimbursementStatus: 'not_applicable',
+            date: validation.data.paymentDate,
+            userId,
+            linkedObligationPaymentId: payment.id,
+          },
+        })
+      }
+    )
 
     const updatedAccount = await getAccountWithDetails(
       obligation.accountId,
-      req.user.userId
+      userId
     )
 
     return res.status(201).json({
       ok: true,
       message: 'Abono registrado correctamente',
       account: updatedAccount,
+      linkedTransaction,
     })
   } catch (error) {
     console.error('Error creando abono:', error)
@@ -879,6 +1034,8 @@ router.delete('/payments/:paymentId', authMiddleware, async (req: AuthRequest, r
       })
     }
 
+    const userId = req.user.userId
+
     const remainingPayments = payment.obligation.payments.filter(
       (currentPayment) => currentPayment.id !== paymentId
     )
@@ -888,31 +1045,42 @@ router.delete('/payments/:paymentId', authMiddleware, async (req: AuthRequest, r
       payments: remainingPayments,
     })
 
-    await prisma.$transaction([
-      prisma.obligationPayment.delete({
-        where: {
-          id: paymentId,
-        },
-      }),
-      prisma.obligation.update({
-        where: {
-          id: payment.obligationId,
-        },
-        data: {
-          status: nextStatus,
-        },
-      }),
-    ])
+    const deletedLinkedTransactionIds = await prisma.$transaction(
+      async (transactionClient) => {
+        const linkedTransactionIds = await deleteLinkedTransactionsForPaymentIds(
+          [paymentId],
+          userId,
+          transactionClient
+        )
+
+        await transactionClient.obligationPayment.delete({
+          where: {
+            id: paymentId,
+          },
+        })
+        await transactionClient.obligation.update({
+          where: {
+            id: payment.obligationId,
+          },
+          data: {
+            status: nextStatus,
+          },
+        })
+
+        return linkedTransactionIds
+      }
+    )
 
     const updatedAccount = await getAccountWithDetails(
       payment.obligation.accountId,
-      req.user.userId
+      userId
     )
 
     return res.json({
       ok: true,
       message: 'Abono eliminado correctamente',
       account: updatedAccount,
+      deletedLinkedTransactionIds,
     })
   } catch (error) {
     console.error('Error eliminando abono:', error)
@@ -948,6 +1116,11 @@ router.delete('/obligations/:obligationId', authMiddleware, async (req: AuthRequ
       },
       include: {
         account: true,
+        payments: {
+          select: {
+            id: true,
+          },
+        },
       },
     })
 
@@ -958,21 +1131,34 @@ router.delete('/obligations/:obligationId', authMiddleware, async (req: AuthRequ
       })
     }
 
-    await prisma.obligation.delete({
-      where: {
-        id: obligationId,
-      },
+    const userId = req.user.userId
+
+    const deletedLinkedTransactionIds = await prisma.$transaction(async (transactionClient) => {
+      const linkedTransactionIds = await deleteLinkedTransactionsForPaymentIds(
+        obligation.payments.map((payment) => payment.id),
+        userId,
+        transactionClient
+      )
+
+      await transactionClient.obligation.delete({
+        where: {
+          id: obligationId,
+        },
+      })
+
+      return linkedTransactionIds
     })
 
     const updatedAccount = await getAccountWithDetails(
       obligation.accountId,
-      req.user.userId
+      userId
     )
 
     return res.json({
       ok: true,
       message: 'Obligacion eliminada correctamente',
       account: updatedAccount,
+      deletedLinkedTransactionIds,
     })
   } catch (error) {
     console.error('Error eliminando obligacion:', error)
@@ -1006,6 +1192,17 @@ router.delete('/:accountId', authMiddleware, async (req: AuthRequest, res) => {
       where: {
         id: accountId,
       },
+      include: {
+        obligations: {
+          select: {
+            payments: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
     })
 
     if (!account || account.userId !== req.user.userId) {
@@ -1015,16 +1212,51 @@ router.delete('/:accountId', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
-    await prisma.obligationAccount.delete({
-      where: {
-        id: accountId,
-      },
+    const userId = req.user.userId
+
+    const deletedLinkedTransactionIds = await prisma.$transaction(async (transactionClient) => {
+      const accountLinkedTransactions = await transactionClient.transaction.findMany({
+        where: {
+          userId,
+          linkedObligationAccountId: accountId,
+        },
+        select: {
+          id: true,
+        },
+      })
+
+      await transactionClient.transaction.deleteMany({
+        where: {
+          userId,
+          linkedObligationAccountId: accountId,
+        },
+      })
+
+      const paymentLinkedTransactionIds = await deleteLinkedTransactionsForPaymentIds(
+        account.obligations.flatMap((obligation) =>
+          obligation.payments.map((payment) => payment.id)
+        ),
+        userId,
+        transactionClient
+      )
+
+      await transactionClient.obligationAccount.delete({
+        where: {
+          id: accountId,
+        },
+      })
+
+      return [
+        ...accountLinkedTransactions.map((transaction) => transaction.id),
+        ...paymentLinkedTransactionIds,
+      ]
     })
 
     return res.json({
       ok: true,
       message: 'Cuenta eliminada correctamente',
       deletedAccountId: accountId,
+      deletedLinkedTransactionIds,
     })
   } catch (error) {
     console.error('Error eliminando cuenta:', error)

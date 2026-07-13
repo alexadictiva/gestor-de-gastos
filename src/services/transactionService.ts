@@ -3,6 +3,7 @@ import type {
   Transaction,
   UpdateTransactionPayload,
 } from '../types/transaction'
+import type { ObligationAccount } from '../types/obligationAccount'
 
 const API_URL = 'http://localhost:4000/api'
 
@@ -15,6 +16,25 @@ interface CreateTransactionResponse {
   ok: boolean
   message: string
   transaction: Transaction
+  linkedObligationAccount?: ObligationAccount | null
+}
+
+interface CreateTransactionResult {
+  transaction: Transaction
+  linkedObligationAccount?: ObligationAccount | null
+}
+
+interface UpdateTransactionResponse {
+  ok: boolean
+  message: string
+  transaction: Transaction
+}
+
+interface DeleteTransactionResponse {
+  ok: boolean
+  message: string
+  deletedLinkedObligationAccountId?: string | null
+  updatedObligationAccount?: ObligationAccount | null
 }
 
 export async function updateTransactionRequest(
@@ -40,17 +60,6 @@ export async function updateTransactionRequest(
   return data.transaction
 }
 
-interface UpdateTransactionResponse {
-  ok: boolean
-  message: string
-  transaction: Transaction
-}
-
-interface DeleteTransactionResponse {
-  ok: boolean
-  message: string
-}
-
 export async function getTransactionsRequest(
   token: string
 ): Promise<Transaction[]> {
@@ -72,7 +81,7 @@ export async function getTransactionsRequest(
 export async function createTransactionRequest(
   token: string,
   payload: CreateTransactionPayload
-): Promise<Transaction> {
+): Promise<CreateTransactionResult> {
   const response = await fetch(`${API_URL}/transactions`, {
     method: 'POST',
     headers: {
@@ -85,16 +94,22 @@ export async function createTransactionRequest(
   const data: CreateTransactionResponse = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.message || 'Error al crear transacción')
+    throw new Error(data.message || 'Error al crear transaccion')
   }
 
-  return data.transaction
+  return {
+    transaction: data.transaction,
+    linkedObligationAccount: data.linkedObligationAccount ?? null,
+  }
 }
 
 export async function deleteTransactionRequest(
   token: string,
   transactionId: string
-): Promise<void> {
+): Promise<{
+  deletedLinkedObligationAccountId?: string | null
+  updatedObligationAccount?: ObligationAccount | null
+}> {
   const response = await fetch(`${API_URL}/transactions/${transactionId}`, {
     method: 'DELETE',
     headers: {
@@ -105,6 +120,12 @@ export async function deleteTransactionRequest(
   const data: DeleteTransactionResponse = await response.json()
 
   if (!response.ok) {
-    throw new Error(data.message || 'Error al eliminar transacción')
+    throw new Error(data.message || 'Error al eliminar transaccion')
+  }
+
+  return {
+    deletedLinkedObligationAccountId:
+      data.deletedLinkedObligationAccountId ?? null,
+    updatedObligationAccount: data.updatedObligationAccount ?? null,
   }
 }

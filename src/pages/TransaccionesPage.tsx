@@ -24,12 +24,18 @@ import {
   updateTransactionRequest,
 } from '../services/transactionService'
 import type { Category } from '../types/category'
+import type { ObligationAccount } from '../types/obligationAccount'
 import {
   getPaymentMethodTone,
   getReimbursementStatusTone,
-  getTransactionTypeLabel,
-  getTransactionTypeTone,
+  getSignedTransactionAmountLabel,
+  getTransactionAmountTone,
+  getTransactionDisplayLabel,
+  getTransactionDisplayTone,
+  isDebtCollectionTransaction,
+  isDebtPaymentTransaction,
 } from '../utils/transactionMetrics'
+import { sortObligationAccounts } from '../utils/obligationAccount'
 
 interface TransactionForm {
   description: string
@@ -39,6 +45,10 @@ interface TransactionForm {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: string
+  createLinkedObligationAccount: boolean
+  linkedObligationAccountName: string
+  linkedObligationInstallmentCount: string
+  linkedObligationFirstDueDate: string
 }
 
 interface TransaccionesPageProps {
@@ -46,22 +56,76 @@ interface TransaccionesPageProps {
   setTransactions: Dispatch<SetStateAction<Transaction[]>>
   isLoadingTransactions: boolean
   categories: Category[]
+  setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
 }
 
-const initialForm: TransactionForm = {
-  description: '',
-  amount: '',
-  type: 'expense',
-  category: '',
-  paymentMethod: 'not_specified',
-  reimbursementStatus: 'not_applicable',
-  date: '',
+function getLocalDateInputValue(referenceDate = new Date()) {
+  const year = referenceDate.getFullYear()
+  const month = String(referenceDate.getMonth() + 1).padStart(2, '0')
+  const day = String(referenceDate.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
 }
 
-function formatCurrency(value: number) {
-  return `$${value.toLocaleString('es-AR', {
-    maximumFractionDigits: 2,
-  })}`
+function createInitialForm(): TransactionForm {
+  return {
+    description: '',
+    amount: '',
+    type: 'expense',
+    category: '',
+    paymentMethod: 'not_specified',
+    reimbursementStatus: 'not_applicable',
+    date: '',
+    createLinkedObligationAccount: false,
+    linkedObligationAccountName: '',
+    linkedObligationInstallmentCount: '',
+    linkedObligationFirstDueDate: getLocalDateInputValue(),
+  }
+}
+
+function replaceAccountItem(
+  items: ObligationAccount[],
+  nextAccount: ObligationAccount
+) {
+  const hasExistingAccount = items.some((item) => item.id === nextAccount.id)
+
+  return sortObligationAccounts(
+    hasExistingAccount
+      ? items.map((item) => (item.id === nextAccount.id ? nextAccount : item))
+      : [nextAccount, ...items]
+  )
+}
+
+function getLinkedAccountBadge(transaction: Transaction) {
+  if (!transaction.linkedObligationAccountId) {
+    return null
+  }
+
+  if (transaction.type === 'income') {
+    return {
+      label: 'Prestamo recibido vinculado a Tarjetas y Prestamos',
+      className: 'bg-emerald-100 text-emerald-700',
+    }
+  }
+
+  if (transaction.paymentMethod === 'loan') {
+    return {
+      label: 'Compra financiada con prestamo',
+      className: 'bg-amber-100 text-amber-700',
+    }
+  }
+
+  if (transaction.paymentMethod === 'credit') {
+    return {
+      label: 'Compra financiada con tarjeta',
+      className: 'bg-violet-100 text-violet-700',
+    }
+  }
+
+  return {
+    label: 'Movimiento vinculado a Tarjetas y Prestamos',
+    className: 'bg-slate-100 text-slate-700',
+  }
 }
 
 export default function TransaccionesPage({
@@ -69,11 +133,12 @@ export default function TransaccionesPage({
   setTransactions,
   isLoadingTransactions,
   categories,
+  setObligationAccounts,
 }: TransaccionesPageProps) {
   const { token } = useAuth()
 
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState<TransactionForm>(initialForm)
+  const [form, setForm] = useState<TransactionForm>(createInitialForm())
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(
     null
   )
@@ -86,7 +151,19 @@ export default function TransaccionesPage({
   const [isDeleting, setIsDeleting] = useState(false)
 
   const isExpense = form.type === 'expense'
+  const isIncome = form.type === 'income'
   const isReimbursable = form.reimbursementStatus !== 'not_applicable'
+  const isFinancingPaymentMethod =
+    form.paymentMethod === 'credit' || form.paymentMethod === 'loan'
+  const canLinkToObligationAccount =
+    isIncome || (isExpense && isFinancingPaymentMethod)
+
+  const resetLinkedObligationFields = () => ({
+    createLinkedObligationAccount: false,
+    linkedObligationAccountName: '',
+    linkedObligationInstallmentCount: '',
+    linkedObligationFirstDueDate: getLocalDateInputValue(),
+  })
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -105,6 +182,19 @@ export default function TransaccionesPage({
             nextType === 'expense' ? prev.paymentMethod : 'not_specified',
           reimbursementStatus:
             nextType === 'expense' ? prev.reimbursementStatus : 'not_applicable',
+          ...(nextType === 'investments' ? resetLinkedObligationFields() : {}),
+        }
+      }
+
+      if (name === 'paymentMethod') {
+        const nextPaymentMethod = value as PaymentMethod
+
+        return {
+          ...prev,
+          paymentMethod: nextPaymentMethod,
+          ...(nextPaymentMethod === 'credit' || nextPaymentMethod === 'loan'
+            ? {}
+            : resetLinkedObligationFields()),
         }
       }
 
@@ -116,19 +206,29 @@ export default function TransaccionesPage({
   }
 
   const resetFormState = () => {
-    setForm(initialForm)
+    setForm(createInitialForm())
     setTransactionToEdit(null)
     setShowForm(false)
   }
 
   const openCreateForm = () => {
     setErrorMessage('')
-    setForm(initialForm)
+    setForm(createInitialForm())
     setTransactionToEdit(null)
     setShowForm(true)
   }
 
   const openEditForm = (transaction: Transaction) => {
+    if (
+      transaction.linkedObligationAccountId ||
+      transaction.linkedObligationPaymentId
+    ) {
+      setErrorMessage(
+        'Las transacciones vinculadas a Tarjetas y Prestamos se administran desde ese modulo'
+      )
+      return
+    }
+
     setErrorMessage('')
     setTransactionToEdit(transaction)
     setForm({
@@ -139,6 +239,10 @@ export default function TransaccionesPage({
       paymentMethod: transaction.paymentMethod,
       reimbursementStatus: transaction.reimbursementStatus,
       date: transaction.date.slice(0, 10),
+      createLinkedObligationAccount: false,
+      linkedObligationAccountName: '',
+      linkedObligationInstallmentCount: '',
+      linkedObligationFirstDueDate: getLocalDateInputValue(),
     })
     setShowForm(true)
   }
@@ -169,6 +273,40 @@ export default function TransaccionesPage({
       return
     }
 
+    if (
+      !transactionToEdit &&
+      form.createLinkedObligationAccount &&
+      !canLinkToObligationAccount
+    ) {
+      setErrorMessage(
+        'Solo puedes vincular a Tarjetas y Prestamos un ingreso que represente un prestamo recibido o un gasto pagado con tarjeta o prestamo'
+      )
+      return
+    }
+
+    if (
+      !transactionToEdit &&
+      form.createLinkedObligationAccount &&
+      (!form.linkedObligationInstallmentCount.trim() ||
+        !form.linkedObligationFirstDueDate.trim())
+    ) {
+      setErrorMessage(
+        'Completa las cuotas y la fecha de la primera cuota para crear la deuda vinculada'
+      )
+      return
+    }
+
+    const parsedInstallmentCount = Number(form.linkedObligationInstallmentCount)
+
+    if (
+      !transactionToEdit &&
+      form.createLinkedObligationAccount &&
+      (!Number.isInteger(parsedInstallmentCount) || parsedInstallmentCount <= 0)
+    ) {
+      setErrorMessage('La cantidad de cuotas debe ser un numero entero mayor a cero')
+      return
+    }
+
     try {
       setIsSaving(true)
 
@@ -182,6 +320,23 @@ export default function TransaccionesPage({
           ? form.reimbursementStatus
           : 'not_applicable',
         date: form.date,
+        ...(transactionToEdit
+          ? {}
+          : {
+              createLinkedObligationAccount: form.createLinkedObligationAccount,
+              linkedObligationAccountName:
+                form.createLinkedObligationAccount
+                  ? form.linkedObligationAccountName.trim() || null
+                  : null,
+              linkedObligationInstallmentCount:
+                form.createLinkedObligationAccount
+                  ? parsedInstallmentCount
+                  : null,
+              linkedObligationFirstDueDate:
+                form.createLinkedObligationAccount
+                  ? form.linkedObligationFirstDueDate
+                  : null,
+            }),
       }
 
       if (transactionToEdit) {
@@ -199,9 +354,16 @@ export default function TransaccionesPage({
           )
         )
       } else {
-        const savedTransaction = await createTransactionRequest(token, payload)
+        const { transaction: savedTransaction, linkedObligationAccount } =
+          await createTransactionRequest(token, payload)
 
         setTransactions((prev) => [savedTransaction, ...prev])
+
+        if (linkedObligationAccount) {
+          setObligationAccounts((prev) =>
+            replaceAccountItem(prev, linkedObligationAccount)
+          )
+        }
       }
 
       resetFormState()
@@ -232,11 +394,26 @@ export default function TransaccionesPage({
     try {
       setIsDeleting(true)
 
-      await deleteTransactionRequest(token, transactionToDelete)
+      const {
+        deletedLinkedObligationAccountId,
+        updatedObligationAccount,
+      } = await deleteTransactionRequest(token, transactionToDelete)
 
       setTransactions((prev) =>
         prev.filter((transaction) => transaction.id !== transactionToDelete)
       )
+
+      if (deletedLinkedObligationAccountId) {
+        setObligationAccounts((prev) =>
+          prev.filter((account) => account.id !== deletedLinkedObligationAccountId)
+        )
+      }
+
+      if (updatedObligationAccount) {
+        setObligationAccounts((prev) =>
+          replaceAccountItem(prev, updatedObligationAccount)
+        )
+      }
 
       if (transactionToEdit?.id === transactionToDelete) {
         resetFormState()
@@ -257,6 +434,10 @@ export default function TransaccionesPage({
   const availableCategories = categories.filter(
     (category) => category.type === form.type
   )
+  const transactionPendingDelete = transactionToDelete
+    ? transactions.find((transaction) => transaction.id === transactionToDelete) ??
+      null
+    : null
 
   return (
     <DashboardLayout>
@@ -474,6 +655,96 @@ export default function TransaccionesPage({
                 </div>
               )}
 
+              {!transactionToEdit && canLinkToObligationAccount && (
+                <div className="flex flex-col gap-4 rounded-2xl border border-violet-200 bg-violet-50 p-4 md:col-span-2">
+                  <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={form.createLinkedObligationAccount}
+                      onChange={(event) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          createLinkedObligationAccount: event.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-slate-300 text-violet-700 focus:ring-violet-400"
+                    />
+                    {isIncome
+                      ? 'Registrar tambien este ingreso como prestamo por pagar'
+                      : 'Registrar tambien esta compra en Tarjetas y Prestamos'}
+                  </label>
+
+                  <p className="text-xs text-slate-600">
+                    {isIncome
+                      ? 'Se creara una deuda vinculada para que este ingreso aumente tu liquidez hoy y puedas seguir sus cuotas desde el otro modulo.'
+                      : form.paymentMethod === 'credit'
+                      ? 'Se creara una cuenta vinculada de tarjeta con sus cuotas para que no tengas que cargar la deuda por separado.'
+                      : 'Se creara una cuenta vinculada de prestamo por pagar con sus cuotas para que puedas seguir la deuda desde el otro modulo.'}
+                  </p>
+
+                  {form.createLinkedObligationAccount && (
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="flex flex-col gap-2">
+                        <label
+                          htmlFor="linkedObligationAccountName"
+                          className="text-sm font-medium text-slate-700"
+                        >
+                          {isIncome ? 'Nombre del prestamo' : 'Nombre de la deuda'}
+                        </label>
+                        <input
+                          id="linkedObligationAccountName"
+                          name="linkedObligationAccountName"
+                          type="text"
+                          value={form.linkedObligationAccountName}
+                          onChange={handleChange}
+                          className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                          placeholder={
+                            isIncome
+                              ? 'Si lo dejas vacio, usamos la descripcion del ingreso'
+                              : 'Si lo dejas vacio, usamos la descripcion'
+                          }
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label
+                          htmlFor="linkedObligationInstallmentCount"
+                          className="text-sm font-medium text-slate-700"
+                        >
+                          Cantidad de cuotas
+                        </label>
+                        <input
+                          id="linkedObligationInstallmentCount"
+                          name="linkedObligationInstallmentCount"
+                          type="number"
+                          value={form.linkedObligationInstallmentCount}
+                          onChange={handleChange}
+                          className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                          placeholder="Ej: 6"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2 md:col-span-2">
+                        <label
+                          htmlFor="linkedObligationFirstDueDate"
+                          className="text-sm font-medium text-slate-700"
+                        >
+                          Fecha de la primera cuota
+                        </label>
+                        <input
+                          id="linkedObligationFirstDueDate"
+                          name="linkedObligationFirstDueDate"
+                          type="date"
+                          value={form.linkedObligationFirstDueDate}
+                          onChange={handleChange}
+                          className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex flex-col gap-2 md:col-span-2">
                 <label
                   htmlFor="date"
@@ -504,7 +775,13 @@ export default function TransaccionesPage({
                   disabled={isSaving}
                   className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving ? 'Guardando...' : 'Guardar transaccion'}
+                  {isSaving
+                    ? 'Guardando...'
+                    : transactionToEdit
+                      ? 'Guardar cambios'
+                      : form.createLinkedObligationAccount
+                        ? 'Guardar y crear deuda'
+                        : 'Guardar transaccion'}
                 </button>
               </div>
             </form>
@@ -551,18 +828,50 @@ export default function TransaccionesPage({
                   transactions.map((transaction) => (
                     <tr key={transaction.id} className="border-b last:border-b-0">
                       <td className="py-3 text-slate-800">
-                        {transaction.description}
+                        <div className="flex flex-col gap-1">
+                    <span>{transaction.description}</span>
+                          {(() => {
+                            const badge = getLinkedAccountBadge(transaction)
+
+                            if (!badge) {
+                              return null
+                            }
+
+                            return (
+                              <span
+                                className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${badge.className}`}
+                              >
+                                {badge.label}
+                              </span>
+                            )
+                          })()}
+                          {transaction.linkedObligationPaymentId && (
+                            <span
+                              className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium ${
+                                isDebtCollectionTransaction(transaction)
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-sky-100 text-sky-700'
+                              }`}
+                            >
+                              {isDebtPaymentTransaction(transaction)
+                                ? 'Pago de deuda generado desde Tarjetas y Prestamos'
+                                : 'Cobro de deuda generado desde Tarjetas y Prestamos'}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 text-slate-600">
                         {transaction.category}
                       </td>
                       <td
-                        className={`py-3 font-medium ${getTransactionTypeTone(transaction.type)}`}
+                        className={`py-3 font-medium ${getTransactionDisplayTone(transaction)}`}
                       >
-                        {getTransactionTypeLabel(transaction.type)}
+                        {getTransactionDisplayLabel(transaction)}
                       </td>
-                      <td className="py-3 text-slate-800">
-                        {formatCurrency(transaction.amount)}
+                      <td
+                        className={`py-3 font-semibold ${getTransactionAmountTone(transaction)}`}
+                      >
+                        {getSignedTransactionAmountLabel(transaction)}
                       </td>
                       <td className="py-3">
                         <span
@@ -587,7 +896,17 @@ export default function TransaccionesPage({
                         <button
                           type="button"
                           onClick={() => openEditForm(transaction)}
-                          className="mr-2 rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200"
+                          disabled={Boolean(
+                            transaction.linkedObligationAccountId ||
+                              transaction.linkedObligationPaymentId
+                          )}
+                          title={
+                            transaction.linkedObligationAccountId ||
+                            transaction.linkedObligationPaymentId
+                              ? 'Edita este movimiento desde Tarjetas y Prestamos para no desincronizar el control de deuda'
+                              : undefined
+                          }
+                          className="mr-2 rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Editar
                         </button>
@@ -614,7 +933,11 @@ export default function TransaccionesPage({
         >
           <div className="flex flex-col gap-4">
             <p className="text-slate-600">
-              Seguro que quieres eliminar esta transaccion?
+              {transactionPendingDelete?.linkedObligationAccountId
+                ? 'Seguro que quieres eliminar esta transaccion? Tambien se eliminara la cuenta vinculada en Tarjetas y Prestamos con sus cuotas y movimientos.'
+                : transactionPendingDelete?.linkedObligationPaymentId
+                  ? 'Seguro que quieres eliminar esta transaccion? Tambien se eliminara el abono o cobro vinculado en Tarjetas y Prestamos.'
+                  : 'Seguro que quieres eliminar esta transaccion?'}
             </p>
 
             <div className="flex justify-end gap-3">

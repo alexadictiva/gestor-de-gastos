@@ -989,7 +989,9 @@ export const TransactionScalarFieldEnum = {
   date: 'date',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  userId: 'userId'
+  userId: 'userId',
+  linkedObligationAccountId: 'linkedObligationAccountId',
+  linkedObligationPaymentId: 'linkedObligationPaymentId'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
@@ -1069,6 +1071,7 @@ export const ObligationPaymentScalarFieldEnum = {
   id: 'id',
   amount: 'amount',
   paymentDate: 'paymentDate',
+  paymentMethod: 'paymentMethod',
   notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',

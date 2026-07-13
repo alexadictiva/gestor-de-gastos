@@ -6,6 +6,7 @@ import type {
   UpdateObligationPayload,
   UpdateObligationAccountPayload,
 } from '../types/obligationAccount'
+import type { Transaction } from '../types/transaction'
 
 const API_URL = 'http://localhost:4000/api'
 
@@ -18,12 +19,15 @@ interface ObligationAccountResponse {
   ok: boolean
   message: string
   account: ObligationAccount
+  linkedTransaction?: Transaction | null
+  deletedLinkedTransactionIds?: string[]
 }
 
 interface DeleteAccountResponse {
   ok: boolean
   message: string
   deletedAccountId: string
+  deletedLinkedTransactionIds?: string[]
 }
 
 export async function getObligationAccountsRequest(
@@ -92,7 +96,10 @@ export async function updateObligationAccountRequest(
 export async function deleteObligationAccountRequest(
   token: string,
   accountId: string
-): Promise<string> {
+): Promise<{
+  deletedAccountId: string
+  deletedLinkedTransactionIds: string[]
+}> {
   const response = await fetch(`${API_URL}/obligation-accounts/${accountId}`, {
     method: 'DELETE',
     headers: {
@@ -106,7 +113,10 @@ export async function deleteObligationAccountRequest(
     throw new Error(data.message || 'Error al eliminar la cuenta')
   }
 
-  return data.deletedAccountId
+  return {
+    deletedAccountId: data.deletedAccountId,
+    deletedLinkedTransactionIds: data.deletedLinkedTransactionIds ?? [],
+  }
 }
 
 export async function createObligationRequest(
@@ -164,7 +174,10 @@ export async function updateObligationRequest(
 export async function deleteObligationRequest(
   token: string,
   obligationId: string
-): Promise<ObligationAccount> {
+): Promise<{
+  account: ObligationAccount
+  deletedLinkedTransactionIds: string[]
+}> {
   const response = await fetch(
     `${API_URL}/obligation-accounts/obligations/${obligationId}`,
     {
@@ -181,14 +194,20 @@ export async function deleteObligationRequest(
     throw new Error(data.message || 'Error al eliminar la obligacion')
   }
 
-  return data.account
+  return {
+    account: data.account,
+    deletedLinkedTransactionIds: data.deletedLinkedTransactionIds ?? [],
+  }
 }
 
 export async function createObligationPaymentRequest(
   token: string,
   obligationId: string,
   payload: CreateObligationPaymentPayload
-): Promise<ObligationAccount> {
+): Promise<{
+  account: ObligationAccount
+  linkedTransaction?: Transaction | null
+}> {
   const response = await fetch(
     `${API_URL}/obligation-accounts/obligations/${obligationId}/payments`,
     {
@@ -207,13 +226,19 @@ export async function createObligationPaymentRequest(
     throw new Error(data.message || 'Error al registrar el abono')
   }
 
-  return data.account
+  return {
+    account: data.account,
+    linkedTransaction: data.linkedTransaction ?? null,
+  }
 }
 
 export async function deleteObligationPaymentRequest(
   token: string,
   paymentId: string
-): Promise<ObligationAccount> {
+): Promise<{
+  account: ObligationAccount
+  deletedLinkedTransactionIds: string[]
+}> {
   const response = await fetch(
     `${API_URL}/obligation-accounts/payments/${paymentId}`,
     {
@@ -230,5 +255,8 @@ export async function deleteObligationPaymentRequest(
     throw new Error(data.message || 'Error al eliminar el abono')
   }
 
-  return data.account
+  return {
+    account: data.account,
+    deletedLinkedTransactionIds: data.deletedLinkedTransactionIds ?? [],
+  }
 }
