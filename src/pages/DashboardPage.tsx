@@ -101,6 +101,13 @@ export default function DashboardPage({
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+          <p className="text-slate-600">
+            Revisa tu liquidez, tus consumos y el estado general de tu economia.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           <StatCard
             label="Liquidez disponible"

@@ -170,6 +170,8 @@ textarea {
   gap: 0.9rem;
   border-top: 1px solid var(--app-sidebar-border);
   padding-top: 1.1rem;
+  position: fixed;
+  bottom: 18px;
 }
 
 .app-user-card {
@@ -238,37 +240,6 @@ textarea {
   display: flex;
   flex: 1;
   flex-direction: column;
-}
-
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-bottom: 1px solid var(--app-border);
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(20px);
-  padding: 1.5rem 2rem 1.15rem;
-}
-
-:root[data-theme='dark'] .app-header {
-  background: rgba(9, 14, 22, 0.82);
-}
-
-.app-header-eyebrow {
-  color: var(--app-accent);
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.app-header-user {
-  border: 1px solid var(--app-border);
-  border-radius: 1rem;
-  background: var(--app-surface-soft);
-  padding: 0.8rem 1rem;
-  text-align: right;
 }
 
 .app-main {
@@ -556,10 +527,6 @@ textarea {
 @media (max-width: 1024px) {
   .app-sidebar {
     width: 15.5rem;
-  }
-
-  .app-header {
-    padding: 1.25rem 1.25rem 1rem;
   }
 
   .app-main {
