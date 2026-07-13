@@ -1674,8 +1674,8 @@ export default function TransaccionesPage({
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="responsive-data-table">
+            <table className="responsive-data-table__table responsive-data-table__table--transactions w-full text-left">
               <thead>
                 <tr className="border-b text-sm text-slate-500">
                   <th className="py-3 pr-3">
@@ -1787,8 +1787,13 @@ export default function TransaccionesPage({
                         />
                       </td>
                       <td className="py-3 text-slate-800">
-                        <div className="flex flex-col gap-1">
-                          <span>{transaction.description}</span>
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span
+                            className="responsive-data-table__text"
+                            title={transaction.description}
+                          >
+                            {transaction.description}
+                          </span>
                           {(() => {
                             const badge = getLinkedAccountBadge(transaction)
 
@@ -1820,7 +1825,12 @@ export default function TransaccionesPage({
                         </div>
                       </td>
                       <td className="py-3 text-slate-600">
-                        {transaction.category}
+                        <span
+                          className="responsive-data-table__text"
+                          title={transaction.category}
+                        >
+                          {transaction.category}
+                        </span>
                       </td>
                       <td
                         className={`py-3 font-medium ${getTransactionDisplayTone(transaction)}`}

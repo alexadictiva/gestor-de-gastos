@@ -462,6 +462,24 @@ textarea {
   background: #0d1626;
 }
 
+.responsive-data-table {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.responsive-data-table__table {
+  width: 100%;
+}
+
+.responsive-data-table__text {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .theme-option-preview-panel {
   display: flex;
   flex-direction: column;
@@ -715,6 +733,16 @@ textarea {
 @media (min-width: 640px) {
   .app-main {
     padding: 1.25rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .responsive-data-table__table--period {
+    min-width: 56rem;
+  }
+
+  .responsive-data-table__table--transactions {
+    min-width: 70rem;
   }
 }
 
