@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useState,
   type ChangeEvent,
   type Dispatch,
@@ -59,6 +60,18 @@ interface TransaccionesPageProps {
   setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
 }
 
+interface TransactionFilters {
+  category: string
+  type: TransactionType | 'all'
+  paymentMethod: PaymentMethod | 'all'
+  reimbursementStatus: ReimbursementStatus | 'all'
+}
+
+type TransactionSortKey = 'type' | 'paymentMethod' | 'reimbursementStatus' | 'date'
+type SortDirection = 'asc' | 'desc'
+
+const ITEMS_PER_PAGE = 10
+
 function getLocalDateInputValue(referenceDate = new Date()) {
   const year = referenceDate.getFullYear()
   const month = String(referenceDate.getMonth() + 1).padStart(2, '0')
@@ -81,6 +94,123 @@ function createInitialForm(): TransactionForm {
     linkedObligationInstallmentCount: '',
     linkedObligationFirstDueDate: getLocalDateInputValue(),
   }
+}
+
+function createInitialFilters(): TransactionFilters {
+  return {
+    category: '',
+    type: 'all',
+    paymentMethod: 'all',
+    reimbursementStatus: 'all',
+  }
+}
+
+function compareText(leftValue: string, rightValue: string) {
+  return leftValue.localeCompare(rightValue, 'es', {
+    sensitivity: 'base',
+  })
+}
+
+function sortTransactionsForTable(
+  items: Transaction[],
+  sortKey: TransactionSortKey,
+  sortDirection: SortDirection
+) {
+  const directionMultiplier = sortDirection === 'asc' ? 1 : -1
+
+  return [...items].sort((leftItem, rightItem) => {
+    switch (sortKey) {
+      case 'type':
+        return (
+          compareText(
+            getTransactionDisplayLabel(leftItem),
+            getTransactionDisplayLabel(rightItem)
+          ) * directionMultiplier
+        )
+      case 'paymentMethod':
+        return (
+          compareText(
+            getPaymentMethodLabel(leftItem.paymentMethod),
+            getPaymentMethodLabel(rightItem.paymentMethod)
+          ) * directionMultiplier
+        )
+      case 'reimbursementStatus':
+        return (
+          compareText(
+            getReimbursementStatusLabel(leftItem.reimbursementStatus),
+            getReimbursementStatusLabel(rightItem.reimbursementStatus)
+          ) * directionMultiplier
+        )
+      default: {
+        const leftDate = new Date(leftItem.date).getTime()
+        const rightDate = new Date(rightItem.date).getTime()
+
+        if (leftDate === rightDate) {
+          return compareText(leftItem.description, rightItem.description)
+        }
+
+        return (leftDate - rightDate) * directionMultiplier
+      }
+    }
+  })
+}
+
+function buildVisiblePageNumbers(currentPage: number, totalPages: number) {
+  if (totalPages <= 5) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, 4, 5]
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ]
+  }
+
+  return [
+    currentPage - 2,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    currentPage + 2,
+  ]
+}
+
+function SortIndicator({
+  isActive,
+  direction,
+}: {
+  isActive: boolean
+  direction: SortDirection
+}) {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      className={`h-3 w-3 ${
+        isActive ? 'text-slate-700' : 'text-slate-400'
+      }`}
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M6 2 3.5 5h5L6 2Z"
+        fill="currentColor"
+        opacity={!isActive || direction === 'desc' ? '0.35' : '1'}
+      />
+      <path
+        d="M6 10 8.5 7h-5L6 10Z"
+        fill="currentColor"
+        opacity={!isActive || direction === 'asc' ? '0.35' : '1'}
+      />
+    </svg>
+  )
 }
 
 function replaceAccountItem(
@@ -149,6 +279,11 @@ export default function TransaccionesPage({
   const [errorMessage, setErrorMessage] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
+  const [filters, setFilters] = useState<TransactionFilters>(createInitialFilters())
+  const [sortKey, setSortKey] = useState<TransactionSortKey>('date')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const isExpense = form.type === 'expense'
   const isIncome = form.type === 'income'
@@ -157,6 +292,17 @@ export default function TransaccionesPage({
     form.paymentMethod === 'credit' || form.paymentMethod === 'loan'
   const canLinkToObligationAccount =
     isIncome || (isExpense && isFinancingPaymentMethod)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [
+    filters.category,
+    filters.type,
+    filters.paymentMethod,
+    filters.reimbursementStatus,
+    sortKey,
+    sortDirection,
+  ])
 
   const resetLinkedObligationFields = () => ({
     createLinkedObligationAccount: false,
@@ -388,6 +534,50 @@ export default function TransaccionesPage({
     setIsDeleteModalOpen(false)
   }
 
+  const handleFilterChange = (
+    event: ChangeEvent<HTMLSelectElement>
+  ) => {
+    const { name, value } = event.target
+
+    setFilters((prev) => {
+      if (name === 'type') {
+        const nextType = value as TransactionFilters['type']
+        const canKeepCategory =
+          !prev.category ||
+          categories.some(
+            (category) =>
+              category.name === prev.category &&
+              (nextType === 'all' || category.type === nextType)
+          )
+
+        return {
+          ...prev,
+          type: nextType,
+          category: canKeepCategory ? prev.category : '',
+        }
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      }
+    })
+  }
+
+  const clearFilters = () => {
+    setFilters(createInitialFilters())
+  }
+
+  const handleSort = (nextSortKey: TransactionSortKey) => {
+    if (sortKey === nextSortKey) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+      return
+    }
+
+    setSortKey(nextSortKey)
+    setSortDirection(nextSortKey === 'date' ? 'desc' : 'asc')
+  }
+
   const confirmDelete = async () => {
     if (!transactionToDelete || !token) return
 
@@ -434,10 +624,84 @@ export default function TransaccionesPage({
   const availableCategories = categories.filter(
     (category) => category.type === form.type
   )
+  const filterCategories = categories
+    .filter(
+      (category) => filters.type === 'all' || category.type === filters.type
+    )
+    .sort((leftCategory, rightCategory) =>
+      compareText(leftCategory.name, rightCategory.name)
+    )
+    .filter(
+      (category, index, items) =>
+        items.findIndex((item) => item.name === category.name) === index
+    )
+  const activeFiltersCount = [
+    filters.category,
+    filters.type !== 'all' ? filters.type : '',
+    filters.paymentMethod !== 'all' ? filters.paymentMethod : '',
+    filters.reimbursementStatus !== 'all' ? filters.reimbursementStatus : '',
+  ].filter(Boolean).length
+  const filteredTransactions = transactions.filter((transaction) => {
+    if (filters.category && transaction.category !== filters.category) {
+      return false
+    }
+
+    if (filters.type !== 'all' && transaction.type !== filters.type) {
+      return false
+    }
+
+    if (
+      filters.paymentMethod !== 'all' &&
+      transaction.paymentMethod !== filters.paymentMethod
+    ) {
+      return false
+    }
+
+    if (
+      filters.reimbursementStatus !== 'all' &&
+      transaction.reimbursementStatus !== filters.reimbursementStatus
+    ) {
+      return false
+    }
+
+    return true
+  })
+  const sortedTransactions = sortTransactionsForTable(
+    filteredTransactions,
+    sortKey,
+    sortDirection
+  )
+  const totalPages = Math.max(
+    1,
+    Math.ceil(sortedTransactions.length / ITEMS_PER_PAGE)
+  )
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const paginatedTransactions = sortedTransactions.slice(
+    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+    safeCurrentPage * ITEMS_PER_PAGE
+  )
+  const visiblePageNumbers = buildVisiblePageNumbers(
+    safeCurrentPage,
+    totalPages
+  )
+  const pageStartItem =
+    sortedTransactions.length === 0
+      ? 0
+      : (safeCurrentPage - 1) * ITEMS_PER_PAGE + 1
+  const pageEndItem =
+    sortedTransactions.length === 0
+      ? 0
+      : Math.min(safeCurrentPage * ITEMS_PER_PAGE, sortedTransactions.length)
   const transactionPendingDelete = transactionToDelete
     ? transactions.find((transaction) => transaction.id === transactionToDelete) ??
       null
     : null
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
 
   return (
     <DashboardLayout>
@@ -789,17 +1053,202 @@ export default function TransaccionesPage({
         )}
 
         <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">
+                Historial de transacciones
+              </h2>
+              <p className="text-sm text-slate-500">
+                Filtra, ordena y navega tus movimientos para encontrar lo que
+                buscas mas rapido.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsFiltersOpen((prev) => !prev)}
+                className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                  isFiltersOpen || activeFiltersCount > 0
+                    ? 'border-sky-200 bg-sky-50 text-sky-700'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                Filtros
+                {activeFiltersCount > 0 && (
+                  <span className="ml-2 inline-flex rounded-full bg-sky-600 px-2 py-0.5 text-xs font-semibold text-white">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+
+              {activeFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+          </div>
+
+          {isFiltersOpen && (
+            <div className="mb-6 grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="filter-category"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Categoria
+                </label>
+                <select
+                  id="filter-category"
+                  name="category"
+                  value={filters.category}
+                  onChange={handleFilterChange}
+                  className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                >
+                  <option value="">Todas</option>
+                  {filterCategories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="filter-type"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Tipo
+                </label>
+                <select
+                  id="filter-type"
+                  name="type"
+                  value={filters.type}
+                  onChange={handleFilterChange}
+                  className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                >
+                  <option value="all">Todos</option>
+                  <option value="expense">Gasto</option>
+                  <option value="income">Ingreso</option>
+                  <option value="investments">Inversion</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="filter-paymentMethod"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Medio de pago
+                </label>
+                <select
+                  id="filter-paymentMethod"
+                  name="paymentMethod"
+                  value={filters.paymentMethod}
+                  onChange={handleFilterChange}
+                  className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                >
+                  <option value="all">Todos</option>
+                  <option value="not_specified">Sin definir</option>
+                  {PAYMENT_METHOD_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="filter-reimbursementStatus"
+                  className="text-sm font-medium text-slate-700"
+                >
+                  Reembolso
+                </label>
+                <select
+                  id="filter-reimbursementStatus"
+                  name="reimbursementStatus"
+                  value={filters.reimbursementStatus}
+                  onChange={handleFilterChange}
+                  className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                >
+                  <option value="all">Todos</option>
+                  <option value="not_applicable">No aplica</option>
+                  {REIMBURSEMENT_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b text-sm text-slate-500">
                   <th className="py-3">Descripcion</th>
                   <th className="py-3">Categoria</th>
-                  <th className="py-3">Tipo</th>
+                  <th className="py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSort('type')}
+                      className="inline-flex items-center gap-2 font-medium text-slate-500 hover:text-slate-700"
+                    >
+                      <span>Tipo</span>
+                      <SortIndicator
+                        isActive={sortKey === 'type'}
+                        direction={sortDirection}
+                      />
+                    </button>
+                  </th>
                   <th className="py-3">Monto</th>
-                  <th className="py-3">Medio de pago</th>
-                  <th className="py-3">Reembolso</th>
-                  <th className="py-3">Fecha</th>
+                  <th className="py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSort('paymentMethod')}
+                      className="inline-flex items-center gap-2 font-medium text-slate-500 hover:text-slate-700"
+                    >
+                      <span>Medio de pago</span>
+                      <SortIndicator
+                        isActive={sortKey === 'paymentMethod'}
+                        direction={sortDirection}
+                      />
+                    </button>
+                  </th>
+                  <th className="py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSort('reimbursementStatus')}
+                      className="inline-flex items-center gap-2 font-medium text-slate-500 hover:text-slate-700"
+                    >
+                      <span>Reembolso</span>
+                      <SortIndicator
+                        isActive={sortKey === 'reimbursementStatus'}
+                        direction={sortDirection}
+                      />
+                    </button>
+                  </th>
+                  <th className="py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSort('date')}
+                      className="inline-flex items-center gap-2 font-medium text-slate-500 hover:text-slate-700"
+                    >
+                      <span>Fecha</span>
+                      <SortIndicator
+                        isActive={sortKey === 'date'}
+                        direction={sortDirection}
+                      />
+                    </button>
+                  </th>
                   <th className="py-3">Acciones</th>
                 </tr>
               </thead>
@@ -811,21 +1260,25 @@ export default function TransaccionesPage({
                       Cargando transacciones...
                     </td>
                   </tr>
-                ) : transactions.length === 0 ? (
+                ) : sortedTransactions.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <p className="font-medium text-slate-600">
-                          No hay transacciones aun
+                          {transactions.length === 0
+                            ? 'No hay transacciones aun'
+                            : 'No hay transacciones que coincidan con esos filtros'}
                         </p>
                         <p className="text-sm text-slate-400">
-                          Agrega tu primera transaccion para comenzar
+                          {transactions.length === 0
+                            ? 'Agrega tu primera transaccion para comenzar'
+                            : 'Prueba limpiando o ajustando los filtros para ver mas resultados'}
                         </p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  transactions.map((transaction) => (
+                  paginatedTransactions.map((transaction) => (
                     <tr key={transaction.id} className="border-b last:border-b-0">
                       <td className="py-3 text-slate-800">
                         <div className="flex flex-col gap-1">
@@ -924,6 +1377,55 @@ export default function TransaccionesPage({
               </tbody>
             </table>
           </div>
+
+          {!isLoadingTransactions && sortedTransactions.length > 0 && (
+            <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-4 lg:flex-row lg:items-center lg:justify-between">
+              <p className="text-sm text-slate-500">
+                Mostrando {pageStartItem} - {pageEndItem} de{' '}
+                {sortedTransactions.length} transaccion
+                {sortedTransactions.length === 1 ? '' : 'es'}.
+              </p>
+
+              {totalPages > 1 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={safeCurrentPage === 1}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Anterior
+                  </button>
+
+                  {visiblePageNumbers.map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                        pageNumber === safeCurrentPage
+                          ? 'bg-slate-900 text-white'
+                          : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={safeCurrentPage === totalPages}
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <Modal
