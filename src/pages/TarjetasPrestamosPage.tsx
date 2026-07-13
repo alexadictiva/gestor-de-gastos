@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useMemo,
   useState,
   type ChangeEvent,
@@ -302,6 +303,20 @@ export default function TarjetasPrestamosPage({
     setErrorMessage('')
     setSuccessMessage('')
   }
+
+  useEffect(() => {
+    if (!successMessage) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSuccessMessage('')
+    }, 8000)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [successMessage])
 
   const resetAccountForm = () => {
     setAccountForm(createInitialAccountForm())
@@ -774,7 +789,7 @@ export default function TarjetasPrestamosPage({
         )}
 
         {successMessage && (
-          <div className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+          <div className="fixed bottom-4 right-4 z-50 w-fit max-w-[calc(100vw-2rem)] rounded-xl border border-green-200 bg-black px-4 py-3 text-sm text-green-700 shadow-lg">
             {successMessage}
           </div>
         )}

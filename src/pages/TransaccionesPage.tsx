@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
   type ChangeEvent,
   type Dispatch,
@@ -22,8 +23,10 @@ import {
 import {
   createTransactionRequest,
   deleteTransactionRequest,
+  getTransactionsRequest,
   updateTransactionRequest,
 } from '../services/transactionService'
+import { getObligationAccountsRequest } from '../services/obligationAccountService'
 import type { Category } from '../types/category'
 import type { ObligationAccount } from '../types/obligationAccount'
 import {
@@ -67,6 +70,13 @@ interface TransactionFilters {
   reimbursementStatus: ReimbursementStatus | 'all'
 }
 
+interface BulkEditForm {
+  type: TransactionType | 'keep'
+  category: string
+  paymentMethod: PaymentMethod | 'keep'
+  date: string
+}
+
 type TransactionSortKey = 'type' | 'paymentMethod' | 'reimbursementStatus' | 'date'
 type SortDirection = 'asc' | 'desc'
 
@@ -105,10 +115,48 @@ function createInitialFilters(): TransactionFilters {
   }
 }
 
+function createInitialBulkEditForm(): BulkEditForm {
+  return {
+    type: 'keep',
+    category: '',
+    paymentMethod: 'keep',
+    date: '',
+  }
+}
+
 function compareText(leftValue: string, rightValue: string) {
   return leftValue.localeCompare(rightValue, 'es', {
     sensitivity: 'base',
   })
+}
+
+function matchesTransactionFilters(
+  transaction: Transaction,
+  filters: TransactionFilters
+) {
+  if (filters.category && transaction.category !== filters.category) {
+    return false
+  }
+
+  if (filters.type !== 'all' && transaction.type !== filters.type) {
+    return false
+  }
+
+  if (
+    filters.paymentMethod !== 'all' &&
+    transaction.paymentMethod !== filters.paymentMethod
+  ) {
+    return false
+  }
+
+  if (
+    filters.reimbursementStatus !== 'all' &&
+    transaction.reimbursementStatus !== filters.reimbursementStatus
+  ) {
+    return false
+  }
+
+  return true
 }
 
 function sortTransactionsForTable(
@@ -258,6 +306,12 @@ function getLinkedAccountBadge(transaction: Transaction) {
   }
 }
 
+function isLinkedTransaction(transaction: Transaction) {
+  return Boolean(
+    transaction.linkedObligationAccountId || transaction.linkedObligationPaymentId
+  )
+}
+
 export default function TransaccionesPage({
   transactions,
   setTransactions,
@@ -284,6 +338,17 @@ export default function TransaccionesPage({
   const [sortKey, setSortKey] = useState<TransactionSortKey>('date')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>(
+    []
+  )
+  const [isBulkActionsOpen, setIsBulkActionsOpen] = useState(false)
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false)
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false)
+  const [isApplyingBulkAction, setIsApplyingBulkAction] = useState(false)
+  const [bulkEditForm, setBulkEditForm] = useState<BulkEditForm>(
+    createInitialBulkEditForm()
+  )
+  const currentPageCheckboxRef = useRef<HTMLInputElement | null>(null)
 
   const isExpense = form.type === 'expense'
   const isIncome = form.type === 'income'
@@ -292,6 +357,29 @@ export default function TransaccionesPage({
     form.paymentMethod === 'credit' || form.paymentMethod === 'loan'
   const canLinkToObligationAccount =
     isIncome || (isExpense && isFinancingPaymentMethod)
+
+  const refreshTransactions = async () => {
+    if (!token) {
+      return
+    }
+
+    const nextTransactions = await getTransactionsRequest(token)
+    setTransactions(nextTransactions)
+  }
+
+  const refreshTransactionsAndAccounts = async () => {
+    if (!token) {
+      return
+    }
+
+    const [nextTransactions, nextAccounts] = await Promise.all([
+      getTransactionsRequest(token),
+      getObligationAccountsRequest(token),
+    ])
+
+    setTransactions(nextTransactions)
+    setObligationAccounts(sortObligationAccounts(nextAccounts))
+  }
 
   useEffect(() => {
     setCurrentPage(1)
@@ -303,6 +391,44 @@ export default function TransaccionesPage({
     sortKey,
     sortDirection,
   ])
+
+  useEffect(() => {
+    const validTransactionIds = new Set(transactions.map((transaction) => transaction.id))
+
+    setSelectedTransactionIds((prev) =>
+      prev.filter((transactionId) => validTransactionIds.has(transactionId))
+    )
+  }, [transactions])
+
+  useEffect(() => {
+    const filteredTransactionIds = new Set(
+      transactions
+        .filter((transaction) => matchesTransactionFilters(transaction, filters))
+        .map((transaction) => transaction.id)
+    )
+
+    setSelectedTransactionIds((prev) => {
+      const nextSelectedTransactionIds = prev.filter((transactionId) =>
+        filteredTransactionIds.has(transactionId)
+      )
+
+      return nextSelectedTransactionIds.length === prev.length
+        ? prev
+        : nextSelectedTransactionIds
+    })
+  }, [
+    transactions,
+    filters.category,
+    filters.type,
+    filters.paymentMethod,
+    filters.reimbursementStatus,
+  ])
+
+  useEffect(() => {
+    if (selectedTransactionIds.length === 0) {
+      setIsBulkActionsOpen(false)
+    }
+  }, [selectedTransactionIds])
 
   const resetLinkedObligationFields = () => ({
     createLinkedObligationAccount: false,
@@ -351,10 +477,89 @@ export default function TransaccionesPage({
     })
   }
 
+  const handleBulkEditChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = event.target
+
+    setBulkEditForm((prev) => {
+      if (name === 'type') {
+        const nextType = value as BulkEditForm['type']
+
+        return {
+          ...prev,
+          type: nextType,
+          category: '',
+          paymentMethod:
+            nextType === 'expense' || nextType === 'keep'
+              ? prev.paymentMethod
+              : 'keep',
+        }
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      }
+    })
+  }
+
+  const toggleTransactionSelection = (transactionId: string) => {
+    setSelectedTransactionIds((prev) =>
+      prev.includes(transactionId)
+        ? prev.filter((selectedId) => selectedId !== transactionId)
+        : [...prev, transactionId]
+    )
+  }
+
+  const toggleCurrentPageSelection = () => {
+    const pageTransactionIds = paginatedTransactions.map(
+      (transaction) => transaction.id
+    )
+
+    if (pageTransactionIds.length === 0) {
+      return
+    }
+
+    setSelectedTransactionIds((prev) => {
+      const areAllVisibleSelected = pageTransactionIds.every((transactionId) =>
+        prev.includes(transactionId)
+      )
+
+      if (areAllVisibleSelected) {
+        return prev.filter(
+          (transactionId) => !pageTransactionIds.includes(transactionId)
+        )
+      }
+
+      const nextSelectedIds = new Set(prev)
+      pageTransactionIds.forEach((transactionId) => {
+        nextSelectedIds.add(transactionId)
+      })
+
+      return Array.from(nextSelectedIds)
+    })
+  }
+
+  const selectAllFilteredTransactions = () => {
+    setSelectedTransactionIds(
+      sortedTransactions.map((transaction) => transaction.id)
+    )
+  }
+
   const resetFormState = () => {
     setForm(createInitialForm())
     setTransactionToEdit(null)
     setShowForm(false)
+  }
+
+  const resetBulkEditState = () => {
+    setBulkEditForm(createInitialBulkEditForm())
+    setIsBulkEditModalOpen(false)
+  }
+
+  const clearSelection = () => {
+    setSelectedTransactionIds([])
   }
 
   const openCreateForm = () => {
@@ -391,6 +596,36 @@ export default function TransaccionesPage({
       linkedObligationFirstDueDate: getLocalDateInputValue(),
     })
     setShowForm(true)
+  }
+
+  const openBulkEditModal = () => {
+    if (selectedTransactions.length === 0) {
+      setErrorMessage('Selecciona al menos una transaccion para editar en lote')
+      return
+    }
+
+    if (selectedTransactions.some(isLinkedTransaction)) {
+      setErrorMessage(
+        'Las transacciones vinculadas a Tarjetas y Prestamos no se pueden editar en lote. Desmarcalas o editalas desde ese modulo.'
+      )
+      return
+    }
+
+    setErrorMessage('')
+    setBulkEditForm(createInitialBulkEditForm())
+    setIsBulkActionsOpen(false)
+    setIsBulkEditModalOpen(true)
+  }
+
+  const openBulkDeleteModal = () => {
+    if (selectedTransactions.length === 0) {
+      setErrorMessage('Selecciona al menos una transaccion para eliminar')
+      return
+    }
+
+    setErrorMessage('')
+    setIsBulkActionsOpen(false)
+    setIsBulkDeleteModalOpen(true)
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -583,27 +818,8 @@ export default function TransaccionesPage({
 
     try {
       setIsDeleting(true)
-
-      const {
-        deletedLinkedObligationAccountId,
-        updatedObligationAccount,
-      } = await deleteTransactionRequest(token, transactionToDelete)
-
-      setTransactions((prev) =>
-        prev.filter((transaction) => transaction.id !== transactionToDelete)
-      )
-
-      if (deletedLinkedObligationAccountId) {
-        setObligationAccounts((prev) =>
-          prev.filter((account) => account.id !== deletedLinkedObligationAccountId)
-        )
-      }
-
-      if (updatedObligationAccount) {
-        setObligationAccounts((prev) =>
-          replaceAccountItem(prev, updatedObligationAccount)
-        )
-      }
+      await deleteTransactionRequest(token, transactionToDelete)
+      await refreshTransactionsAndAccounts()
 
       if (transactionToEdit?.id === transactionToDelete) {
         resetFormState()
@@ -618,6 +834,157 @@ export default function TransaccionesPage({
       }
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const handleBulkEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setErrorMessage('')
+
+    if (!token) {
+      setErrorMessage('No hay sesion activa')
+      return
+    }
+
+    if (selectedTransactions.length === 0) {
+      setErrorMessage('Selecciona al menos una transaccion para editar en lote')
+      return
+    }
+
+    if (selectedTransactions.length === 0) {
+      setErrorMessage('No se encontraron transacciones seleccionadas')
+      return
+    }
+
+    if (selectedTransactions.some(isLinkedTransaction)) {
+      setErrorMessage(
+        'Las transacciones vinculadas a Tarjetas y Prestamos no se pueden editar en lote.'
+      )
+      return
+    }
+
+    const hasAnyChange =
+      bulkEditForm.type !== 'keep' ||
+      bulkEditForm.category.trim() !== '' ||
+      bulkEditForm.paymentMethod !== 'keep' ||
+      bulkEditForm.date.trim() !== ''
+
+    if (!hasAnyChange) {
+      setErrorMessage('Indica al menos un campo para actualizar')
+      return
+    }
+
+    const uniqueSelectedTypes = Array.from(
+      new Set(selectedTransactions.map((transaction) => transaction.type))
+    )
+    const selectedSharedType =
+      uniqueSelectedTypes.length === 1 ? uniqueSelectedTypes[0] : null
+    const effectiveType =
+      bulkEditForm.type === 'keep' ? selectedSharedType : bulkEditForm.type
+
+    if (bulkEditForm.type !== 'keep' && !bulkEditForm.category.trim()) {
+      setErrorMessage(
+        'Si cambias el tipo de transaccion, selecciona tambien la categoria compatible.'
+      )
+      return
+    }
+
+    if (bulkEditForm.category.trim() && !effectiveType) {
+      setErrorMessage(
+        'Para editar la categoria en lote, selecciona transacciones del mismo tipo o define antes un nuevo tipo.'
+      )
+      return
+    }
+
+    try {
+      setIsApplyingBulkAction(true)
+
+      await Promise.all(
+        selectedTransactions.map((transaction) => {
+          const nextType =
+            bulkEditForm.type === 'keep' ? transaction.type : bulkEditForm.type
+          const nextPaymentMethod =
+            nextType === 'expense'
+              ? bulkEditForm.paymentMethod === 'keep'
+                ? transaction.paymentMethod
+                : bulkEditForm.paymentMethod
+              : 'not_specified'
+          const nextReimbursementStatus =
+            nextType === 'expense'
+              ? transaction.type === 'expense'
+                ? transaction.reimbursementStatus
+                : 'not_applicable'
+              : 'not_applicable'
+
+          return updateTransactionRequest(token, transaction.id, {
+            description: transaction.description,
+            amount: transaction.amount,
+            type: nextType,
+            category: bulkEditForm.category.trim() || transaction.category,
+            paymentMethod: nextPaymentMethod,
+            reimbursementStatus: nextReimbursementStatus,
+            date: bulkEditForm.date.trim() || transaction.date.slice(0, 10),
+          })
+        })
+      )
+
+      await refreshTransactions()
+      clearSelection()
+      resetBulkEditState()
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('Error al editar transacciones en lote')
+      }
+    } finally {
+      setIsApplyingBulkAction(false)
+    }
+  }
+
+  const confirmBulkDelete = async () => {
+    if (!token || selectedTransactions.length === 0) {
+      return
+    }
+
+    try {
+      setIsApplyingBulkAction(true)
+
+      for (const transactionId of selectedTransactions.map((transaction) => transaction.id)) {
+        try {
+          await deleteTransactionRequest(token, transactionId)
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message.includes('Transaccion no encontrada')
+          ) {
+            continue
+          }
+
+          throw error
+        }
+      }
+
+      if (
+        transactionToEdit &&
+        selectedTransactions.some(
+          (transaction) => transaction.id === transactionToEdit.id
+        )
+      ) {
+        resetFormState()
+      }
+
+      await refreshTransactionsAndAccounts()
+      clearSelection()
+      setIsBulkDeleteModalOpen(false)
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('Error al eliminar transacciones en lote')
+      }
+    } finally {
+      setIsApplyingBulkAction(false)
     }
   }
 
@@ -641,36 +1008,35 @@ export default function TransaccionesPage({
     filters.paymentMethod !== 'all' ? filters.paymentMethod : '',
     filters.reimbursementStatus !== 'all' ? filters.reimbursementStatus : '',
   ].filter(Boolean).length
-  const filteredTransactions = transactions.filter((transaction) => {
-    if (filters.category && transaction.category !== filters.category) {
-      return false
-    }
-
-    if (filters.type !== 'all' && transaction.type !== filters.type) {
-      return false
-    }
-
-    if (
-      filters.paymentMethod !== 'all' &&
-      transaction.paymentMethod !== filters.paymentMethod
-    ) {
-      return false
-    }
-
-    if (
-      filters.reimbursementStatus !== 'all' &&
-      transaction.reimbursementStatus !== filters.reimbursementStatus
-    ) {
-      return false
-    }
-
-    return true
-  })
+  const selectedTransactionIdSet = new Set(selectedTransactionIds)
+  const filteredTransactions = transactions.filter((transaction) =>
+    matchesTransactionFilters(transaction, filters)
+  )
   const sortedTransactions = sortTransactionsForTable(
     filteredTransactions,
     sortKey,
     sortDirection
   )
+  const selectedTransactions = sortedTransactions.filter((transaction) =>
+    selectedTransactionIdSet.has(transaction.id)
+  )
+  const selectedLinkedTransactions = selectedTransactions.filter(
+    isLinkedTransaction
+  )
+  const selectedTypeOptions = Array.from(
+    new Set(selectedTransactions.map((transaction) => transaction.type))
+  )
+  const selectedSharedType =
+    selectedTypeOptions.length === 1 ? selectedTypeOptions[0] : null
+  const bulkEditEffectiveType =
+    bulkEditForm.type === 'keep' ? selectedSharedType : bulkEditForm.type
+  const bulkEditAvailableCategories = bulkEditEffectiveType
+    ? categories
+        .filter((category) => category.type === bulkEditEffectiveType)
+        .sort((leftCategory, rightCategory) =>
+          compareText(leftCategory.name, rightCategory.name)
+        )
+    : []
   const totalPages = Math.max(
     1,
     Math.ceil(sortedTransactions.length / ITEMS_PER_PAGE)
@@ -680,6 +1046,14 @@ export default function TransaccionesPage({
     (safeCurrentPage - 1) * ITEMS_PER_PAGE,
     safeCurrentPage * ITEMS_PER_PAGE
   )
+  const selectedVisibleCount = paginatedTransactions.filter((transaction) =>
+    selectedTransactionIdSet.has(transaction.id)
+  ).length
+  const allVisibleSelected =
+    paginatedTransactions.length > 0 &&
+    selectedVisibleCount === paginatedTransactions.length
+  const hasPartialVisibleSelection =
+    selectedVisibleCount > 0 && !allVisibleSelected
   const visiblePageNumbers = buildVisiblePageNumbers(
     safeCurrentPage,
     totalPages
@@ -702,6 +1076,14 @@ export default function TransaccionesPage({
       setCurrentPage(totalPages)
     }
   }, [currentPage, totalPages])
+
+  useEffect(() => {
+    if (!currentPageCheckboxRef.current) {
+      return
+    }
+
+    currentPageCheckboxRef.current.indeterminate = hasPartialVisibleSelection
+  }, [hasPartialVisibleSelection, paginatedTransactions.length])
 
   return (
     <DashboardLayout>
@@ -920,8 +1302,8 @@ export default function TransaccionesPage({
               )}
 
               {!transactionToEdit && canLinkToObligationAccount && (
-                <div className="flex flex-col gap-4 rounded-2xl border border-violet-200 bg-violet-50 p-4 md:col-span-2">
-                  <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                <div className="transaction-link-panel flex flex-col gap-4 rounded-2xl p-4 md:col-span-2">
+                  <label className="transaction-link-panel__label flex items-center gap-3 text-sm font-medium">
                     <input
                       type="checkbox"
                       checked={form.createLinkedObligationAccount}
@@ -931,14 +1313,14 @@ export default function TransaccionesPage({
                           createLinkedObligationAccount: event.target.checked,
                         }))
                       }
-                      className="h-4 w-4 rounded border-slate-300 text-violet-700 focus:ring-violet-400"
+                      className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-400"
                     />
                     {isIncome
                       ? 'Registrar tambien este ingreso como prestamo por pagar'
                       : 'Registrar tambien esta compra en Tarjetas y Prestamos'}
                   </label>
 
-                  <p className="text-xs text-slate-600">
+                  <p className="transaction-link-panel__copy text-xs">
                     {isIncome
                       ? 'Se creara una deuda vinculada para que este ingreso aumente tu liquidez hoy y puedas seguir sus cuotas desde el otro modulo.'
                       : form.paymentMethod === 'credit'
@@ -1067,6 +1449,24 @@ export default function TransaccionesPage({
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
+                onClick={() => setIsBulkActionsOpen((prev) => !prev)}
+                disabled={transactions.length === 0}
+                className={`rounded-xl border px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isBulkActionsOpen || selectedTransactions.length > 0
+                    ? 'border-violet-200 bg-violet-50 text-violet-700'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                Acciones masivas
+                {selectedTransactions.length > 0 && (
+                  <span className="ml-2 inline-flex rounded-full bg-violet-600 px-2 py-0.5 text-xs font-semibold text-white">
+                    {selectedTransactions.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsFiltersOpen((prev) => !prev)}
                 className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
                   isFiltersOpen || activeFiltersCount > 0
@@ -1093,6 +1493,90 @@ export default function TransaccionesPage({
               )}
             </div>
           </div>
+
+          {transactions.length > 0 && (
+            <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {selectedTransactions.length === 0
+                      ? 'Selecciona una o varias transacciones para trabajar en lote.'
+                      : `${selectedTransactions.length} transaccion${selectedTransactions.length === 1 ? '' : 'es'} seleccionada${selectedTransactions.length === 1 ? '' : 's'}.`}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Puedes marcar la pagina actual, todas las transacciones filtradas o limpiar la seleccion.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleCurrentPageSelection}
+                    disabled={paginatedTransactions.length === 0}
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {allVisibleSelected
+                      ? 'Deseleccionar pagina'
+                      : 'Seleccionar pagina'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={selectAllFilteredTransactions}
+                    disabled={sortedTransactions.length === 0}
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Seleccionar filtradas ({sortedTransactions.length})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={clearSelection}
+                    disabled={selectedTransactions.length === 0}
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Quitar seleccion
+                  </button>
+                </div>
+              </div>
+
+              {isBulkActionsOpen && (
+                <div className="grid grid-cols-1 gap-3 rounded-2xl border border-violet-200 bg-white p-4 md:grid-cols-[1fr_auto_auto] md:items-center">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">
+                      Acciones disponibles para las transacciones seleccionadas
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {selectedLinkedTransactions.length > 0
+                        ? 'Los movimientos vinculados a Tarjetas y Prestamos se pueden eliminar, pero no editar en lote.'
+                        : 'Puedes editar el medio de pago, la fecha, el tipo y la categoria en un solo paso.'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={openBulkEditModal}
+                    disabled={
+                      selectedTransactions.length === 0 ||
+                      selectedLinkedTransactions.length > 0
+                    }
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Editar seleccionadas
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={openBulkDeleteModal}
+                    disabled={selectedTransactions.length === 0}
+                    className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Eliminar seleccionadas
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {isFiltersOpen && (
             <div className="mb-6 grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-2 xl:grid-cols-4">
@@ -1194,6 +1678,17 @@ export default function TransaccionesPage({
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b text-sm text-slate-500">
+                  <th className="py-3 pr-3">
+                    <input
+                      ref={currentPageCheckboxRef}
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleCurrentPageSelection}
+                      disabled={paginatedTransactions.length === 0}
+                      className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400 disabled:cursor-not-allowed"
+                      aria-label="Seleccionar transacciones de la pagina actual"
+                    />
+                  </th>
                   <th className="py-3">Descripcion</th>
                   <th className="py-3">Categoria</th>
                   <th className="py-3">
@@ -1256,13 +1751,13 @@ export default function TransaccionesPage({
               <tbody>
                 {isLoadingTransactions ? (
                   <tr>
-                    <td colSpan={8} className="py-10 text-center text-slate-500">
+                    <td colSpan={9} className="py-10 text-center text-slate-500">
                       Cargando transacciones...
                     </td>
                   </tr>
                 ) : sortedTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center">
+                    <td colSpan={9} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <p className="font-medium text-slate-600">
                           {transactions.length === 0
@@ -1280,9 +1775,20 @@ export default function TransaccionesPage({
                 ) : (
                   paginatedTransactions.map((transaction) => (
                     <tr key={transaction.id} className="border-b last:border-b-0">
+                      <td className="py-3 pr-3 align-top">
+                        <input
+                          type="checkbox"
+                          checked={selectedTransactionIdSet.has(transaction.id)}
+                          onChange={() =>
+                            toggleTransactionSelection(transaction.id)
+                          }
+                          className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                          aria-label={`Seleccionar transaccion ${transaction.description}`}
+                        />
+                      </td>
                       <td className="py-3 text-slate-800">
                         <div className="flex flex-col gap-1">
-                    <span>{transaction.description}</span>
+                          <span>{transaction.description}</span>
                           {(() => {
                             const badge = getLinkedAccountBadge(transaction)
 
@@ -1427,6 +1933,204 @@ export default function TransaccionesPage({
             </div>
           )}
         </div>
+
+        <Modal
+          isOpen={isBulkEditModalOpen}
+          onClose={() => {
+            if (isApplyingBulkAction) {
+              return
+            }
+
+            resetBulkEditState()
+          }}
+          title="Editar transacciones seleccionadas"
+          maxWidthClass="max-w-2xl"
+        >
+          <form
+            onSubmit={handleBulkEditSubmit}
+            className="grid grid-cols-1 gap-4 md:grid-cols-2"
+          >
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+              <p className="text-sm font-medium text-slate-800">
+                Vas a actualizar {selectedTransactions.length} transaccion
+                {selectedTransactions.length === 1 ? '' : 'es'} en lote.
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Deja un campo en "No cambiar" o vacio si quieres conservar su valor actual.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="bulk-type"
+                className="text-sm font-medium text-slate-700"
+              >
+                Tipo de transaccion
+              </label>
+              <select
+                id="bulk-type"
+                name="type"
+                value={bulkEditForm.type}
+                onChange={handleBulkEditChange}
+                className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+              >
+                <option value="keep">No cambiar</option>
+                <option value="expense">Gasto</option>
+                <option value="income">Ingreso</option>
+                <option value="investments">Inversion</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="bulk-paymentMethod"
+                className="text-sm font-medium text-slate-700"
+              >
+                Medio de pago
+              </label>
+              <select
+                id="bulk-paymentMethod"
+                name="paymentMethod"
+                value={bulkEditForm.paymentMethod}
+                onChange={handleBulkEditChange}
+                disabled={bulkEditEffectiveType !== 'expense'}
+                className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                <option value="keep">No cambiar</option>
+                <option value="not_specified">Sin definir</option>
+                {PAYMENT_METHOD_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">
+                {bulkEditEffectiveType === 'expense'
+                  ? 'Disponible porque el lote mantiene o pasara a ser gasto.'
+                  : 'Solo aplica a transacciones de tipo gasto.'}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="bulk-category"
+                className="text-sm font-medium text-slate-700"
+              >
+                Categoria
+              </label>
+              <select
+                id="bulk-category"
+                name="category"
+                value={bulkEditForm.category}
+                onChange={handleBulkEditChange}
+                disabled={!bulkEditEffectiveType}
+                className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                <option value="">
+                  {!bulkEditEffectiveType
+                    ? 'Primero define un tipo comun'
+                    : 'No cambiar'}
+                </option>
+                {bulkEditAvailableCategories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">
+                {bulkEditEffectiveType
+                  ? 'Se mostraran solo categorias compatibles con el tipo final del lote.'
+                  : 'Si mezclaste ingresos, gastos e inversiones, primero elige el nuevo tipo.'}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="bulk-date"
+                className="text-sm font-medium text-slate-700"
+              >
+                Fecha
+              </label>
+              <input
+                id="bulk-date"
+                name="date"
+                type="date"
+                value={bulkEditForm.date}
+                onChange={handleBulkEditChange}
+                className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+              />
+              <p className="text-xs text-slate-500">
+                Si lo dejas vacio, cada transaccion conservara su fecha actual.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 md:col-span-2">
+              <button
+                type="button"
+                onClick={resetBulkEditState}
+                disabled={isApplyingBulkAction}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isApplyingBulkAction}
+                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isApplyingBulkAction ? 'Aplicando cambios...' : 'Guardar cambios'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+
+        <Modal
+          isOpen={isBulkDeleteModalOpen}
+          onClose={() => {
+            if (isApplyingBulkAction) {
+              return
+            }
+
+            setIsBulkDeleteModalOpen(false)
+          }}
+          title="Eliminar transacciones seleccionadas"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-slate-600">
+              Se eliminaran {selectedTransactions.length} transaccion
+              {selectedTransactions.length === 1 ? '' : 'es'} seleccionada
+              {selectedTransactions.length === 1 ? '' : 's'}.
+            </p>
+
+            {selectedLinkedTransactions.length > 0 && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                Hay {selectedLinkedTransactions.length} movimiento
+                {selectedLinkedTransactions.length === 1 ? '' : 's'} vinculado
+                {selectedLinkedTransactions.length === 1 ? '' : 's'} a Tarjetas y Prestamos. Al borrarlos tambien se ajustaran sus deudas, cuotas o abonos relacionados.
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsBulkDeleteModalOpen(false)}
+                disabled={isApplyingBulkAction}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmBulkDelete}
+                disabled={isApplyingBulkAction}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isApplyingBulkAction ? 'Eliminando...' : 'Eliminar seleccionadas'}
+              </button>
+            </div>
+          </div>
+        </Modal>
 
         <Modal
           isOpen={isDeleteModalOpen}

@@ -343,6 +343,21 @@ textarea {
   background: linear-gradient(135deg, var(--app-accent), var(--app-accent-strong));
 }
 
+.transaction-link-panel {
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  background:
+    linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(37, 99, 235, 0.06)),
+    var(--app-surface-soft);
+}
+
+.transaction-link-panel__label {
+  color: var(--app-text);
+}
+
+.transaction-link-panel__copy {
+  color: var(--app-text-muted);
+}
+
 :root[data-theme='dark'] * {
   scrollbar-color: rgba(73, 91, 122, 0.7) transparent;
 }
@@ -466,6 +481,16 @@ textarea {
 
 :root[data-theme='dark'] .bg-violet-100 {
   background-color: rgba(139, 92, 246, 0.15) !important;
+}
+
+:root[data-theme='dark'] .transaction-link-panel {
+  border-color: rgba(24, 209, 255, 0.26);
+  background:
+    linear-gradient(135deg, rgba(24, 209, 255, 0.14), rgba(30, 109, 255, 0.1)),
+    rgba(12, 19, 31, 0.96);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 18px 38px rgba(3, 7, 18, 0.28);
 }
 
 :root[data-theme='dark'] .text-red-600,
