@@ -28,6 +28,8 @@ model Transaction {
   amount      Float
   type        String
   category    String
+  paymentMethod String @default("not_specified")
+  reimbursementStatus String @default("not_applicable")
   date        DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

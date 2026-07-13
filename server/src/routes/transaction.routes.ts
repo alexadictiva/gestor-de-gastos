@@ -1,12 +1,137 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma'
 import {
+  normalizePaymentMethod,
+  normalizeReimbursementStatus,
+  normalizeTransactionType,
+} from '../lib/transaction-fields'
+import {
   authMiddleware,
   type AuthRequest,
 } from '../middlewares/auth.middleware'
 
 const router = Router()
-const ALLOWED_TRANSACTION_TYPES = ['income', 'expense', 'investments'] as const
+
+function parseTransactionDate(value: unknown) {
+  const trimmedValue = String(value ?? '').trim()
+
+  if (!trimmedValue) {
+    return null
+  }
+
+  const parsedDate = new Date(`${trimmedValue}T00:00:00.000Z`)
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null
+  }
+
+  return parsedDate
+}
+
+async function validateTransactionInput(
+  body: Record<string, unknown>,
+  userId: string,
+  existingTransaction?: {
+    paymentMethod: string
+    reimbursementStatus: string
+  }
+) {
+  const {
+    description,
+    amount,
+    type,
+    category,
+    date,
+    paymentMethod,
+    reimbursementStatus,
+  } = body
+
+  const trimmedDescription = String(description ?? '').trim()
+  const trimmedCategory = String(category ?? '').trim()
+  const normalizedType = normalizeTransactionType(String(type ?? '').trim())
+  const rawPaymentMethod = String(paymentMethod ?? '').trim()
+  const rawReimbursementStatus = String(reimbursementStatus ?? '').trim()
+  const normalizedPaymentMethod = normalizePaymentMethod(rawPaymentMethod)
+  const normalizedReimbursementStatus =
+    normalizeReimbursementStatus(rawReimbursementStatus)
+
+  if (
+    !trimmedDescription ||
+    amount === undefined ||
+    amount === null ||
+    !normalizedType ||
+    !trimmedCategory ||
+    !date
+  ) {
+    return {
+      error: 'Todos los campos son obligatorios',
+    }
+  }
+
+  const parsedAmount = Number(amount)
+
+  if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    return {
+      error: 'El monto debe ser mayor a cero',
+    }
+  }
+
+  const parsedDate = parseTransactionDate(date)
+
+  if (!parsedDate) {
+    return {
+      error: 'La fecha no es valida',
+    }
+  }
+
+  const selectedCategory = await prisma.category.findFirst({
+    where: {
+      userId,
+      name: trimmedCategory,
+      type: normalizedType,
+    },
+  })
+
+  if (!selectedCategory) {
+    return {
+      error: 'La categoria seleccionada no es valida',
+    }
+  }
+
+  if (rawPaymentMethod && !normalizedPaymentMethod) {
+    return {
+      error: 'El medio de pago no es valido',
+    }
+  }
+
+  if (rawReimbursementStatus && !normalizedReimbursementStatus) {
+    return {
+      error: 'El estado de reembolso no es valido',
+    }
+  }
+
+  return {
+    data: {
+      description: trimmedDescription,
+      amount: parsedAmount,
+      type: normalizedType,
+      category: trimmedCategory,
+      paymentMethod:
+        normalizedType === 'expense'
+          ? normalizedPaymentMethod ??
+            existingTransaction?.paymentMethod ??
+            'not_specified'
+          : 'not_specified',
+      reimbursementStatus:
+        normalizedType === 'expense'
+          ? normalizedReimbursementStatus ??
+            existingTransaction?.reimbursementStatus ??
+            'not_applicable'
+          : 'not_applicable',
+      date: parsedDate,
+    },
+  }
+}
 
 router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
@@ -49,98 +174,32 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
-    const { description, amount, type, category, date } = req.body
-    const trimmedDescription = String(description ?? '').trim()
-    const trimmedCategory = String(category ?? '').trim()
-    const normalizedType = String(type ?? '').trim()
+    const validation = await validateTransactionInput(
+      req.body,
+      req.user.userId
+    )
 
-    if (
-      !trimmedDescription ||
-      amount === undefined ||
-      amount === null ||
-      !normalizedType ||
-      !trimmedCategory ||
-      !date
-    ) {
+    if ('error' in validation) {
       return res.status(400).json({
         ok: false,
-        message: 'Todos los campos son obligatorios',
-      })
-    }
-
-    if (
-      !ALLOWED_TRANSACTION_TYPES.includes(
-        normalizedType as (typeof ALLOWED_TRANSACTION_TYPES)[number]
-      )
-    ) {
-      return res.status(400).json({
-        ok: false,
-        message: 'El tipo de transacción no es válido',
-      })
-    }
-
-    const parsedAmount = Number(amount)
-
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      return res.status(400).json({
-        ok: false,
-        message: 'El monto debe ser mayor a cero',
-      })
-    }
-
-    const parsedDate = new Date(`${date}T00:00:00.000Z`)
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return res.status(400).json({
-        ok: false,
-        message: 'La fecha no es válida',
-      })
-    }
-
-    const selectedCategory = await prisma.category.findFirst({
-      where: {
-        userId: req.user.userId,
-        name: trimmedCategory,
-        type: normalizedType,
-      },
-    })
-
-    if (!selectedCategory) {
-      return res.status(400).json({
-        ok: false,
-        message: 'La categoria seleccionada no es valida',
+        message: validation.error,
       })
     }
 
     const transaction = await prisma.transaction.create({
       data: {
-        description: trimmedDescription,
-        amount: parsedAmount,
-        type: normalizedType,
-        category: trimmedCategory,
-        date: parsedDate,
+        ...validation.data,
         userId: req.user.userId,
       },
     })
 
-    const categoryExists = selectedCategory
-
-    if (!categoryExists) {
-      return res.status(400).json({
-        ok: false,
-        message: 'La categoría seleccionada no es válida',
-      })
-    }
-
     return res.status(201).json({
       ok: true,
-      message: 'Transacción creada correctamente',
+      message: 'Transaccion creada correctamente',
       transaction,
     })
-
-    
   } catch (error) {
-    console.error('Error creando transacción:', error)
+    console.error('Error creando transaccion:', error)
 
     return res.status(500).json({
       ok: false,
@@ -163,7 +222,7 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
     if (typeof transactionId !== 'string' || !transactionId.trim()) {
       return res.status(400).json({
         ok: false,
-        message: 'ID de transacción inválido',
+        message: 'ID de transaccion invalido',
       })
     }
 
@@ -177,7 +236,7 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
     if (!transaction) {
       return res.status(404).json({
         ok: false,
-        message: 'Transacción no encontrada',
+        message: 'Transaccion no encontrada',
       })
     }
 
@@ -189,10 +248,10 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
 
     return res.json({
       ok: true,
-      message: 'Transacción eliminada correctamente',
+      message: 'Transaccion eliminada correctamente',
     })
   } catch (error) {
-    console.error('Error eliminando transacción:', error)
+    console.error('Error eliminando transaccion:', error)
 
     return res.status(500).json({
       ok: false,
@@ -233,66 +292,19 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
-    const { description, amount, type, category, date } = req.body
-    const trimmedDescription = String(description ?? '').trim()
-    const trimmedCategory = String(category ?? '').trim()
-    const normalizedType = String(type ?? '').trim()
+    const validation = await validateTransactionInput(
+      req.body,
+      req.user.userId,
+      {
+        paymentMethod: existingTransaction.paymentMethod,
+        reimbursementStatus: existingTransaction.reimbursementStatus,
+      }
+    )
 
-    if (
-      !trimmedDescription ||
-      amount === undefined ||
-      amount === null ||
-      !normalizedType ||
-      !trimmedCategory ||
-      !date
-    ) {
+    if ('error' in validation) {
       return res.status(400).json({
         ok: false,
-        message: 'Todos los campos son obligatorios',
-      })
-    }
-
-    if (
-      !ALLOWED_TRANSACTION_TYPES.includes(
-        normalizedType as (typeof ALLOWED_TRANSACTION_TYPES)[number]
-      )
-    ) {
-      return res.status(400).json({
-        ok: false,
-        message: 'El tipo de transaccion no es valido',
-      })
-    }
-
-    const parsedAmount = Number(amount)
-
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      return res.status(400).json({
-        ok: false,
-        message: 'El monto debe ser mayor a cero',
-      })
-    }
-
-    const parsedDate = new Date(`${date}T00:00:00.000Z`)
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return res.status(400).json({
-        ok: false,
-        message: 'La fecha no es valida',
-      })
-    }
-
-    const selectedCategory = await prisma.category.findFirst({
-      where: {
-        userId: req.user.userId,
-        name: trimmedCategory,
-        type: normalizedType,
-      },
-    })
-
-    if (!selectedCategory) {
-      return res.status(400).json({
-        ok: false,
-        message: 'La categoria seleccionada no es valida',
+        message: validation.error,
       })
     }
 
@@ -300,13 +312,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
       where: {
         id: transactionId,
       },
-      data: {
-        description: trimmedDescription,
-        amount: parsedAmount,
-        type: normalizedType,
-        category: trimmedCategory,
-        date: parsedDate,
-      },
+      data: validation.data,
     })
 
     return res.json({

@@ -1,20 +1,43 @@
-import { useState, type ChangeEvent, type FormEvent, type Dispatch, type SetStateAction } from 'react'
+import {
+  useState,
+  type ChangeEvent,
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
+} from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
-import type { Transaction, TransactionType } from '../types/transaction'
 import Modal from '../components/layout/Modal'
 import { useAuth } from '../hooks/useAuth'
+import {
+  PAYMENT_METHOD_OPTIONS,
+  REIMBURSEMENT_STATUS_OPTIONS,
+  getPaymentMethodLabel,
+  getReimbursementStatusLabel,
+  type PaymentMethod,
+  type ReimbursementStatus,
+  type Transaction,
+  type TransactionType,
+} from '../types/transaction'
 import {
   createTransactionRequest,
   deleteTransactionRequest,
   updateTransactionRequest,
 } from '../services/transactionService'
 import type { Category } from '../types/category'
+import {
+  getPaymentMethodTone,
+  getReimbursementStatusTone,
+  getTransactionTypeLabel,
+  getTransactionTypeTone,
+} from '../utils/transactionMetrics'
 
-interface NewTransactionForm {
+interface TransactionForm {
   description: string
   amount: string
   type: TransactionType
   category: string
+  paymentMethod: PaymentMethod
+  reimbursementStatus: ReimbursementStatus
   date: string
 }
 
@@ -25,12 +48,20 @@ interface TransaccionesPageProps {
   categories: Category[]
 }
 
-const initialForm: NewTransactionForm = {
+const initialForm: TransactionForm = {
   description: '',
   amount: '',
   type: 'expense',
   category: '',
+  paymentMethod: 'not_specified',
+  reimbursementStatus: 'not_applicable',
   date: '',
+}
+
+function formatCurrency(value: number) {
+  return `$${value.toLocaleString('es-AR', {
+    maximumFractionDigits: 2,
+  })}`
 }
 
 export default function TransaccionesPage({
@@ -39,31 +70,50 @@ export default function TransaccionesPage({
   isLoadingTransactions,
   categories,
 }: TransaccionesPageProps) {
+  const { token } = useAuth()
+
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState<NewTransactionForm>(initialForm)
+  const [form, setForm] = useState<TransactionForm>(initialForm)
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(
     null
   )
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
-  
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(
+    null
+  )
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const isExpense = form.type === 'expense'
+  const isReimbursable = form.reimbursementStatus !== 'not_applicable'
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = event.target
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-      ...(name === 'type' ? { category: '' } : {}),
-    }))
+    setForm((prev) => {
+      if (name === 'type') {
+        const nextType = value as TransactionType
+
+        return {
+          ...prev,
+          type: nextType,
+          category: '',
+          paymentMethod:
+            nextType === 'expense' ? prev.paymentMethod : 'not_specified',
+          reimbursementStatus:
+            nextType === 'expense' ? prev.reimbursementStatus : 'not_applicable',
+        }
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      }
+    })
   }
-  
-  const { token } = useAuth()
-  const [errorMessage, setErrorMessage] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
 
   const resetFormState = () => {
     setForm(initialForm)
@@ -86,6 +136,8 @@ export default function TransaccionesPage({
       amount: String(transaction.amount),
       type: transaction.type,
       category: transaction.category,
+      paymentMethod: transaction.paymentMethod,
+      reimbursementStatus: transaction.reimbursementStatus,
       date: transaction.date.slice(0, 10),
     })
     setShowForm(true)
@@ -96,7 +148,7 @@ export default function TransaccionesPage({
     setErrorMessage('')
 
     if (!token) {
-      setErrorMessage('No hay sesión activa')
+      setErrorMessage('No hay sesion activa')
       return
     }
 
@@ -125,6 +177,10 @@ export default function TransaccionesPage({
         amount: parsedAmount,
         type: form.type,
         category: form.category.trim(),
+        paymentMethod: isExpense ? form.paymentMethod : 'not_specified',
+        reimbursementStatus: isExpense
+          ? form.reimbursementStatus
+          : 'not_applicable',
         date: form.date,
       }
 
@@ -153,7 +209,7 @@ export default function TransaccionesPage({
       if (error instanceof Error) {
         setErrorMessage(error.message)
       } else {
-        setErrorMessage('Error al guardar transacción')
+        setErrorMessage('Error al guardar transaccion')
       }
     } finally {
       setIsSaving(false)
@@ -191,7 +247,7 @@ export default function TransaccionesPage({
       if (error instanceof Error) {
         setErrorMessage(error.message)
       } else {
-        setErrorMessage('Error al eliminar transacción')
+        setErrorMessage('Error al eliminar transaccion')
       }
     } finally {
       setIsDeleting(false)
@@ -199,8 +255,8 @@ export default function TransaccionesPage({
   }
 
   const availableCategories = categories.filter(
-  (category) => category.type === form.type
-)
+    (category) => category.type === form.type
+  )
 
   return (
     <DashboardLayout>
@@ -211,7 +267,8 @@ export default function TransaccionesPage({
               Transacciones
             </h1>
             <p className="text-slate-600">
-              Aquí puedes ver todos tus ingresos y gastos.
+              Registra ingresos, gastos personales y gastos reembolsables con su
+              medio de pago.
             </p>
           </div>
 
@@ -227,7 +284,7 @@ export default function TransaccionesPage({
             }}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
-            {showForm ? 'Cerrar formulario' : 'Nueva transacción'}
+            {showForm ? 'Cerrar formulario' : 'Nueva transaccion'}
           </button>
         </div>
 
@@ -240,7 +297,7 @@ export default function TransaccionesPage({
         {showForm && (
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-slate-800">
-              Agregar transacción
+              {transactionToEdit ? 'Editar transaccion' : 'Agregar transaccion'}
             </h2>
 
             <form
@@ -252,7 +309,7 @@ export default function TransaccionesPage({
                   htmlFor="description"
                   className="text-sm font-medium text-slate-700"
                 >
-                  Descripción
+                  Descripcion
                 </label>
                 <input
                   id="description"
@@ -299,7 +356,7 @@ export default function TransaccionesPage({
                 >
                   <option value="expense">Gasto</option>
                   <option value="income">Ingreso</option>
-                  <option value="investments">Inversión</option>
+                  <option value="investments">Inversion</option>
                 </select>
               </div>
 
@@ -308,7 +365,7 @@ export default function TransaccionesPage({
                   htmlFor="category"
                   className="text-sm font-medium text-slate-700"
                 >
-                  Categoría
+                  Categoria
                 </label>
                 <select
                   id="category"
@@ -317,7 +374,7 @@ export default function TransaccionesPage({
                   onChange={handleChange}
                   className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
                 >
-                  <option value="">Selecciona una categoría</option>
+                  <option value="">Selecciona una categoria</option>
 
                   {availableCategories.map((category) => (
                     <option key={category.id} value={category.name}>
@@ -328,10 +385,94 @@ export default function TransaccionesPage({
 
                 {availableCategories.length === 0 && (
                   <p className="text-xs text-slate-500">
-                    No tienes categorías para este tipo. Crea una desde la sección Categorías.
+                    No tienes categorias para este tipo. Crea una desde la
+                    seccion Categorias.
                   </p>
                 )}
               </div>
+
+              {isExpense && (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="paymentMethod"
+                      className="text-sm font-medium text-slate-700"
+                    >
+                      Medio de pago
+                    </label>
+                    <select
+                      id="paymentMethod"
+                      name="paymentMethod"
+                      value={form.paymentMethod}
+                      onChange={handleChange}
+                      className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                    >
+                      <option value="not_specified">
+                        Sin definir
+                      </option>
+                      {PAYMENT_METHOD_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    <p className="text-xs text-slate-500">
+                      Si no lo indicas, el gasto queda como sin definir.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4">
+                    <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={isReimbursable}
+                        onChange={(event) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            reimbursementStatus: event.target.checked
+                              ? prev.reimbursementStatus === 'reimbursed'
+                                ? 'reimbursed'
+                                : 'pending'
+                              : 'not_applicable',
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+                      />
+                      Es un gasto reembolsable o por cobrar
+                    </label>
+
+                    <p className="text-xs text-slate-500">
+                      Activalo cuando pagaste algo que despues te tienen que
+                      devolver.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {isExpense && isReimbursable && (
+                <div className="flex flex-col gap-2 md:col-span-2">
+                  <label
+                    htmlFor="reimbursementStatus"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Estado del reembolso
+                  </label>
+                  <select
+                    id="reimbursementStatus"
+                    name="reimbursementStatus"
+                    value={form.reimbursementStatus}
+                    onChange={handleChange}
+                    className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                  >
+                    {REIMBURSEMENT_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex flex-col gap-2 md:col-span-2">
                 <label
@@ -363,7 +504,7 @@ export default function TransaccionesPage({
                   disabled={isSaving}
                   className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving ? 'Guardando...' : 'Guardar transacción'}
+                  {isSaving ? 'Guardando...' : 'Guardar transaccion'}
                 </button>
               </div>
             </form>
@@ -375,10 +516,12 @@ export default function TransaccionesPage({
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b text-sm text-slate-500">
-                  <th className="py-3">Descripción</th>
-                  <th className="py-3">Categoría</th>
+                  <th className="py-3">Descripcion</th>
+                  <th className="py-3">Categoria</th>
                   <th className="py-3">Tipo</th>
                   <th className="py-3">Monto</th>
+                  <th className="py-3">Medio de pago</th>
+                  <th className="py-3">Reembolso</th>
                   <th className="py-3">Fecha</th>
                   <th className="py-3">Acciones</th>
                 </tr>
@@ -387,19 +530,19 @@ export default function TransaccionesPage({
               <tbody>
                 {isLoadingTransactions ? (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center text-slate-500">
+                    <td colSpan={8} className="py-10 text-center text-slate-500">
                       Cargando transacciones...
                     </td>
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center">
+                    <td colSpan={8} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <p className="font-medium text-slate-600">
-                          No hay transacciones aún
+                          No hay transacciones aun
                         </p>
                         <p className="text-sm text-slate-400">
-                          Agrega tu primera transacción para comenzar
+                          Agrega tu primera transaccion para comenzar
                         </p>
                       </div>
                     </td>
@@ -414,16 +557,28 @@ export default function TransaccionesPage({
                         {transaction.category}
                       </td>
                       <td
-                        className={`py-3 font-medium ${
-                          transaction.type === 'expense'
-                            ? 'text-red-500'
-                            : 'text-green-600'
-                        }`}
+                        className={`py-3 font-medium ${getTransactionTypeTone(transaction.type)}`}
                       >
-                        {transaction.type === 'expense' ? 'Gasto' : transaction.type === 'income' ? 'Ingreso' : 'Inversión'}
+                        {getTransactionTypeLabel(transaction.type)}
                       </td>
                       <td className="py-3 text-slate-800">
-                        ${transaction.amount}
+                        {formatCurrency(transaction.amount)}
+                      </td>
+                      <td className="py-3">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getPaymentMethodTone(transaction.paymentMethod)}`}
+                        >
+                          {getPaymentMethodLabel(transaction.paymentMethod)}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getReimbursementStatusTone(transaction.reimbursementStatus)}`}
+                        >
+                          {getReimbursementStatusLabel(
+                            transaction.reimbursementStatus
+                          )}
+                        </span>
                       </td>
                       <td className="py-3 text-slate-600">
                         {transaction.date.slice(0, 10)}
@@ -455,11 +610,11 @@ export default function TransaccionesPage({
         <Modal
           isOpen={isDeleteModalOpen}
           onClose={closeDeleteModal}
-          title="Confirmar eliminación"
+          title="Confirmar eliminacion"
         >
           <div className="flex flex-col gap-4">
             <p className="text-slate-600">
-              ¿Seguro que quieres eliminar esta transacción?
+              Seguro que quieres eliminar esta transaccion?
             </p>
 
             <div className="flex justify-end gap-3">

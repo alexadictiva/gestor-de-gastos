@@ -5,6 +5,7 @@ interface VoiceAssistantProps {
   incomeTotal: number
   expenseTotal: number
   investmentsTotal: number
+  reimbursablePendingTotal: number
 }
 
 function normalizeText(value: string) {
@@ -24,6 +25,7 @@ export default function VoiceAssistant({
   incomeTotal,
   expenseTotal,
   investmentsTotal,
+  reimbursablePendingTotal,
 }: VoiceAssistantProps) {
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const [isListening, setIsListening] = useState(false)
@@ -84,7 +86,15 @@ export default function VoiceAssistant({
       return `Llevas ${formatAmount(investmentsTotal)} en inversiones.`
     }
 
-    return 'Puedo responder tu saldo, tus ingresos, tus gastos o tus inversiones.'
+    if (
+      normalizedTranscript.includes('cuanto me deben') ||
+      normalizedTranscript.includes('cuanto tengo por cobrar') ||
+      normalizedTranscript.includes('cuanto me tienen que pagar')
+    ) {
+      return `Tienes ${formatAmount(reimbursablePendingTotal)} pendiente de cobro.`
+    }
+
+    return 'Puedo responder tu saldo, tus ingresos, tus gastos, tus inversiones o cuanto te deben.'
   }
 
   const startListening = () => {
@@ -158,21 +168,21 @@ export default function VoiceAssistant({
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-xl bg-slate-800 p-4">
+      <div className="mt-4 grid grid-cols-1 gap-2">
+        <div className="rounded-xl bg-slate-800 p-2">
           <p className="text-xs uppercase tracking-wide text-slate-400">
             Ultima pregunta
           </p>
-          <p className="mt-2 text-sm text-slate-100">
+          <p className="mt-0 text-sm text-slate-100">
             {lastQuestion || 'Todavia no hiciste ninguna pregunta por voz.'}
           </p>
         </div>
 
-        <div className="rounded-xl bg-slate-800 p-4">
+        <div className="rounded-xl bg-slate-800 p-2">
           <p className="text-xs uppercase tracking-wide text-slate-400">
             Respuesta
           </p>
-          <p className="mt-2 text-sm text-slate-100">
+          <p className="mt-0 text-sm text-slate-100">
             {lastAnswer || 'Cuando hables, te respondo por pantalla y por voz.'}
           </p>
         </div>
@@ -193,6 +203,9 @@ export default function VoiceAssistant({
         </span>
         <span className="rounded-full bg-slate-800 px-3 py-1">
           "cuanto ingrese"
+        </span>
+        <span className="rounded-full bg-slate-800 px-3 py-1">
+          "cuanto me deben"
         </span>
       </div>
     </section>

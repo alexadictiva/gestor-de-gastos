@@ -79,7 +79,11 @@ export default function AppRouter({
           path="/resumen-semanal"
           element={
             <ProtectedRoute>
-              <ResumenSemanalPage />
+              <ResumenSemanalPage
+                transactions={transactions}
+                categories={categories}
+                isLoadingTransactions={isLoadingTransactions}
+              />
             </ProtectedRoute>
           }
         />
@@ -88,7 +92,11 @@ export default function AppRouter({
           path="/resumen-mensual"
           element={
             <ProtectedRoute>
-              <ResumenMensualPage />
+              <ResumenMensualPage
+                transactions={transactions}
+                categories={categories}
+                isLoadingTransactions={isLoadingTransactions}
+              />
             </ProtectedRoute>
           }
         />

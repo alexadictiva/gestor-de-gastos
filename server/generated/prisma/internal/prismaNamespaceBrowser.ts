@@ -89,6 +89,8 @@ export const TransactionScalarFieldEnum = {
   amount: 'amount',
   type: 'type',
   category: 'category',
+  paymentMethod: 'paymentMethod',
+  reimbursementStatus: 'reimbursementStatus',
   date: 'date',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',

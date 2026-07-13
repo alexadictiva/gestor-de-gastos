@@ -40,6 +40,8 @@ export type TransactionMinAggregateOutputType = {
   amount: number | null
   type: string | null
   category: string | null
+  paymentMethod: string | null
+  reimbursementStatus: string | null
   date: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -52,6 +54,8 @@ export type TransactionMaxAggregateOutputType = {
   amount: number | null
   type: string | null
   category: string | null
+  paymentMethod: string | null
+  reimbursementStatus: string | null
   date: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -64,6 +68,8 @@ export type TransactionCountAggregateOutputType = {
   amount: number
   type: number
   category: number
+  paymentMethod: number
+  reimbursementStatus: number
   date: number
   createdAt: number
   updatedAt: number
@@ -86,6 +92,8 @@ export type TransactionMinAggregateInputType = {
   amount?: true
   type?: true
   category?: true
+  paymentMethod?: true
+  reimbursementStatus?: true
   date?: true
   createdAt?: true
   updatedAt?: true
@@ -98,6 +106,8 @@ export type TransactionMaxAggregateInputType = {
   amount?: true
   type?: true
   category?: true
+  paymentMethod?: true
+  reimbursementStatus?: true
   date?: true
   createdAt?: true
   updatedAt?: true
@@ -110,6 +120,8 @@ export type TransactionCountAggregateInputType = {
   amount?: true
   type?: true
   category?: true
+  paymentMethod?: true
+  reimbursementStatus?: true
   date?: true
   createdAt?: true
   updatedAt?: true
@@ -209,6 +221,8 @@ export type TransactionGroupByOutputType = {
   amount: number
   type: string
   category: string
+  paymentMethod: string
+  reimbursementStatus: string
   date: Date
   createdAt: Date
   updatedAt: Date
@@ -244,6 +258,8 @@ export type TransactionWhereInput = {
   amount?: Prisma.FloatFilter<"Transaction"> | number
   type?: Prisma.StringFilter<"Transaction"> | string
   category?: Prisma.StringFilter<"Transaction"> | string
+  paymentMethod?: Prisma.StringFilter<"Transaction"> | string
+  reimbursementStatus?: Prisma.StringFilter<"Transaction"> | string
   date?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
@@ -257,6 +273,8 @@ export type TransactionOrderByWithRelationInput = {
   amount?: Prisma.SortOrder
   type?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  paymentMethod?: Prisma.SortOrder
+  reimbursementStatus?: Prisma.SortOrder
   date?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -273,6 +291,8 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   amount?: Prisma.FloatFilter<"Transaction"> | number
   type?: Prisma.StringFilter<"Transaction"> | string
   category?: Prisma.StringFilter<"Transaction"> | string
+  paymentMethod?: Prisma.StringFilter<"Transaction"> | string
+  reimbursementStatus?: Prisma.StringFilter<"Transaction"> | string
   date?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
@@ -286,6 +306,8 @@ export type TransactionOrderByWithAggregationInput = {
   amount?: Prisma.SortOrder
   type?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  paymentMethod?: Prisma.SortOrder
+  reimbursementStatus?: Prisma.SortOrder
   date?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -306,6 +328,8 @@ export type TransactionScalarWhereWithAggregatesInput = {
   amount?: Prisma.FloatWithAggregatesFilter<"Transaction"> | number
   type?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   category?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
+  paymentMethod?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
+  reimbursementStatus?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   date?: Prisma.DateTimeWithAggregatesFilter<"Transaction"> | Date | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Transaction"> | Date | string
@@ -318,6 +342,8 @@ export type TransactionCreateInput = {
   amount: number
   type: string
   category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
   date: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -330,6 +356,8 @@ export type TransactionUncheckedCreateInput = {
   amount: number
   type: string
   category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
   date: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -342,6 +370,8 @@ export type TransactionUpdateInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -354,6 +384,8 @@ export type TransactionUncheckedUpdateInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -366,6 +398,8 @@ export type TransactionCreateManyInput = {
   amount: number
   type: string
   category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
   date: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -378,6 +412,8 @@ export type TransactionUpdateManyMutationInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -389,6 +425,8 @@ export type TransactionUncheckedUpdateManyInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -411,6 +449,8 @@ export type TransactionCountOrderByAggregateInput = {
   amount?: Prisma.SortOrder
   type?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  paymentMethod?: Prisma.SortOrder
+  reimbursementStatus?: Prisma.SortOrder
   date?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -427,6 +467,8 @@ export type TransactionMaxOrderByAggregateInput = {
   amount?: Prisma.SortOrder
   type?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  paymentMethod?: Prisma.SortOrder
+  reimbursementStatus?: Prisma.SortOrder
   date?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -439,6 +481,8 @@ export type TransactionMinOrderByAggregateInput = {
   amount?: Prisma.SortOrder
   type?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  paymentMethod?: Prisma.SortOrder
+  reimbursementStatus?: Prisma.SortOrder
   date?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -505,6 +549,8 @@ export type TransactionCreateWithoutUserInput = {
   amount: number
   type: string
   category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
   date: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -516,6 +562,8 @@ export type TransactionUncheckedCreateWithoutUserInput = {
   amount: number
   type: string
   category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
   date: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -555,6 +603,8 @@ export type TransactionScalarWhereInput = {
   amount?: Prisma.FloatFilter<"Transaction"> | number
   type?: Prisma.StringFilter<"Transaction"> | string
   category?: Prisma.StringFilter<"Transaction"> | string
+  paymentMethod?: Prisma.StringFilter<"Transaction"> | string
+  reimbursementStatus?: Prisma.StringFilter<"Transaction"> | string
   date?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Transaction"> | Date | string
@@ -567,6 +617,8 @@ export type TransactionCreateManyUserInput = {
   amount: number
   type: string
   category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
   date: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -578,6 +630,8 @@ export type TransactionUpdateWithoutUserInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -589,6 +643,8 @@ export type TransactionUncheckedUpdateWithoutUserInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -600,6 +656,8 @@ export type TransactionUncheckedUpdateManyWithoutUserInput = {
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   type?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -613,6 +671,8 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   amount?: boolean
   type?: boolean
   category?: boolean
+  paymentMethod?: boolean
+  reimbursementStatus?: boolean
   date?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -626,6 +686,8 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   amount?: boolean
   type?: boolean
   category?: boolean
+  paymentMethod?: boolean
+  reimbursementStatus?: boolean
   date?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -639,6 +701,8 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   amount?: boolean
   type?: boolean
   category?: boolean
+  paymentMethod?: boolean
+  reimbursementStatus?: boolean
   date?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -652,13 +716,15 @@ export type TransactionSelectScalar = {
   amount?: boolean
   type?: boolean
   category?: boolean
+  paymentMethod?: boolean
+  reimbursementStatus?: boolean
   date?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   userId?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "description" | "amount" | "type" | "category" | "date" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "description" | "amount" | "type" | "category" | "paymentMethod" | "reimbursementStatus" | "date" | "createdAt" | "updatedAt" | "userId", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -680,6 +746,8 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     amount: number
     type: string
     category: string
+    paymentMethod: string
+    reimbursementStatus: string
     date: Date
     createdAt: Date
     updatedAt: Date
@@ -1113,6 +1181,8 @@ export interface TransactionFieldRefs {
   readonly amount: Prisma.FieldRef<"Transaction", 'Float'>
   readonly type: Prisma.FieldRef<"Transaction", 'String'>
   readonly category: Prisma.FieldRef<"Transaction", 'String'>
+  readonly paymentMethod: Prisma.FieldRef<"Transaction", 'String'>
+  readonly reimbursementStatus: Prisma.FieldRef<"Transaction", 'String'>
   readonly date: Prisma.FieldRef<"Transaction", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Transaction", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Transaction", 'DateTime'>

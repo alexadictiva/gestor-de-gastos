@@ -7,6 +7,8 @@ export const mockTransactions: Transaction[] = [
     amount: 50,
     type: 'expense',
     category: 'Comida',
+    paymentMethod: 'cash',
+    reimbursementStatus: 'not_applicable',
     date: '2026-04-13',
   },
   {
@@ -15,6 +17,8 @@ export const mockTransactions: Transaction[] = [
     amount: 2000,
     type: 'income',
     category: 'Trabajo',
+    paymentMethod: 'not_specified',
+    reimbursementStatus: 'not_applicable',
     date: '2026-04-12',
   },
   {
@@ -23,6 +27,8 @@ export const mockTransactions: Transaction[] = [
     amount: 30,
     type: 'expense',
     category: 'Movilidad',
+    paymentMethod: 'bank',
+    reimbursementStatus: 'pending',
     date: '2026-04-11',
   },
   {
@@ -31,6 +37,8 @@ export const mockTransactions: Transaction[] = [
     amount: 1000,
     type: 'investments',
     category: 'Trabajo',
+    paymentMethod: 'not_specified',
+    reimbursementStatus: 'not_applicable',
     date: '2026-04-10',
   },
 ]

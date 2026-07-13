@@ -542,13 +542,21 @@ export default function ConfiguracionPage() {
               <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
                 <p>
                   <span className="font-medium text-slate-800">Gasto:</span>{' '}
-                  <code>gasto 2500 comida - Supermercado</code>
+                  <code>gasto 2500 comida - Supermercado pago:efectivo</code>
                 </p>
                 <p>
                   <span className="font-medium text-slate-800">
                     Gasto con fecha:
                   </span>{' '}
-                  <code>gasto 2500 comida - Supermercado - 2026-07-12</code>
+                  <code>gasto 2500 comida - Supermercado 30-06-2026 pago:cuenta</code>
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">
+                    Gasto reembolsable:
+                  </span>{' '}
+                  <code>
+                    gasto 264000 auto - GNC 3ra Cuota 11-06-2026 pago:tarjeta reembolso:pendiente
+                  </code>
                 </p>
                 <p>
                   <span className="font-medium text-slate-800">Ingreso:</span>{' '}
@@ -559,7 +567,7 @@ export default function ConfiguracionPage() {
                     Ingreso con fecha:
                   </span>{' '}
                   <code>
-                    ingreso 120000 sueldo - Salario julio fecha:2026-07-12
+                    ingreso 120000 sueldo - Salario julio fecha:30-06-2026
                   </code>
                 </p>
                 <p>
@@ -569,11 +577,21 @@ export default function ConfiguracionPage() {
                 <p>
                   <span className="font-medium text-slate-800">Formato completo:</span>{' '}
                   <code>
-                    gasto 2500 categoria:comida descripcion:super fecha:2026-07-12
+                    gasto 2500 categoria:comida descripcion:super fecha:2026-07-12 pago:cuenta
                   </code>
                 </p>
+                <div className="rounded-2xl bg-slate-900 p-4 text-xs text-slate-100">
+                  <p className="mb-2 font-medium text-white">
+                    Carga masiva en un solo mensaje:
+                  </p>
+                  <pre className="whitespace-pre-wrap font-mono">
+{`gasto 26333,35 conciertos - Martin Garrix 6ta Cuota 06-06-2026 pago:tarjeta
+gasto 264000 auto - GNC 3ra Cuota 11-06-2026 pago:tarjeta reembolso:pendiente
+gasto 236000 daniela - Prestamo Daniela 2da cuota 10-06-2026 pago:cuenta reembolso:cobrado`}
+                  </pre>
+                </div>
                 <p className="text-xs text-slate-500">
-                  La fecha es opcional. Si no la envias, el bot usa la fecha actual. La categoria debe existir en tu cuenta para ese tipo de movimiento.
+                  La fecha es opcional. Si no la envias, el bot usa la fecha actual. Puedes usar DD-MM-YYYY o YYYY-MM-DD, indicar pago:efectivo, pago:cuenta o pago:tarjeta y marcar reembolso:pendiente o reembolso:cobrado. Tambien puedes pegar varias lineas en un solo mensaje. La categoria debe existir en tu cuenta para ese tipo de movimiento.
                 </p>
               </div>
             </div>
