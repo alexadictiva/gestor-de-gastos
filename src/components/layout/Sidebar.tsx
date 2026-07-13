@@ -13,6 +13,11 @@ interface SidebarNavItem {
   end?: boolean
 }
 
+interface SidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
 function WalletIcon({ className = '' }: IconProps) {
   return (
     <svg
@@ -188,6 +193,24 @@ function LogoutIcon({ className = '' }: IconProps) {
   )
 }
 
+function CloseIcon({ className = '' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  )
+}
+
 const navItems: SidebarNavItem[] = [
   { to: '/', label: 'Dashboard', icon: DashboardIcon, end: true },
   { to: '/transacciones', label: 'Transacciones', icon: ReceiptIcon },
@@ -217,26 +240,36 @@ function getUserInitials(name?: string | null) {
   return initials || 'CG'
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
 
   const handleLogout = () => {
+    onClose()
     logout()
     navigate('/login')
   }
 
   return (
-    <aside className="app-sidebar">
+    <aside className={`app-sidebar ${isOpen ? 'app-sidebar--open' : ''}`}>
       <div className="app-sidebar-brand">
         <div className="app-sidebar-logo">
           <WalletIcon className="h-5 w-5" />
         </div>
 
-        <div>
+        <div className="app-sidebar-brand-copy">
           <p className="app-sidebar-brand-title">Control de gastos</p>
           <p className="app-sidebar-brand-subtitle">Panel administrativo</p>
         </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="app-sidebar-close"
+          aria-label="Cerrar menu"
+        >
+          <CloseIcon className="h-5 w-5" />
+        </button>
       </div>
 
       <nav className="app-sidebar-nav">
@@ -248,6 +281,7 @@ export default function Sidebar() {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={onClose}
               className={({ isActive }) =>
                 `app-nav-link ${isActive ? 'app-nav-link--active' : ''}`
               }
@@ -258,8 +292,6 @@ export default function Sidebar() {
           )
         })}
       </nav>
-
-      <div className="app-sidebar-spacer" />
 
       <div className="app-sidebar-footer">
         <div className="app-user-card">
@@ -275,6 +307,7 @@ export default function Sidebar() {
 
         <NavLink
           to="/configuracion"
+          onClick={onClose}
           className={({ isActive }) =>
             `app-sidebar-action ${isActive ? 'app-nav-link--active' : ''}`
           }
