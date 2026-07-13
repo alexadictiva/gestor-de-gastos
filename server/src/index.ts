@@ -5,6 +5,8 @@ import { startTelegramPolling } from './lib/telegram'
 import authRoutes from './routes/auth.routes'
 import transactionRoutes from './routes/transaction.routes'
 import categoryRoutes from './routes/category.routes'
+import obligationAccountRoutes from './routes/obligation-account.routes'
+import plannedMovementRoutes from './routes/planned-movement.routes'
 
 const app = express()
 const PORT = 4000
@@ -40,6 +42,8 @@ app.get('/api/health', async (_req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/transactions', transactionRoutes)
 app.use('/api/categories', categoryRoutes)
+app.use('/api/obligation-accounts', obligationAccountRoutes)
+app.use('/api/planned-movements', plannedMovementRoutes)
 
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`)

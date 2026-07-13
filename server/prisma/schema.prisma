@@ -18,6 +18,8 @@ model User {
   createdAt    DateTime      @default(now())
   transactions Transaction[]
   categories Category[]
+  plannedMovements PlannedMovement[]
+  obligationAccounts ObligationAccount[]
 
   @@index([telegramLinkCode])
 }
@@ -53,4 +55,84 @@ model Category{
 
   @@index([userId])
   @@unique([userId, name, type])
+}
+
+model PlannedMovement {
+  id            String   @id @default(cuid())
+  title         String
+  amount        Float
+  type          String
+  category      String
+  paymentMethod String   @default("not_specified")
+  dueDate       DateTime
+  isRecurring   Boolean  @default(false)
+  status        String   @default("pending")
+  completedAt   DateTime?
+  linkedTransactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dueDate])
+}
+
+model ObligationAccount {
+  id          String       @id @default(cuid())
+  name        String
+  type        String
+  creditLimit Float?
+  closingDay  Int?
+  dueDay      Int?
+  loanTotalAmount Float?
+  installmentCount Int?
+  loanFirstDueDate DateTime?
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  obligations Obligation[]
+
+  @@index([userId])
+}
+
+model Obligation {
+  id              String              @id @default(cuid())
+  title           String
+  referenceMonth  String?
+  principalAmount Float
+  interestAmount  Float               @default(0)
+  minimumPayment  Float?
+  dueDate         DateTime
+  status          String              @default("open")
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  accountId       String
+  account         ObligationAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  payments        ObligationPayment[]
+
+  @@index([accountId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+model ObligationPayment {
+  id          String      @id @default(cuid())
+  amount      Float
+  paymentDate DateTime
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  obligationId String
+  obligation   Obligation @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+
+  @@index([obligationId])
+  @@index([paymentDate])
 }

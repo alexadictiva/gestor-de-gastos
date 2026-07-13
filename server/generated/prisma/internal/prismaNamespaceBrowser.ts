@@ -53,7 +53,11 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Transaction: 'Transaction',
-  Category: 'Category'
+  Category: 'Category',
+  PlannedMovement: 'PlannedMovement',
+  ObligationAccount: 'ObligationAccount',
+  Obligation: 'Obligation',
+  ObligationPayment: 'ObligationPayment'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -111,6 +115,76 @@ export const CategoryScalarFieldEnum = {
 } as const
 
 export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]
+
+
+export const PlannedMovementScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  amount: 'amount',
+  type: 'type',
+  category: 'category',
+  paymentMethod: 'paymentMethod',
+  dueDate: 'dueDate',
+  isRecurring: 'isRecurring',
+  status: 'status',
+  completedAt: 'completedAt',
+  linkedTransactionId: 'linkedTransactionId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type PlannedMovementScalarFieldEnum = (typeof PlannedMovementScalarFieldEnum)[keyof typeof PlannedMovementScalarFieldEnum]
+
+
+export const ObligationAccountScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  creditLimit: 'creditLimit',
+  closingDay: 'closingDay',
+  dueDay: 'dueDay',
+  loanTotalAmount: 'loanTotalAmount',
+  installmentCount: 'installmentCount',
+  loanFirstDueDate: 'loanFirstDueDate',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type ObligationAccountScalarFieldEnum = (typeof ObligationAccountScalarFieldEnum)[keyof typeof ObligationAccountScalarFieldEnum]
+
+
+export const ObligationScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  referenceMonth: 'referenceMonth',
+  principalAmount: 'principalAmount',
+  interestAmount: 'interestAmount',
+  minimumPayment: 'minimumPayment',
+  dueDate: 'dueDate',
+  status: 'status',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  accountId: 'accountId'
+} as const
+
+export type ObligationScalarFieldEnum = (typeof ObligationScalarFieldEnum)[keyof typeof ObligationScalarFieldEnum]
+
+
+export const ObligationPaymentScalarFieldEnum = {
+  id: 'id',
+  amount: 'amount',
+  paymentDate: 'paymentDate',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  obligationId: 'obligationId'
+} as const
+
+export type ObligationPaymentScalarFieldEnum = (typeof ObligationPaymentScalarFieldEnum)[keyof typeof ObligationPaymentScalarFieldEnum]
 
 
 export const SortOrder = {

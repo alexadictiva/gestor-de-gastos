@@ -32,3 +32,23 @@ export type Transaction = Prisma.TransactionModel
  * 
  */
 export type Category = Prisma.CategoryModel
+/**
+ * Model PlannedMovement
+ * 
+ */
+export type PlannedMovement = Prisma.PlannedMovementModel
+/**
+ * Model ObligationAccount
+ * 
+ */
+export type ObligationAccount = Prisma.ObligationAccountModel
+/**
+ * Model Obligation
+ * 
+ */
+export type Obligation = Prisma.ObligationModel
+/**
+ * Model ObligationPayment
+ * 
+ */
+export type ObligationPayment = Prisma.ObligationPaymentModel

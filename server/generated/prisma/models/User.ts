@@ -208,6 +208,8 @@ export type UserWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   transactions?: Prisma.TransactionListRelationFilter
   categories?: Prisma.CategoryListRelationFilter
+  plannedMovements?: Prisma.PlannedMovementListRelationFilter
+  obligationAccounts?: Prisma.ObligationAccountListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -221,6 +223,8 @@ export type UserOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   transactions?: Prisma.TransactionOrderByRelationAggregateInput
   categories?: Prisma.CategoryOrderByRelationAggregateInput
+  plannedMovements?: Prisma.PlannedMovementOrderByRelationAggregateInput
+  obligationAccounts?: Prisma.ObligationAccountOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -237,6 +241,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   transactions?: Prisma.TransactionListRelationFilter
   categories?: Prisma.CategoryListRelationFilter
+  plannedMovements?: Prisma.PlannedMovementListRelationFilter
+  obligationAccounts?: Prisma.ObligationAccountListRelationFilter
 }, "id" | "email" | "telegramChatId">
 
 export type UserOrderByWithAggregationInput = {
@@ -278,6 +284,8 @@ export type UserCreateInput = {
   createdAt?: Date | string
   transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -291,6 +299,8 @@ export type UserUncheckedCreateInput = {
   createdAt?: Date | string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -304,6 +314,8 @@ export type UserUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -317,6 +329,8 @@ export type UserUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -434,6 +448,34 @@ export type UserUpdateOneRequiredWithoutCategoriesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCategoriesInput, Prisma.UserUpdateWithoutCategoriesInput>, Prisma.UserUncheckedUpdateWithoutCategoriesInput>
 }
 
+export type UserCreateNestedOneWithoutPlannedMovementsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlannedMovementsInput, Prisma.UserUncheckedCreateWithoutPlannedMovementsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlannedMovementsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPlannedMovementsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlannedMovementsInput, Prisma.UserUncheckedCreateWithoutPlannedMovementsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlannedMovementsInput
+  upsert?: Prisma.UserUpsertWithoutPlannedMovementsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPlannedMovementsInput, Prisma.UserUpdateWithoutPlannedMovementsInput>, Prisma.UserUncheckedUpdateWithoutPlannedMovementsInput>
+}
+
+export type UserCreateNestedOneWithoutObligationAccountsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutObligationAccountsInput, Prisma.UserUncheckedCreateWithoutObligationAccountsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutObligationAccountsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutObligationAccountsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutObligationAccountsInput, Prisma.UserUncheckedCreateWithoutObligationAccountsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutObligationAccountsInput
+  upsert?: Prisma.UserUpsertWithoutObligationAccountsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutObligationAccountsInput, Prisma.UserUpdateWithoutObligationAccountsInput>, Prisma.UserUncheckedUpdateWithoutObligationAccountsInput>
+}
+
 export type UserCreateWithoutTransactionsInput = {
   id?: string
   name: string
@@ -444,6 +486,8 @@ export type UserCreateWithoutTransactionsInput = {
   telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTransactionsInput = {
@@ -456,6 +500,8 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTransactionsInput = {
@@ -484,6 +530,8 @@ export type UserUpdateWithoutTransactionsInput = {
   telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransactionsInput = {
@@ -496,6 +544,8 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCategoriesInput = {
@@ -508,6 +558,8 @@ export type UserCreateWithoutCategoriesInput = {
   telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCategoriesInput = {
@@ -520,6 +572,8 @@ export type UserUncheckedCreateWithoutCategoriesInput = {
   telegramLinkCodeExpiresAt?: Date | string | null
   createdAt?: Date | string
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCategoriesInput = {
@@ -548,6 +602,8 @@ export type UserUpdateWithoutCategoriesInput = {
   telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCategoriesInput = {
@@ -560,6 +616,152 @@ export type UserUncheckedUpdateWithoutCategoriesInput = {
   telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutPlannedMovementsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
+  createdAt?: Date | string
+  transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPlannedMovementsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
+  createdAt?: Date | string
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPlannedMovementsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlannedMovementsInput, Prisma.UserUncheckedCreateWithoutPlannedMovementsInput>
+}
+
+export type UserUpsertWithoutPlannedMovementsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPlannedMovementsInput, Prisma.UserUncheckedUpdateWithoutPlannedMovementsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlannedMovementsInput, Prisma.UserUncheckedCreateWithoutPlannedMovementsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPlannedMovementsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPlannedMovementsInput, Prisma.UserUncheckedUpdateWithoutPlannedMovementsInput>
+}
+
+export type UserUpdateWithoutPlannedMovementsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPlannedMovementsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutObligationAccountsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
+  createdAt?: Date | string
+  transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutObligationAccountsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
+  createdAt?: Date | string
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutObligationAccountsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutObligationAccountsInput, Prisma.UserUncheckedCreateWithoutObligationAccountsInput>
+}
+
+export type UserUpsertWithoutObligationAccountsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutObligationAccountsInput, Prisma.UserUncheckedUpdateWithoutObligationAccountsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutObligationAccountsInput, Prisma.UserUncheckedCreateWithoutObligationAccountsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutObligationAccountsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutObligationAccountsInput, Prisma.UserUncheckedUpdateWithoutObligationAccountsInput>
+}
+
+export type UserUpdateWithoutObligationAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutObligationAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -570,11 +772,15 @@ export type UserUncheckedUpdateWithoutCategoriesInput = {
 export type UserCountOutputType = {
   transactions: number
   categories: number
+  plannedMovements: number
+  obligationAccounts: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactions?: boolean | UserCountOutputTypeCountTransactionsArgs
   categories?: boolean | UserCountOutputTypeCountCategoriesArgs
+  plannedMovements?: boolean | UserCountOutputTypeCountPlannedMovementsArgs
+  obligationAccounts?: boolean | UserCountOutputTypeCountObligationAccountsArgs
 }
 
 /**
@@ -601,6 +807,20 @@ export type UserCountOutputTypeCountCategoriesArgs<ExtArgs extends runtime.Types
   where?: Prisma.CategoryWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPlannedMovementsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PlannedMovementWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountObligationAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ObligationAccountWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -613,6 +833,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdAt?: boolean
   transactions?: boolean | Prisma.User$transactionsArgs<ExtArgs>
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
+  plannedMovements?: boolean | Prisma.User$plannedMovementsArgs<ExtArgs>
+  obligationAccounts?: boolean | Prisma.User$obligationAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -653,6 +875,8 @@ export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = run
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   transactions?: boolean | Prisma.User$transactionsArgs<ExtArgs>
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
+  plannedMovements?: boolean | Prisma.User$plannedMovementsArgs<ExtArgs>
+  obligationAccounts?: boolean | Prisma.User$obligationAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -663,6 +887,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     transactions: Prisma.$TransactionPayload<ExtArgs>[]
     categories: Prisma.$CategoryPayload<ExtArgs>[]
+    plannedMovements: Prisma.$PlannedMovementPayload<ExtArgs>[]
+    obligationAccounts: Prisma.$ObligationAccountPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1069,6 +1295,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   transactions<T extends Prisma.User$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   categories<T extends Prisma.User$categoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$categoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  plannedMovements<T extends Prisma.User$plannedMovementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$plannedMovementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlannedMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  obligationAccounts<T extends Prisma.User$obligationAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$obligationAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ObligationAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1542,6 +1770,54 @@ export type User$categoriesArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.CategoryScalarFieldEnum | Prisma.CategoryScalarFieldEnum[]
+}
+
+/**
+ * User.plannedMovements
+ */
+export type User$plannedMovementsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PlannedMovement
+   */
+  select?: Prisma.PlannedMovementSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PlannedMovement
+   */
+  omit?: Prisma.PlannedMovementOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PlannedMovementInclude<ExtArgs> | null
+  where?: Prisma.PlannedMovementWhereInput
+  orderBy?: Prisma.PlannedMovementOrderByWithRelationInput | Prisma.PlannedMovementOrderByWithRelationInput[]
+  cursor?: Prisma.PlannedMovementWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PlannedMovementScalarFieldEnum | Prisma.PlannedMovementScalarFieldEnum[]
+}
+
+/**
+ * User.obligationAccounts
+ */
+export type User$obligationAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ObligationAccount
+   */
+  select?: Prisma.ObligationAccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ObligationAccount
+   */
+  omit?: Prisma.ObligationAccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ObligationAccountInclude<ExtArgs> | null
+  where?: Prisma.ObligationAccountWhereInput
+  orderBy?: Prisma.ObligationAccountOrderByWithRelationInput | Prisma.ObligationAccountOrderByWithRelationInput[]
+  cursor?: Prisma.ObligationAccountWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ObligationAccountScalarFieldEnum | Prisma.ObligationAccountScalarFieldEnum[]
 }
 
 /**

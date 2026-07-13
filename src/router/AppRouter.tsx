@@ -10,8 +10,12 @@ import ResumenMensualPage from '../pages/ResumenMensualPage'
 import ConfiguracionPage from '../pages/ConfiguracionPage'
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
+import type { ObligationAccount } from '../types/obligationAccount'
+import type { PlannedMovement } from '../types/plannedMovement'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
 import RegisterPage from '../pages/RegisterPage'
+import ProyeccionPage from '../pages/ProyeccionPage'
+import TarjetasPrestamosPage from '../pages/TarjetasPrestamosPage'
 
 interface AppRouterProps {
   transactions: Transaction[]
@@ -20,6 +24,12 @@ interface AppRouterProps {
   categories: Category[]
   setCategories: Dispatch<SetStateAction<Category[]>>
   isLoadingCategories: boolean
+  obligationAccounts: ObligationAccount[]
+  setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
+  isLoadingObligationAccounts: boolean
+  plannedMovements: PlannedMovement[]
+  setPlannedMovements: Dispatch<SetStateAction<PlannedMovement[]>>
+  isLoadingPlannedMovements: boolean
 }
 
 export default function AppRouter({
@@ -29,6 +39,12 @@ export default function AppRouter({
   categories,
   setCategories,
   isLoadingCategories,
+  obligationAccounts,
+  setObligationAccounts,
+  isLoadingObligationAccounts,
+  plannedMovements,
+  setPlannedMovements,
+  isLoadingPlannedMovements,
 }: AppRouterProps) {
   return (
     <BrowserRouter>
@@ -42,7 +58,12 @@ export default function AppRouter({
             <ProtectedRoute>
               <DashboardPage 
               transactions={transactions} 
-              isLoadingTransactions={isLoadingTransactions} />
+              categories={categories}
+              obligationAccounts={obligationAccounts}
+              plannedMovements={plannedMovements}
+              isLoadingTransactions={isLoadingTransactions}
+              isLoadingObligationAccounts={isLoadingObligationAccounts}
+              isLoadingPlannedMovements={isLoadingPlannedMovements} />
             </ProtectedRoute>
           }
         />
@@ -96,6 +117,33 @@ export default function AppRouter({
                 transactions={transactions}
                 categories={categories}
                 isLoadingTransactions={isLoadingTransactions}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tarjetas-prestamos"
+          element={
+            <ProtectedRoute>
+              <TarjetasPrestamosPage
+                obligationAccounts={obligationAccounts}
+                setObligationAccounts={setObligationAccounts}
+                isLoadingObligationAccounts={isLoadingObligationAccounts}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/proyeccion"
+          element={
+            <ProtectedRoute>
+              <ProyeccionPage
+                plannedMovements={plannedMovements}
+                setPlannedMovements={setPlannedMovements}
+                isLoadingPlannedMovements={isLoadingPlannedMovements}
+                setTransactions={setTransactions}
               />
             </ProtectedRoute>
           }

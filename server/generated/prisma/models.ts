@@ -11,4 +11,8 @@
 export type * from './models/User'
 export type * from './models/Transaction'
 export type * from './models/Category'
+export type * from './models/PlannedMovement'
+export type * from './models/ObligationAccount'
+export type * from './models/Obligation'
+export type * from './models/ObligationPayment'
 export type * from './commonInputTypes'

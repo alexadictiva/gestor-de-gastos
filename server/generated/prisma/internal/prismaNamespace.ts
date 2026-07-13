@@ -386,7 +386,11 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Transaction: 'Transaction',
-  Category: 'Category'
+  Category: 'Category',
+  PlannedMovement: 'PlannedMovement',
+  ObligationAccount: 'ObligationAccount',
+  Obligation: 'Obligation',
+  ObligationPayment: 'ObligationPayment'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -402,7 +406,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "transaction" | "category"
+    modelProps: "user" | "transaction" | "category" | "plannedMovement" | "obligationAccount" | "obligation" | "obligationPayment"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +632,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PlannedMovement: {
+      payload: Prisma.$PlannedMovementPayload<ExtArgs>
+      fields: Prisma.PlannedMovementFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PlannedMovementFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PlannedMovementFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>
+        }
+        findFirst: {
+          args: Prisma.PlannedMovementFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PlannedMovementFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>
+        }
+        findMany: {
+          args: Prisma.PlannedMovementFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>[]
+        }
+        create: {
+          args: Prisma.PlannedMovementCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>
+        }
+        createMany: {
+          args: Prisma.PlannedMovementCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PlannedMovementCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>[]
+        }
+        delete: {
+          args: Prisma.PlannedMovementDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>
+        }
+        update: {
+          args: Prisma.PlannedMovementUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>
+        }
+        deleteMany: {
+          args: Prisma.PlannedMovementDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PlannedMovementUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PlannedMovementUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>[]
+        }
+        upsert: {
+          args: Prisma.PlannedMovementUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlannedMovementPayload>
+        }
+        aggregate: {
+          args: Prisma.PlannedMovementAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePlannedMovement>
+        }
+        groupBy: {
+          args: Prisma.PlannedMovementGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlannedMovementGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PlannedMovementCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlannedMovementCountAggregateOutputType> | number
+        }
+      }
+    }
+    ObligationAccount: {
+      payload: Prisma.$ObligationAccountPayload<ExtArgs>
+      fields: Prisma.ObligationAccountFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ObligationAccountFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ObligationAccountFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>
+        }
+        findFirst: {
+          args: Prisma.ObligationAccountFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ObligationAccountFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>
+        }
+        findMany: {
+          args: Prisma.ObligationAccountFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>[]
+        }
+        create: {
+          args: Prisma.ObligationAccountCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>
+        }
+        createMany: {
+          args: Prisma.ObligationAccountCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ObligationAccountCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>[]
+        }
+        delete: {
+          args: Prisma.ObligationAccountDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>
+        }
+        update: {
+          args: Prisma.ObligationAccountUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>
+        }
+        deleteMany: {
+          args: Prisma.ObligationAccountDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ObligationAccountUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ObligationAccountUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>[]
+        }
+        upsert: {
+          args: Prisma.ObligationAccountUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationAccountPayload>
+        }
+        aggregate: {
+          args: Prisma.ObligationAccountAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateObligationAccount>
+        }
+        groupBy: {
+          args: Prisma.ObligationAccountGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ObligationAccountGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ObligationAccountCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ObligationAccountCountAggregateOutputType> | number
+        }
+      }
+    }
+    Obligation: {
+      payload: Prisma.$ObligationPayload<ExtArgs>
+      fields: Prisma.ObligationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ObligationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ObligationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>
+        }
+        findFirst: {
+          args: Prisma.ObligationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ObligationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>
+        }
+        findMany: {
+          args: Prisma.ObligationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>[]
+        }
+        create: {
+          args: Prisma.ObligationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>
+        }
+        createMany: {
+          args: Prisma.ObligationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ObligationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>[]
+        }
+        delete: {
+          args: Prisma.ObligationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>
+        }
+        update: {
+          args: Prisma.ObligationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>
+        }
+        deleteMany: {
+          args: Prisma.ObligationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ObligationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ObligationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>[]
+        }
+        upsert: {
+          args: Prisma.ObligationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPayload>
+        }
+        aggregate: {
+          args: Prisma.ObligationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateObligation>
+        }
+        groupBy: {
+          args: Prisma.ObligationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ObligationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ObligationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ObligationCountAggregateOutputType> | number
+        }
+      }
+    }
+    ObligationPayment: {
+      payload: Prisma.$ObligationPaymentPayload<ExtArgs>
+      fields: Prisma.ObligationPaymentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ObligationPaymentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ObligationPaymentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>
+        }
+        findFirst: {
+          args: Prisma.ObligationPaymentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ObligationPaymentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>
+        }
+        findMany: {
+          args: Prisma.ObligationPaymentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>[]
+        }
+        create: {
+          args: Prisma.ObligationPaymentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>
+        }
+        createMany: {
+          args: Prisma.ObligationPaymentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ObligationPaymentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>[]
+        }
+        delete: {
+          args: Prisma.ObligationPaymentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>
+        }
+        update: {
+          args: Prisma.ObligationPaymentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>
+        }
+        deleteMany: {
+          args: Prisma.ObligationPaymentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ObligationPaymentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ObligationPaymentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>[]
+        }
+        upsert: {
+          args: Prisma.ObligationPaymentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ObligationPaymentPayload>
+        }
+        aggregate: {
+          args: Prisma.ObligationPaymentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateObligationPayment>
+        }
+        groupBy: {
+          args: Prisma.ObligationPaymentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ObligationPaymentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ObligationPaymentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ObligationPaymentCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -708,6 +1008,76 @@ export const CategoryScalarFieldEnum = {
 export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]
 
 
+export const PlannedMovementScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  amount: 'amount',
+  type: 'type',
+  category: 'category',
+  paymentMethod: 'paymentMethod',
+  dueDate: 'dueDate',
+  isRecurring: 'isRecurring',
+  status: 'status',
+  completedAt: 'completedAt',
+  linkedTransactionId: 'linkedTransactionId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type PlannedMovementScalarFieldEnum = (typeof PlannedMovementScalarFieldEnum)[keyof typeof PlannedMovementScalarFieldEnum]
+
+
+export const ObligationAccountScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  creditLimit: 'creditLimit',
+  closingDay: 'closingDay',
+  dueDay: 'dueDay',
+  loanTotalAmount: 'loanTotalAmount',
+  installmentCount: 'installmentCount',
+  loanFirstDueDate: 'loanFirstDueDate',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type ObligationAccountScalarFieldEnum = (typeof ObligationAccountScalarFieldEnum)[keyof typeof ObligationAccountScalarFieldEnum]
+
+
+export const ObligationScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  referenceMonth: 'referenceMonth',
+  principalAmount: 'principalAmount',
+  interestAmount: 'interestAmount',
+  minimumPayment: 'minimumPayment',
+  dueDate: 'dueDate',
+  status: 'status',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  accountId: 'accountId'
+} as const
+
+export type ObligationScalarFieldEnum = (typeof ObligationScalarFieldEnum)[keyof typeof ObligationScalarFieldEnum]
+
+
+export const ObligationPaymentScalarFieldEnum = {
+  id: 'id',
+  amount: 'amount',
+  paymentDate: 'paymentDate',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  obligationId: 'obligationId'
+} as const
+
+export type ObligationPaymentScalarFieldEnum = (typeof ObligationPaymentScalarFieldEnum)[keyof typeof ObligationPaymentScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -748,6 +1118,13 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -855,6 +1232,10 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   transaction?: Prisma.TransactionOmit
   category?: Prisma.CategoryOmit
+  plannedMovement?: Prisma.PlannedMovementOmit
+  obligationAccount?: Prisma.ObligationAccountOmit
+  obligation?: Prisma.ObligationOmit
+  obligationPayment?: Prisma.ObligationPaymentOmit
 }
 
 /* Types for Logging */

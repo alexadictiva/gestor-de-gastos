@@ -4,6 +4,8 @@ const navItems = [
   { to: '/', label: 'Dashboard' },
   { to: '/transacciones', label: 'Transacciones' },
   { to: '/categorias', label: 'Categorias' },
+  { to: '/tarjetas-prestamos', label: 'Tarjetas y Prestamos' },
+  { to: '/proyeccion', label: 'Proyeccion' },
   { to: '/configuracion', label: 'Configuracion' },
   { to: '/resumen-semanal', label: 'Resumen semanal' },
   { to: '/resumen-mensual', label: 'Resumen mensual' },
