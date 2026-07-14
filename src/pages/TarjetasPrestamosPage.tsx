@@ -9,6 +9,16 @@ import {
 } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CloseIcon,
+  EditIcon,
+  RegisterCollectionIcon,
+  RegisterPaymentIcon,
+  TrashIcon,
+  ViewIcon,
+} from '../components/ui/AppIcons'
 import { useAuth } from '../hooks/useAuth'
 import {
   createObligationAccountRequest,
@@ -1133,17 +1143,28 @@ export default function TarjetasPrestamosPage({
                     <button
                       type="button"
                       onClick={() => toggleAccountAccordion(account.id)}
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                      title={isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                      aria-label={isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                     >
-                      {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                      <span className="relative inline-flex h-5 w-5 items-center justify-center">
+                        <ViewIcon className="h-4 w-4" />
+                        {isExpanded ? (
+                          <ChevronUpIcon className="absolute -right-2 -top-2 h-3 w-3 rounded-full bg-white text-slate-600" />
+                        ) : (
+                          <ChevronDownIcon className="absolute -right-2 -top-2 h-3 w-3 rounded-full bg-white text-slate-600" />
+                        )}
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => openEditAccountForm(account)}
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                      title="Editar cuenta"
+                      aria-label="Editar cuenta"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                     >
-                      Editar cuenta
+                      <EditIcon className="h-4 w-4" />
                     </button>
 
                     <button
@@ -1180,9 +1201,11 @@ export default function TarjetasPrestamosPage({
                           label: account.name,
                         })
                       }
-                      className="rounded-xl bg-red-100 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-200"
+                      title="Eliminar cuenta"
+                      aria-label="Eliminar cuenta"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 hover:bg-red-200"
                     >
-                      Eliminar cuenta
+                      <TrashIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -1450,9 +1473,11 @@ export default function TarjetasPrestamosPage({
                                 onClick={() =>
                                   openEditObligationForm(account.id, obligation)
                                 }
-                                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                title="Editar obligacion"
+                                aria-label="Editar obligacion"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                               >
-                                Editar obligacion
+                                <EditIcon className="h-4 w-4" />
                               </button>
 
                               {obligationFinancials.remainingAmount > 0.01 && (
@@ -1469,11 +1494,23 @@ export default function TarjetasPrestamosPage({
                                     setPaymentFormObligationId(obligation.id)
                                     setPaymentForm(createInitialPaymentForm())
                                   }}
-                                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                  title={
+                                    isPaymentFormOpen
+                                      ? 'Cerrar movimiento'
+                                      : getPaymentActionLabel(account.type)
+                                  }
+                                  aria-label={
+                                    isPaymentFormOpen
+                                      ? 'Cerrar movimiento'
+                                      : getPaymentActionLabel(account.type)
+                                  }
+                                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                                 >
                                   {isPaymentFormOpen
-                                    ? 'Cerrar movimiento'
-                                    : getPaymentActionLabel(account.type)}
+                                    ? <CloseIcon className="h-4 w-4" />
+                                    : account.type === 'loan_receivable'
+                                      ? <RegisterCollectionIcon className="h-4 w-4" />
+                                      : <RegisterPaymentIcon className="h-4 w-4" />}
                                 </button>
                               )}
 
@@ -1486,9 +1523,11 @@ export default function TarjetasPrestamosPage({
                                     label: obligation.title,
                                   })
                                 }
-                                className="rounded-xl bg-red-100 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-200"
+                                title="Eliminar obligacion"
+                                aria-label="Eliminar obligacion"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 hover:bg-red-200"
                               >
-                                Eliminar obligacion
+                                <TrashIcon className="h-4 w-4" />
                               </button>
                             </div>
                           </div>
@@ -1693,9 +1732,11 @@ export default function TarjetasPrestamosPage({
                                           label: payment.paymentDate.slice(0, 10),
                                         })
                                       }
-                                      className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-200"
+                                      title="Eliminar abono"
+                                      aria-label="Eliminar abono"
+                                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
                                     >
-                                      Eliminar abono
+                                      <TrashIcon className="h-4 w-4" />
                                     </button>
                                   </div>
                                 ))}

@@ -8,6 +8,7 @@ import {
 } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
+import { EditIcon, TrashIcon } from '../components/ui/AppIcons'
 import { useAuth } from '../hooks/useAuth'
 import {
   convertPlannedMovementToTransactionRequest,
@@ -919,9 +920,11 @@ export default function ProyeccionPage({
                                     type="button"
                                     onClick={() => openEditForm(item)}
                                     disabled={isBusy}
-                                    className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                                    title="Editar movimiento proyectado"
+                                    aria-label="Editar movimiento proyectado"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
                                   >
-                                    Editar
+                                    <EditIcon className="h-4 w-4" />
                                   </button>
                                 )}
 
@@ -930,9 +933,11 @@ export default function ProyeccionPage({
                                     type="button"
                                     onClick={() => openDeleteModal(item.id)}
                                     disabled={isBusy}
-                                    className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60"
+                                    title="Eliminar movimiento proyectado"
+                                    aria-label="Eliminar movimiento proyectado"
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60"
                                   >
-                                    Eliminar
+                                    <TrashIcon className="h-4 w-4" />
                                   </button>
                                 )}
                               </div>

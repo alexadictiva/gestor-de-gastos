@@ -9,6 +9,12 @@ import {
 } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
+import {
+  EditIcon,
+  FilterIcon,
+  FilterOffIcon,
+  TrashIcon,
+} from '../components/ui/AppIcons'
 import { useAuth } from '../hooks/useAuth'
 import {
   PAYMENT_METHOD_OPTIONS,
@@ -1468,13 +1474,15 @@ export default function TransaccionesPage({
               <button
                 type="button"
                 onClick={() => setIsFiltersOpen((prev) => !prev)}
+                title="Filtros"
+                aria-label="Filtros"
                 className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
                   isFiltersOpen || activeFiltersCount > 0
                     ? 'border-sky-200 bg-sky-50 text-sky-700'
                     : 'border-slate-300 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                Filtros
+                <FilterIcon className="h-4 w-4" />
                 {activeFiltersCount > 0 && (
                   <span className="ml-2 inline-flex rounded-full bg-sky-600 px-2 py-0.5 text-xs font-semibold text-white">
                     {activeFiltersCount}
@@ -1486,9 +1494,11 @@ export default function TransaccionesPage({
                 <button
                   type="button"
                   onClick={clearFilters}
+                  title="Limpiar filtros"
+                  aria-label="Limpiar filtros"
                   className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
                 >
-                  Limpiar filtros
+                  <FilterOffIcon className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -1775,7 +1785,7 @@ export default function TransaccionesPage({
                 ) : (
                   paginatedTransactions.map((transaction) => (
                     <tr key={transaction.id} className="border-b last:border-b-0">
-                      <td className="py-3 pr-3 align-top">
+                      <td className="py-3 pr-3 align-center">
                         <input
                           type="checkbox"
                           checked={selectedTransactionIdSet.has(transaction.id)}
@@ -1862,30 +1872,39 @@ export default function TransaccionesPage({
                         {transaction.date.slice(0, 10)}
                       </td>
                       <td className="py-3">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(transaction)}
-                          disabled={Boolean(
-                            transaction.linkedObligationAccountId ||
+                        <div className="flex items-center gap-2">
+                          <span
+                            title={
+                              transaction.linkedObligationAccountId ||
                               transaction.linkedObligationPaymentId
-                          )}
-                          title={
-                            transaction.linkedObligationAccountId ||
-                            transaction.linkedObligationPaymentId
-                              ? 'Edita este movimiento desde Tarjetas y Prestamos para no desincronizar el control de deuda'
-                              : undefined
-                          }
-                          className="mr-2 rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openDeleteModal(transaction.id)}
-                          className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-600 hover:bg-red-200"
-                        >
-                          Eliminar
-                        </button>
+                                ? 'Edita este movimiento desde Tarjetas y Prestamos para no desincronizar el control de deuda'
+                                : 'Editar'
+                            }
+                          >
+                            <button
+                              type="button"
+                              onClick={() => openEditForm(transaction)}
+                              aria-label="Editar"
+                              disabled={Boolean(
+                                transaction.linkedObligationAccountId ||
+                                  transaction.linkedObligationPaymentId
+                              )}
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <EditIcon className="h-4 w-4" />
+                            </button>
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => openDeleteModal(transaction.id)}
+                            title="Eliminar"
+                            aria-label="Eliminar"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

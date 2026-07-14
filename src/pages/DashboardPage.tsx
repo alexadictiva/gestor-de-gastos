@@ -175,7 +175,7 @@ export default function DashboardPage({
           reimbursablePendingTotal={reimbursablePendingTotal}
         />
 
-        <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <section className="grid grid-cols-1 gap-6">
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-800">
               Panorama general
