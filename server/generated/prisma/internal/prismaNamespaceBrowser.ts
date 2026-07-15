@@ -57,7 +57,8 @@ export const ModelName = {
   PlannedMovement: 'PlannedMovement',
   ObligationAccount: 'ObligationAccount',
   Obligation: 'Obligation',
-  ObligationPayment: 'ObligationPayment'
+  ObligationPayment: 'ObligationPayment',
+  FinancialAccount: 'FinancialAccount'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -100,7 +101,8 @@ export const TransactionScalarFieldEnum = {
   updatedAt: 'updatedAt',
   userId: 'userId',
   linkedObligationAccountId: 'linkedObligationAccountId',
-  linkedObligationPaymentId: 'linkedObligationPaymentId'
+  linkedObligationPaymentId: 'linkedObligationPaymentId',
+  financialAccountId: 'financialAccountId'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
@@ -184,10 +186,25 @@ export const ObligationPaymentScalarFieldEnum = {
   notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  obligationId: 'obligationId'
+  obligationId: 'obligationId',
+  financialAccountId: 'financialAccountId'
 } as const
 
 export type ObligationPaymentScalarFieldEnum = (typeof ObligationPaymentScalarFieldEnum)[keyof typeof ObligationPaymentScalarFieldEnum]
+
+
+export const FinancialAccountScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  initialBalance: 'initialBalance',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type FinancialAccountScalarFieldEnum = (typeof FinancialAccountScalarFieldEnum)[keyof typeof FinancialAccountScalarFieldEnum]
 
 
 export const SortOrder = {

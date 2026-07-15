@@ -1,3 +1,4 @@
+import type { FinancialAccount } from './financialAccount'
 import type { PaymentMethod, Transaction } from './transaction'
 
 export type ObligationAccountType =
@@ -12,6 +13,8 @@ export interface ObligationPayment {
   amount: number
   paymentDate: string
   paymentMethod: PaymentMethod
+  financialAccountId?: string | null
+  financialAccount?: FinancialAccount | null
   linkedTransactions?: Transaction[]
   notes?: string | null
   createdAt?: string
@@ -97,6 +100,7 @@ export interface CreateObligationPaymentPayload {
   amount: number
   paymentDate: string
   paymentMethod: PaymentMethod
+  financialAccountId?: string | null
   notes?: string | null
 }
 

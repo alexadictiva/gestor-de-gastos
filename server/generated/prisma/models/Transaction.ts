@@ -48,6 +48,7 @@ export type TransactionMinAggregateOutputType = {
   userId: string | null
   linkedObligationAccountId: string | null
   linkedObligationPaymentId: string | null
+  financialAccountId: string | null
 }
 
 export type TransactionMaxAggregateOutputType = {
@@ -64,6 +65,7 @@ export type TransactionMaxAggregateOutputType = {
   userId: string | null
   linkedObligationAccountId: string | null
   linkedObligationPaymentId: string | null
+  financialAccountId: string | null
 }
 
 export type TransactionCountAggregateOutputType = {
@@ -80,6 +82,7 @@ export type TransactionCountAggregateOutputType = {
   userId: number
   linkedObligationAccountId: number
   linkedObligationPaymentId: number
+  financialAccountId: number
   _all: number
 }
 
@@ -106,6 +109,7 @@ export type TransactionMinAggregateInputType = {
   userId?: true
   linkedObligationAccountId?: true
   linkedObligationPaymentId?: true
+  financialAccountId?: true
 }
 
 export type TransactionMaxAggregateInputType = {
@@ -122,6 +126,7 @@ export type TransactionMaxAggregateInputType = {
   userId?: true
   linkedObligationAccountId?: true
   linkedObligationPaymentId?: true
+  financialAccountId?: true
 }
 
 export type TransactionCountAggregateInputType = {
@@ -138,6 +143,7 @@ export type TransactionCountAggregateInputType = {
   userId?: true
   linkedObligationAccountId?: true
   linkedObligationPaymentId?: true
+  financialAccountId?: true
   _all?: true
 }
 
@@ -241,6 +247,7 @@ export type TransactionGroupByOutputType = {
   userId: string
   linkedObligationAccountId: string | null
   linkedObligationPaymentId: string | null
+  financialAccountId: string | null
   _count: TransactionCountAggregateOutputType | null
   _avg: TransactionAvgAggregateOutputType | null
   _sum: TransactionSumAggregateOutputType | null
@@ -280,9 +287,11 @@ export type TransactionWhereInput = {
   userId?: Prisma.StringFilter<"Transaction"> | string
   linkedObligationAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   linkedObligationPaymentId?: Prisma.StringNullableFilter<"Transaction"> | string | null
+  financialAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   linkedObligationAccount?: Prisma.XOR<Prisma.ObligationAccountNullableScalarRelationFilter, Prisma.ObligationAccountWhereInput> | null
   linkedObligationPayment?: Prisma.XOR<Prisma.ObligationPaymentNullableScalarRelationFilter, Prisma.ObligationPaymentWhereInput> | null
+  financialAccount?: Prisma.XOR<Prisma.FinancialAccountNullableScalarRelationFilter, Prisma.FinancialAccountWhereInput> | null
 }
 
 export type TransactionOrderByWithRelationInput = {
@@ -299,9 +308,11 @@ export type TransactionOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   linkedObligationAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedObligationPaymentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  financialAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   linkedObligationAccount?: Prisma.ObligationAccountOrderByWithRelationInput
   linkedObligationPayment?: Prisma.ObligationPaymentOrderByWithRelationInput
+  financialAccount?: Prisma.FinancialAccountOrderByWithRelationInput
 }
 
 export type TransactionWhereUniqueInput = Prisma.AtLeast<{
@@ -321,9 +332,11 @@ export type TransactionWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.StringFilter<"Transaction"> | string
   linkedObligationAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   linkedObligationPaymentId?: Prisma.StringNullableFilter<"Transaction"> | string | null
+  financialAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   linkedObligationAccount?: Prisma.XOR<Prisma.ObligationAccountNullableScalarRelationFilter, Prisma.ObligationAccountWhereInput> | null
   linkedObligationPayment?: Prisma.XOR<Prisma.ObligationPaymentNullableScalarRelationFilter, Prisma.ObligationPaymentWhereInput> | null
+  financialAccount?: Prisma.XOR<Prisma.FinancialAccountNullableScalarRelationFilter, Prisma.FinancialAccountWhereInput> | null
 }, "id">
 
 export type TransactionOrderByWithAggregationInput = {
@@ -340,6 +353,7 @@ export type TransactionOrderByWithAggregationInput = {
   userId?: Prisma.SortOrder
   linkedObligationAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedObligationPaymentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  financialAccountId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.TransactionCountOrderByAggregateInput
   _avg?: Prisma.TransactionAvgOrderByAggregateInput
   _max?: Prisma.TransactionMaxOrderByAggregateInput
@@ -364,6 +378,7 @@ export type TransactionScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"Transaction"> | string
   linkedObligationAccountId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
   linkedObligationPaymentId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
+  financialAccountId?: Prisma.StringNullableWithAggregatesFilter<"Transaction"> | string | null
 }
 
 export type TransactionCreateInput = {
@@ -380,6 +395,7 @@ export type TransactionCreateInput = {
   user: Prisma.UserCreateNestedOneWithoutTransactionsInput
   linkedObligationAccount?: Prisma.ObligationAccountCreateNestedOneWithoutLinkedTransactionsInput
   linkedObligationPayment?: Prisma.ObligationPaymentCreateNestedOneWithoutLinkedTransactionsInput
+  financialAccount?: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
 }
 
 export type TransactionUncheckedCreateInput = {
@@ -396,6 +412,7 @@ export type TransactionUncheckedCreateInput = {
   userId: string
   linkedObligationAccountId?: string | null
   linkedObligationPaymentId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionUpdateInput = {
@@ -412,6 +429,7 @@ export type TransactionUpdateInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutTransactionsNestedInput
   linkedObligationAccount?: Prisma.ObligationAccountUpdateOneWithoutLinkedTransactionsNestedInput
   linkedObligationPayment?: Prisma.ObligationPaymentUpdateOneWithoutLinkedTransactionsNestedInput
+  financialAccount?: Prisma.FinancialAccountUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TransactionUncheckedUpdateInput = {
@@ -428,6 +446,7 @@ export type TransactionUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TransactionCreateManyInput = {
@@ -444,6 +463,7 @@ export type TransactionCreateManyInput = {
   userId: string
   linkedObligationAccountId?: string | null
   linkedObligationPaymentId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionUpdateManyMutationInput = {
@@ -473,6 +493,7 @@ export type TransactionUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TransactionListRelationFilter = {
@@ -499,6 +520,7 @@ export type TransactionCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   linkedObligationAccountId?: Prisma.SortOrder
   linkedObligationPaymentId?: Prisma.SortOrder
+  financialAccountId?: Prisma.SortOrder
 }
 
 export type TransactionAvgOrderByAggregateInput = {
@@ -519,6 +541,7 @@ export type TransactionMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   linkedObligationAccountId?: Prisma.SortOrder
   linkedObligationPaymentId?: Prisma.SortOrder
+  financialAccountId?: Prisma.SortOrder
 }
 
 export type TransactionMinOrderByAggregateInput = {
@@ -535,6 +558,7 @@ export type TransactionMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   linkedObligationAccountId?: Prisma.SortOrder
   linkedObligationPaymentId?: Prisma.SortOrder
+  financialAccountId?: Prisma.SortOrder
 }
 
 export type TransactionSumOrderByAggregateInput = {
@@ -675,6 +699,48 @@ export type TransactionUncheckedUpdateManyWithoutLinkedObligationPaymentNestedIn
   deleteMany?: Prisma.TransactionScalarWhereInput | Prisma.TransactionScalarWhereInput[]
 }
 
+export type TransactionCreateNestedManyWithoutFinancialAccountInput = {
+  create?: Prisma.XOR<Prisma.TransactionCreateWithoutFinancialAccountInput, Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput> | Prisma.TransactionCreateWithoutFinancialAccountInput[] | Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput[]
+  connectOrCreate?: Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput | Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput[]
+  createMany?: Prisma.TransactionCreateManyFinancialAccountInputEnvelope
+  connect?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+}
+
+export type TransactionUncheckedCreateNestedManyWithoutFinancialAccountInput = {
+  create?: Prisma.XOR<Prisma.TransactionCreateWithoutFinancialAccountInput, Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput> | Prisma.TransactionCreateWithoutFinancialAccountInput[] | Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput[]
+  connectOrCreate?: Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput | Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput[]
+  createMany?: Prisma.TransactionCreateManyFinancialAccountInputEnvelope
+  connect?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+}
+
+export type TransactionUpdateManyWithoutFinancialAccountNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionCreateWithoutFinancialAccountInput, Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput> | Prisma.TransactionCreateWithoutFinancialAccountInput[] | Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput[]
+  connectOrCreate?: Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput | Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput[]
+  upsert?: Prisma.TransactionUpsertWithWhereUniqueWithoutFinancialAccountInput | Prisma.TransactionUpsertWithWhereUniqueWithoutFinancialAccountInput[]
+  createMany?: Prisma.TransactionCreateManyFinancialAccountInputEnvelope
+  set?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  disconnect?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  delete?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  connect?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  update?: Prisma.TransactionUpdateWithWhereUniqueWithoutFinancialAccountInput | Prisma.TransactionUpdateWithWhereUniqueWithoutFinancialAccountInput[]
+  updateMany?: Prisma.TransactionUpdateManyWithWhereWithoutFinancialAccountInput | Prisma.TransactionUpdateManyWithWhereWithoutFinancialAccountInput[]
+  deleteMany?: Prisma.TransactionScalarWhereInput | Prisma.TransactionScalarWhereInput[]
+}
+
+export type TransactionUncheckedUpdateManyWithoutFinancialAccountNestedInput = {
+  create?: Prisma.XOR<Prisma.TransactionCreateWithoutFinancialAccountInput, Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput> | Prisma.TransactionCreateWithoutFinancialAccountInput[] | Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput[]
+  connectOrCreate?: Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput | Prisma.TransactionCreateOrConnectWithoutFinancialAccountInput[]
+  upsert?: Prisma.TransactionUpsertWithWhereUniqueWithoutFinancialAccountInput | Prisma.TransactionUpsertWithWhereUniqueWithoutFinancialAccountInput[]
+  createMany?: Prisma.TransactionCreateManyFinancialAccountInputEnvelope
+  set?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  disconnect?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  delete?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  connect?: Prisma.TransactionWhereUniqueInput | Prisma.TransactionWhereUniqueInput[]
+  update?: Prisma.TransactionUpdateWithWhereUniqueWithoutFinancialAccountInput | Prisma.TransactionUpdateWithWhereUniqueWithoutFinancialAccountInput[]
+  updateMany?: Prisma.TransactionUpdateManyWithWhereWithoutFinancialAccountInput | Prisma.TransactionUpdateManyWithWhereWithoutFinancialAccountInput[]
+  deleteMany?: Prisma.TransactionScalarWhereInput | Prisma.TransactionScalarWhereInput[]
+}
+
 export type TransactionCreateWithoutUserInput = {
   id?: string
   description: string
@@ -688,6 +754,7 @@ export type TransactionCreateWithoutUserInput = {
   updatedAt?: Date | string
   linkedObligationAccount?: Prisma.ObligationAccountCreateNestedOneWithoutLinkedTransactionsInput
   linkedObligationPayment?: Prisma.ObligationPaymentCreateNestedOneWithoutLinkedTransactionsInput
+  financialAccount?: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
 }
 
 export type TransactionUncheckedCreateWithoutUserInput = {
@@ -703,6 +770,7 @@ export type TransactionUncheckedCreateWithoutUserInput = {
   updatedAt?: Date | string
   linkedObligationAccountId?: string | null
   linkedObligationPaymentId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionCreateOrConnectWithoutUserInput = {
@@ -747,6 +815,7 @@ export type TransactionScalarWhereInput = {
   userId?: Prisma.StringFilter<"Transaction"> | string
   linkedObligationAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
   linkedObligationPaymentId?: Prisma.StringNullableFilter<"Transaction"> | string | null
+  financialAccountId?: Prisma.StringNullableFilter<"Transaction"> | string | null
 }
 
 export type TransactionCreateWithoutLinkedObligationAccountInput = {
@@ -762,6 +831,7 @@ export type TransactionCreateWithoutLinkedObligationAccountInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTransactionsInput
   linkedObligationPayment?: Prisma.ObligationPaymentCreateNestedOneWithoutLinkedTransactionsInput
+  financialAccount?: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
 }
 
 export type TransactionUncheckedCreateWithoutLinkedObligationAccountInput = {
@@ -777,6 +847,7 @@ export type TransactionUncheckedCreateWithoutLinkedObligationAccountInput = {
   updatedAt?: Date | string
   userId: string
   linkedObligationPaymentId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionCreateOrConnectWithoutLinkedObligationAccountInput = {
@@ -817,6 +888,7 @@ export type TransactionCreateWithoutLinkedObligationPaymentInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutTransactionsInput
   linkedObligationAccount?: Prisma.ObligationAccountCreateNestedOneWithoutLinkedTransactionsInput
+  financialAccount?: Prisma.FinancialAccountCreateNestedOneWithoutTransactionsInput
 }
 
 export type TransactionUncheckedCreateWithoutLinkedObligationPaymentInput = {
@@ -832,6 +904,7 @@ export type TransactionUncheckedCreateWithoutLinkedObligationPaymentInput = {
   updatedAt?: Date | string
   userId: string
   linkedObligationAccountId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionCreateOrConnectWithoutLinkedObligationPaymentInput = {
@@ -859,6 +932,63 @@ export type TransactionUpdateManyWithWhereWithoutLinkedObligationPaymentInput = 
   data: Prisma.XOR<Prisma.TransactionUpdateManyMutationInput, Prisma.TransactionUncheckedUpdateManyWithoutLinkedObligationPaymentInput>
 }
 
+export type TransactionCreateWithoutFinancialAccountInput = {
+  id?: string
+  description: string
+  amount: number
+  type: string
+  category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
+  date: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutTransactionsInput
+  linkedObligationAccount?: Prisma.ObligationAccountCreateNestedOneWithoutLinkedTransactionsInput
+  linkedObligationPayment?: Prisma.ObligationPaymentCreateNestedOneWithoutLinkedTransactionsInput
+}
+
+export type TransactionUncheckedCreateWithoutFinancialAccountInput = {
+  id?: string
+  description: string
+  amount: number
+  type: string
+  category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
+  date: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userId: string
+  linkedObligationAccountId?: string | null
+  linkedObligationPaymentId?: string | null
+}
+
+export type TransactionCreateOrConnectWithoutFinancialAccountInput = {
+  where: Prisma.TransactionWhereUniqueInput
+  create: Prisma.XOR<Prisma.TransactionCreateWithoutFinancialAccountInput, Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput>
+}
+
+export type TransactionCreateManyFinancialAccountInputEnvelope = {
+  data: Prisma.TransactionCreateManyFinancialAccountInput | Prisma.TransactionCreateManyFinancialAccountInput[]
+}
+
+export type TransactionUpsertWithWhereUniqueWithoutFinancialAccountInput = {
+  where: Prisma.TransactionWhereUniqueInput
+  update: Prisma.XOR<Prisma.TransactionUpdateWithoutFinancialAccountInput, Prisma.TransactionUncheckedUpdateWithoutFinancialAccountInput>
+  create: Prisma.XOR<Prisma.TransactionCreateWithoutFinancialAccountInput, Prisma.TransactionUncheckedCreateWithoutFinancialAccountInput>
+}
+
+export type TransactionUpdateWithWhereUniqueWithoutFinancialAccountInput = {
+  where: Prisma.TransactionWhereUniqueInput
+  data: Prisma.XOR<Prisma.TransactionUpdateWithoutFinancialAccountInput, Prisma.TransactionUncheckedUpdateWithoutFinancialAccountInput>
+}
+
+export type TransactionUpdateManyWithWhereWithoutFinancialAccountInput = {
+  where: Prisma.TransactionScalarWhereInput
+  data: Prisma.XOR<Prisma.TransactionUpdateManyMutationInput, Prisma.TransactionUncheckedUpdateManyWithoutFinancialAccountInput>
+}
+
 export type TransactionCreateManyUserInput = {
   id?: string
   description: string
@@ -872,6 +1002,7 @@ export type TransactionCreateManyUserInput = {
   updatedAt?: Date | string
   linkedObligationAccountId?: string | null
   linkedObligationPaymentId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionUpdateWithoutUserInput = {
@@ -887,6 +1018,7 @@ export type TransactionUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   linkedObligationAccount?: Prisma.ObligationAccountUpdateOneWithoutLinkedTransactionsNestedInput
   linkedObligationPayment?: Prisma.ObligationPaymentUpdateOneWithoutLinkedTransactionsNestedInput
+  financialAccount?: Prisma.FinancialAccountUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TransactionUncheckedUpdateWithoutUserInput = {
@@ -902,6 +1034,7 @@ export type TransactionUncheckedUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TransactionUncheckedUpdateManyWithoutUserInput = {
@@ -917,6 +1050,7 @@ export type TransactionUncheckedUpdateManyWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TransactionCreateManyLinkedObligationAccountInput = {
@@ -932,6 +1066,7 @@ export type TransactionCreateManyLinkedObligationAccountInput = {
   updatedAt?: Date | string
   userId: string
   linkedObligationPaymentId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionUpdateWithoutLinkedObligationAccountInput = {
@@ -947,6 +1082,7 @@ export type TransactionUpdateWithoutLinkedObligationAccountInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTransactionsNestedInput
   linkedObligationPayment?: Prisma.ObligationPaymentUpdateOneWithoutLinkedTransactionsNestedInput
+  financialAccount?: Prisma.FinancialAccountUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TransactionUncheckedUpdateWithoutLinkedObligationAccountInput = {
@@ -962,6 +1098,7 @@ export type TransactionUncheckedUpdateWithoutLinkedObligationAccountInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TransactionUncheckedUpdateManyWithoutLinkedObligationAccountInput = {
@@ -977,6 +1114,7 @@ export type TransactionUncheckedUpdateManyWithoutLinkedObligationAccountInput = 
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TransactionCreateManyLinkedObligationPaymentInput = {
@@ -992,6 +1130,7 @@ export type TransactionCreateManyLinkedObligationPaymentInput = {
   updatedAt?: Date | string
   userId: string
   linkedObligationAccountId?: string | null
+  financialAccountId?: string | null
 }
 
 export type TransactionUpdateWithoutLinkedObligationPaymentInput = {
@@ -1007,6 +1146,7 @@ export type TransactionUpdateWithoutLinkedObligationPaymentInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutTransactionsNestedInput
   linkedObligationAccount?: Prisma.ObligationAccountUpdateOneWithoutLinkedTransactionsNestedInput
+  financialAccount?: Prisma.FinancialAccountUpdateOneWithoutTransactionsNestedInput
 }
 
 export type TransactionUncheckedUpdateWithoutLinkedObligationPaymentInput = {
@@ -1022,6 +1162,7 @@ export type TransactionUncheckedUpdateWithoutLinkedObligationPaymentInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TransactionUncheckedUpdateManyWithoutLinkedObligationPaymentInput = {
@@ -1037,6 +1178,71 @@ export type TransactionUncheckedUpdateManyWithoutLinkedObligationPaymentInput = 
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  financialAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type TransactionCreateManyFinancialAccountInput = {
+  id?: string
+  description: string
+  amount: number
+  type: string
+  category: string
+  paymentMethod?: string
+  reimbursementStatus?: string
+  date: Date | string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userId: string
+  linkedObligationAccountId?: string | null
+  linkedObligationPaymentId?: string | null
+}
+
+export type TransactionUpdateWithoutFinancialAccountInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutTransactionsNestedInput
+  linkedObligationAccount?: Prisma.ObligationAccountUpdateOneWithoutLinkedTransactionsNestedInput
+  linkedObligationPayment?: Prisma.ObligationPaymentUpdateOneWithoutLinkedTransactionsNestedInput
+}
+
+export type TransactionUncheckedUpdateWithoutFinancialAccountInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type TransactionUncheckedUpdateManyWithoutFinancialAccountInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  amount?: Prisma.FloatFieldUpdateOperationsInput | number
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  reimbursementStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  linkedObligationAccountId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedObligationPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -1055,9 +1261,11 @@ export type TransactionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   userId?: boolean
   linkedObligationAccountId?: boolean
   linkedObligationPaymentId?: boolean
+  financialAccountId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   linkedObligationAccount?: boolean | Prisma.Transaction$linkedObligationAccountArgs<ExtArgs>
   linkedObligationPayment?: boolean | Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs>
+  financialAccount?: boolean | Prisma.Transaction$financialAccountArgs<ExtArgs>
 }, ExtArgs["result"]["transaction"]>
 
 export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1074,9 +1282,11 @@ export type TransactionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   userId?: boolean
   linkedObligationAccountId?: boolean
   linkedObligationPaymentId?: boolean
+  financialAccountId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   linkedObligationAccount?: boolean | Prisma.Transaction$linkedObligationAccountArgs<ExtArgs>
   linkedObligationPayment?: boolean | Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs>
+  financialAccount?: boolean | Prisma.Transaction$financialAccountArgs<ExtArgs>
 }, ExtArgs["result"]["transaction"]>
 
 export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1093,9 +1303,11 @@ export type TransactionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   userId?: boolean
   linkedObligationAccountId?: boolean
   linkedObligationPaymentId?: boolean
+  financialAccountId?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   linkedObligationAccount?: boolean | Prisma.Transaction$linkedObligationAccountArgs<ExtArgs>
   linkedObligationPayment?: boolean | Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs>
+  financialAccount?: boolean | Prisma.Transaction$financialAccountArgs<ExtArgs>
 }, ExtArgs["result"]["transaction"]>
 
 export type TransactionSelectScalar = {
@@ -1112,23 +1324,27 @@ export type TransactionSelectScalar = {
   userId?: boolean
   linkedObligationAccountId?: boolean
   linkedObligationPaymentId?: boolean
+  financialAccountId?: boolean
 }
 
-export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "description" | "amount" | "type" | "category" | "paymentMethod" | "reimbursementStatus" | "date" | "createdAt" | "updatedAt" | "userId" | "linkedObligationAccountId" | "linkedObligationPaymentId", ExtArgs["result"]["transaction"]>
+export type TransactionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "description" | "amount" | "type" | "category" | "paymentMethod" | "reimbursementStatus" | "date" | "createdAt" | "updatedAt" | "userId" | "linkedObligationAccountId" | "linkedObligationPaymentId" | "financialAccountId", ExtArgs["result"]["transaction"]>
 export type TransactionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   linkedObligationAccount?: boolean | Prisma.Transaction$linkedObligationAccountArgs<ExtArgs>
   linkedObligationPayment?: boolean | Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs>
+  financialAccount?: boolean | Prisma.Transaction$financialAccountArgs<ExtArgs>
 }
 export type TransactionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   linkedObligationAccount?: boolean | Prisma.Transaction$linkedObligationAccountArgs<ExtArgs>
   linkedObligationPayment?: boolean | Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs>
+  financialAccount?: boolean | Prisma.Transaction$financialAccountArgs<ExtArgs>
 }
 export type TransactionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   linkedObligationAccount?: boolean | Prisma.Transaction$linkedObligationAccountArgs<ExtArgs>
   linkedObligationPayment?: boolean | Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs>
+  financialAccount?: boolean | Prisma.Transaction$financialAccountArgs<ExtArgs>
 }
 
 export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1137,6 +1353,7 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     user: Prisma.$UserPayload<ExtArgs>
     linkedObligationAccount: Prisma.$ObligationAccountPayload<ExtArgs> | null
     linkedObligationPayment: Prisma.$ObligationPaymentPayload<ExtArgs> | null
+    financialAccount: Prisma.$FinancialAccountPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1152,6 +1369,7 @@ export type $TransactionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     userId: string
     linkedObligationAccountId: string | null
     linkedObligationPaymentId: string | null
+    financialAccountId: string | null
   }, ExtArgs["result"]["transaction"]>
   composites: {}
 }
@@ -1549,6 +1767,7 @@ export interface Prisma__TransactionClient<T, Null = never, ExtArgs extends runt
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   linkedObligationAccount<T extends Prisma.Transaction$linkedObligationAccountArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Transaction$linkedObligationAccountArgs<ExtArgs>>): Prisma.Prisma__ObligationAccountClient<runtime.Types.Result.GetResult<Prisma.$ObligationAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   linkedObligationPayment<T extends Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Transaction$linkedObligationPaymentArgs<ExtArgs>>): Prisma.Prisma__ObligationPaymentClient<runtime.Types.Result.GetResult<Prisma.$ObligationPaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  financialAccount<T extends Prisma.Transaction$financialAccountArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Transaction$financialAccountArgs<ExtArgs>>): Prisma.Prisma__FinancialAccountClient<runtime.Types.Result.GetResult<Prisma.$FinancialAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1591,6 +1810,7 @@ export interface TransactionFieldRefs {
   readonly userId: Prisma.FieldRef<"Transaction", 'String'>
   readonly linkedObligationAccountId: Prisma.FieldRef<"Transaction", 'String'>
   readonly linkedObligationPaymentId: Prisma.FieldRef<"Transaction", 'String'>
+  readonly financialAccountId: Prisma.FieldRef<"Transaction", 'String'>
 }
     
 
@@ -2025,6 +2245,25 @@ export type Transaction$linkedObligationPaymentArgs<ExtArgs extends runtime.Type
    */
   include?: Prisma.ObligationPaymentInclude<ExtArgs> | null
   where?: Prisma.ObligationPaymentWhereInput
+}
+
+/**
+ * Transaction.financialAccount
+ */
+export type Transaction$financialAccountArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FinancialAccount
+   */
+  select?: Prisma.FinancialAccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FinancialAccount
+   */
+  omit?: Prisma.FinancialAccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FinancialAccountInclude<ExtArgs> | null
+  where?: Prisma.FinancialAccountWhereInput
 }
 
 /**

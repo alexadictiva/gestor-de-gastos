@@ -49,6 +49,14 @@ function buildObligationAccountInclude() {
               createdAt: 'desc' as const,
             },
           ],
+          include: {
+            financialAccount: true,
+            linkedTransactions: {
+              include: {
+                financialAccount: true,
+              },
+            },
+          },
         },
       },
     },
@@ -515,6 +523,44 @@ function validatePaymentInput(
   }
 }
 
+async function validateOptionalFinancialAccountSelection(
+  body: Record<string, unknown>,
+  userId: string,
+  paymentMethod: PaymentMethod
+) {
+  const trimmedValue = String(body.financialAccountId ?? '').trim()
+
+  if (!trimmedValue) {
+    return {
+      data: null,
+    }
+  }
+
+  if (paymentMethod === 'credit' || paymentMethod === 'loan') {
+    return {
+      error:
+        'Solo puedes asociar una cuenta cuando el abono o cobro impacta tu liquidez hoy',
+    }
+  }
+
+  const selectedAccount = await prisma.financialAccount.findFirst({
+    where: {
+      id: trimmedValue,
+      userId,
+    },
+  })
+
+  if (!selectedAccount) {
+    return {
+      error: 'La cuenta seleccionada no es valida',
+    }
+  }
+
+  return {
+    data: selectedAccount.id,
+  }
+}
+
 router.get('/', authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (!req.user) {
@@ -927,6 +973,20 @@ router.post('/obligations/:obligationId/payments', authMiddleware, async (req: A
       })
     }
 
+    const financialAccountValidation =
+      await validateOptionalFinancialAccountSelection(
+        req.body,
+        userId,
+        validation.data.paymentMethod
+      )
+
+    if ('error' in financialAccountValidation) {
+      return res.status(400).json({
+        ok: false,
+        message: financialAccountValidation.error,
+      })
+    }
+
     const nextPaidAmount = roundAmount(paidAmount + validation.data.amount)
     const nextRemainingAmount = roundAmount(
       Math.max(totalAmount - nextPaidAmount, 0)
@@ -938,6 +998,7 @@ router.post('/obligations/:obligationId/payments', authMiddleware, async (req: A
           data: {
             ...validation.data,
             obligationId,
+            financialAccountId: financialAccountValidation.data,
           },
         })
 
@@ -969,6 +1030,10 @@ router.post('/obligations/:obligationId/payments', authMiddleware, async (req: A
             date: validation.data.paymentDate,
             userId,
             linkedObligationPaymentId: payment.id,
+            financialAccountId: financialAccountValidation.data,
+          },
+          include: {
+            financialAccount: true,
           },
         })
       }

@@ -16,6 +16,8 @@ import {
   FilterButtonIcon,
 } from '../assets/icons'
 import { useAuth } from '../hooks/useAuth'
+import type { FinancialAccount } from '../types/financialAccount'
+import { getFinancialAccountTypeLabel } from '../types/financialAccount'
 import {
   PAYMENT_METHOD_OPTIONS,
   REIMBURSEMENT_STATUS_OPTIONS,
@@ -45,6 +47,10 @@ import {
   isDebtCollectionTransaction,
   isDebtPaymentTransaction,
 } from '../utils/transactionMetrics'
+import {
+  sortFinancialAccounts,
+  transactionSupportsFinancialAccount,
+} from '../utils/financialAccount'
 import { sortObligationAccounts } from '../utils/obligationAccount'
 
 interface TransactionForm {
@@ -55,6 +61,7 @@ interface TransactionForm {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: string
+  financialAccountId: string
   createLinkedObligationAccount: boolean
   linkedObligationAccountName: string
   linkedObligationInstallmentCount: string
@@ -66,6 +73,7 @@ interface TransaccionesPageProps {
   setTransactions: Dispatch<SetStateAction<Transaction[]>>
   isLoadingTransactions: boolean
   categories: Category[]
+  financialAccounts: FinancialAccount[]
   setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
 }
 
@@ -105,6 +113,7 @@ function createInitialForm(): TransactionForm {
     paymentMethod: 'not_specified',
     reimbursementStatus: 'not_applicable',
     date: '',
+    financialAccountId: '',
     createLinkedObligationAccount: false,
     linkedObligationAccountName: '',
     linkedObligationInstallmentCount: '',
@@ -312,6 +321,29 @@ function getLinkedAccountBadge(transaction: Transaction) {
   }
 }
 
+function getFinancialAccountBadge(transaction: Transaction) {
+  if (!transactionSupportsFinancialAccount(transaction)) {
+    return {
+      label: 'No aplica',
+      className: 'bg-slate-100 text-slate-600',
+    }
+  }
+
+  if (transaction.financialAccount) {
+    return {
+      label: `${transaction.financialAccount.name} · ${getFinancialAccountTypeLabel(
+        transaction.financialAccount.type
+      )}`,
+      className: 'bg-cyan-100 text-cyan-700',
+    }
+  }
+
+  return {
+    label: 'Sin cuenta',
+    className: 'bg-amber-100 text-amber-700',
+  }
+}
+
 function isLinkedTransaction(transaction: Transaction) {
   return Boolean(
     transaction.linkedObligationAccountId || transaction.linkedObligationPaymentId
@@ -323,6 +355,7 @@ export default function TransaccionesPage({
   setTransactions,
   isLoadingTransactions,
   categories,
+  financialAccounts,
   setObligationAccounts,
 }: TransaccionesPageProps) {
   const { token } = useAuth()
@@ -361,8 +394,13 @@ export default function TransaccionesPage({
   const isReimbursable = form.reimbursementStatus !== 'not_applicable'
   const isFinancingPaymentMethod =
     form.paymentMethod === 'credit' || form.paymentMethod === 'loan'
+  const canSelectFinancialAccount = transactionSupportsFinancialAccount({
+    type: form.type,
+    paymentMethod: form.paymentMethod,
+  })
   const canLinkToObligationAccount =
     isIncome || (isExpense && isFinancingPaymentMethod)
+  const financialAccountOptions = sortFinancialAccounts(financialAccounts)
 
   const refreshTransactions = async () => {
     if (!token) {
@@ -451,25 +489,44 @@ export default function TransaccionesPage({
     setForm((prev) => {
       if (name === 'type') {
         const nextType = value as TransactionType
+        const nextPaymentMethod =
+          nextType === 'expense' ? prev.paymentMethod : 'not_specified'
+        const nextCanSelectFinancialAccount = transactionSupportsFinancialAccount(
+          {
+            type: nextType,
+            paymentMethod: nextPaymentMethod,
+          }
+        )
 
         return {
           ...prev,
           type: nextType,
           category: '',
-          paymentMethod:
-            nextType === 'expense' ? prev.paymentMethod : 'not_specified',
+          paymentMethod: nextPaymentMethod,
           reimbursementStatus:
             nextType === 'expense' ? prev.reimbursementStatus : 'not_applicable',
+          financialAccountId: nextCanSelectFinancialAccount
+            ? prev.financialAccountId
+            : '',
           ...(nextType === 'investments' ? resetLinkedObligationFields() : {}),
         }
       }
 
       if (name === 'paymentMethod') {
         const nextPaymentMethod = value as PaymentMethod
+        const nextCanSelectFinancialAccount = transactionSupportsFinancialAccount(
+          {
+            type: prev.type,
+            paymentMethod: nextPaymentMethod,
+          }
+        )
 
         return {
           ...prev,
           paymentMethod: nextPaymentMethod,
+          financialAccountId: nextCanSelectFinancialAccount
+            ? prev.financialAccountId
+            : '',
           ...(nextPaymentMethod === 'credit' || nextPaymentMethod === 'loan'
             ? {}
             : resetLinkedObligationFields()),
@@ -596,6 +653,7 @@ export default function TransaccionesPage({
       paymentMethod: transaction.paymentMethod,
       reimbursementStatus: transaction.reimbursementStatus,
       date: transaction.date.slice(0, 10),
+      financialAccountId: transaction.financialAccountId ?? '',
       createLinkedObligationAccount: false,
       linkedObligationAccountName: '',
       linkedObligationInstallmentCount: '',
@@ -661,6 +719,21 @@ export default function TransaccionesPage({
     }
 
     if (
+      canSelectFinancialAccount &&
+      financialAccountOptions.length > 0 &&
+      !form.financialAccountId
+    ) {
+      setErrorMessage(
+        isIncome
+          ? 'Selecciona la cuenta donde ingreso este dinero'
+          : form.type === 'investments'
+            ? 'Selecciona la cuenta desde la que hiciste la inversion'
+            : 'Selecciona la cuenta desde la que pagaste este movimiento'
+      )
+      return
+    }
+
+    if (
       !transactionToEdit &&
       form.createLinkedObligationAccount &&
       !canLinkToObligationAccount
@@ -707,6 +780,9 @@ export default function TransaccionesPage({
           ? form.reimbursementStatus
           : 'not_applicable',
         date: form.date,
+        financialAccountId: canSelectFinancialAccount
+          ? form.financialAccountId || null
+          : null,
         ...(transactionToEdit
           ? {}
           : {
@@ -1224,6 +1300,49 @@ export default function TransaccionesPage({
                 )}
               </div>
 
+              {canSelectFinancialAccount && (
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="financialAccountId"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    {isIncome
+                      ? 'Cuenta de destino'
+                      : form.type === 'investments'
+                        ? 'Cuenta de origen'
+                        : 'Cuenta desde la que pagaste'}
+                  </label>
+                  <select
+                    id="financialAccountId"
+                    name="financialAccountId"
+                    value={form.financialAccountId}
+                    onChange={handleChange}
+                    className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                  >
+                    <option value="">
+                      {financialAccountOptions.length === 0
+                        ? 'Primero crea una cuenta'
+                        : 'Selecciona una cuenta'}
+                    </option>
+                    {financialAccountOptions.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name} · {getFinancialAccountTypeLabel(account.type)}
+                      </option>
+                    ))}
+                  </select>
+
+                  <p className="text-xs text-slate-500">
+                    {financialAccountOptions.length === 0
+                      ? 'Crea tu primera cuenta desde la seccion Cuentas para separar banco, efectivo y billeteras.'
+                      : isIncome
+                        ? 'Esta cuenta aumentara su saldo con este ingreso.'
+                        : form.type === 'investments'
+                          ? 'Esta cuenta reducira su saldo por la inversion registrada.'
+                          : 'Esta cuenta reducira su saldo con este gasto o pago.'}
+                  </p>
+                </div>
+              )}
+
               {isExpense && (
                 <>
                   <div className="flex flex-col gap-2">
@@ -1281,6 +1400,19 @@ export default function TransaccionesPage({
                     </p>
                   </div>
                 </>
+              )}
+
+              {isExpense && !canSelectFinancialAccount && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+                  <p className="text-sm font-medium text-slate-700">
+                    Este gasto no descuenta liquidez hoy
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Al estar marcado como pagado con tarjeta o prestamo, la
+                    salida real de dinero se registrara cuando cargues el abono
+                    desde Tarjetas y Prestamos.
+                  </p>
+                </div>
               )}
 
               {isExpense && isReimbursable && (
@@ -1715,6 +1847,7 @@ export default function TransaccionesPage({
                     </button>
                   </th>
                   <th className="py-3">Monto</th>
+                  <th className="py-3">Cuenta</th>
                   <th className="py-3">
                     <button
                       type="button"
@@ -1761,13 +1894,13 @@ export default function TransaccionesPage({
               <tbody>
                 {isLoadingTransactions ? (
                   <tr>
-                    <td colSpan={9} className="py-10 text-center text-slate-500">
+                    <td colSpan={10} className="py-10 text-center text-slate-500">
                       Cargando transacciones...
                     </td>
                   </tr>
                 ) : sortedTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center">
+                    <td colSpan={10} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <p className="font-medium text-slate-600">
                           {transactions.length === 0
@@ -1851,6 +1984,19 @@ export default function TransaccionesPage({
                         className={`py-3 font-semibold ${getTransactionAmountTone(transaction)}`}
                       >
                         {getSignedTransactionAmountLabel(transaction)}
+                      </td>
+                      <td className="py-3 text-slate-700">
+                        {(() => {
+                          const badge = getFinancialAccountBadge(transaction)
+
+                          return (
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${badge.className}`}
+                            >
+                              {badge.label}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td className="py-3 text-slate-700">
                         <span

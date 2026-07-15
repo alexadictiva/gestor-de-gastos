@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useState } from 'react'
 import AppRouter from './router/AppRouter'
 import type { Transaction } from './types/transaction'
 import type { Category } from './types/category'
+import type { FinancialAccount } from './types/financialAccount'
 import type { ObligationAccount } from './types/obligationAccount'
 import type { PlannedMovement } from './types/plannedMovement'
 import { AuthProvider } from './context/AuthProvider'
@@ -9,6 +10,7 @@ import { ThemeProvider } from './context/ThemeProvider'
 import { useAuth } from './hooks/useAuth'
 import { getTransactionsRequest } from './services/transactionService'
 import { getCategoriesRequest } from './services/categoryService'
+import { getFinancialAccountsRequest } from './services/financialAccountService'
 import { getObligationAccountsRequest } from './services/obligationAccountService'
 import { getPlannedMovementsRequest } from './services/plannedMovementService'
 
@@ -17,11 +19,14 @@ function AppContent() {
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [financialAccounts, setFinancialAccounts] = useState<FinancialAccount[]>([])
   const [obligationAccounts, setObligationAccounts] = useState<ObligationAccount[]>([])
   const [plannedMovements, setPlannedMovements] = useState<PlannedMovement[]>([])
 
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(false)
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
+  const [isLoadingFinancialAccounts, setIsLoadingFinancialAccounts] =
+    useState(false)
   const [isLoadingObligationAccounts, setIsLoadingObligationAccounts] =
     useState(false)
   const [isLoadingPlannedMovements, setIsLoadingPlannedMovements] =
@@ -105,6 +110,32 @@ function AppContent() {
     }
   })
 
+  const loadFinancialAccounts = useEffectEvent(async (showLoader = true) => {
+    if (!token || !isAuthenticated) {
+      setFinancialAccounts([])
+      return
+    }
+
+    try {
+      if (showLoader) {
+        setIsLoadingFinancialAccounts(true)
+      }
+
+      const data = await getFinancialAccountsRequest(token)
+      setFinancialAccounts(data)
+    } catch (error) {
+      console.error('Error cargando cuentas:', error)
+
+      if (showLoader) {
+        setFinancialAccounts([])
+      }
+    } finally {
+      if (showLoader) {
+        setIsLoadingFinancialAccounts(false)
+      }
+    }
+  })
+
   useEffect(() => {
     void loadTransactions()
   }, [token, isAuthenticated])
@@ -118,6 +149,10 @@ function AppContent() {
   }, [token, isAuthenticated])
 
   useEffect(() => {
+    void loadFinancialAccounts()
+  }, [token, isAuthenticated])
+
+  useEffect(() => {
     if (!token || !isAuthenticated) {
       return
     }
@@ -126,6 +161,7 @@ function AppContent() {
       void loadTransactions(false)
       void loadPlannedMovements(false)
       void loadObligationAccounts(false)
+      void loadFinancialAccounts(false)
     }
 
     const intervalId = window.setInterval(syncTransactions, 10000)
@@ -178,6 +214,9 @@ function AppContent() {
       categories={categories}
       setCategories={setCategories}
       isLoadingCategories={isLoadingCategories}
+      financialAccounts={financialAccounts}
+      setFinancialAccounts={setFinancialAccounts}
+      isLoadingFinancialAccounts={isLoadingFinancialAccounts}
       obligationAccounts={obligationAccounts}
       setObligationAccounts={setObligationAccounts}
       isLoadingObligationAccounts={isLoadingObligationAccounts}

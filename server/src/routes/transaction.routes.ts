@@ -25,6 +25,7 @@ interface ValidatedTransactionInput {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: Date
+  financialAccountId: string | null
 }
 
 function buildObligationAccountInclude() {
@@ -51,6 +52,12 @@ function buildObligationAccountInclude() {
         },
       },
     },
+  }
+}
+
+function buildTransactionInclude() {
+  return {
+    financialAccount: true,
   }
 }
 
@@ -129,6 +136,58 @@ function normalizeOptionalText(value: unknown) {
 
 function isFinancingPaymentMethod(paymentMethod: PaymentMethod) {
   return paymentMethod === 'credit' || paymentMethod === 'loan'
+}
+
+function supportsFinancialAccountSelection(transaction: {
+  type: TransactionType
+  paymentMethod: PaymentMethod
+}) {
+  if (transaction.type === 'income' || transaction.type === 'investments') {
+    return true
+  }
+
+  return !isFinancingPaymentMethod(transaction.paymentMethod)
+}
+
+async function validateOptionalFinancialAccountId(
+  rawValue: unknown,
+  userId: string,
+  transaction: {
+    type: TransactionType
+    paymentMethod: PaymentMethod
+  }
+) {
+  const trimmedValue = String(rawValue ?? '').trim()
+
+  if (!trimmedValue) {
+    return {
+      data: null,
+    }
+  }
+
+  if (!supportsFinancialAccountSelection(transaction)) {
+    return {
+      error:
+        'Solo puedes asociar una cuenta cuando el movimiento impacta tu liquidez hoy',
+    }
+  }
+
+  const selectedAccount = await prisma.financialAccount.findFirst({
+    where: {
+      id: trimmedValue,
+      userId,
+    },
+  })
+
+  if (!selectedAccount) {
+    return {
+      error: 'La cuenta seleccionada no es valida',
+    }
+  }
+
+  return {
+    data: selectedAccount.id,
+  }
 }
 
 function buildLinkedAccountType(
@@ -244,6 +303,12 @@ async function validateTransactionInput(
   const normalizedPaymentMethod = normalizePaymentMethod(rawPaymentMethod)
   const normalizedReimbursementStatus =
     normalizeReimbursementStatus(rawReimbursementStatus)
+  const nextPaymentMethod =
+    normalizedType === 'expense'
+      ? normalizedPaymentMethod ??
+        existingTransaction?.paymentMethod ??
+        'not_specified'
+      : 'not_specified'
 
   if (
     !trimmedDescription ||
@@ -300,6 +365,21 @@ async function validateTransactionInput(
     }
   }
 
+  const financialAccountValidation = await validateOptionalFinancialAccountId(
+    body.financialAccountId,
+    userId,
+    {
+      type: normalizedType,
+      paymentMethod: nextPaymentMethod,
+    }
+  )
+
+  if ('error' in financialAccountValidation) {
+    return {
+      error: financialAccountValidation.error,
+    }
+  }
+
   return {
     data: {
       description: trimmedDescription,
@@ -307,11 +387,7 @@ async function validateTransactionInput(
       type: normalizedType,
       category: trimmedCategory,
       paymentMethod:
-        normalizedType === 'expense'
-          ? normalizedPaymentMethod ??
-            existingTransaction?.paymentMethod ??
-            'not_specified'
-          : 'not_specified',
+        nextPaymentMethod,
       reimbursementStatus:
         normalizedType === 'expense'
           ? normalizedReimbursementStatus ??
@@ -319,6 +395,7 @@ async function validateTransactionInput(
             'not_applicable'
           : 'not_applicable',
       date: parsedDate,
+      financialAccountId: financialAccountValidation.data,
     } satisfies ValidatedTransactionInput,
   }
 }
@@ -396,6 +473,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
       where: {
         userId: req.user.userId,
       },
+      include: buildTransactionInclude(),
       orderBy: {
         date: 'desc',
       },
@@ -506,6 +584,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
             userId,
             linkedObligationAccountId: linkedObligationAccount?.id ?? null,
           },
+          include: buildTransactionInclude(),
         })
 
         return {
@@ -792,6 +871,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
         id: transactionId,
       },
       data: validation.data,
+      include: buildTransactionInclude(),
     })
 
     return res.json({

@@ -1,10 +1,14 @@
 import DashboardLayout from '../components/layout/DashboardLayout'
 import VoiceAssistant from '../components/ui/VoiceAssistant'
 import type { Category } from '../types/category'
+import type { FinancialAccount } from '../types/financialAccount'
 import { getObligationAccountTypeLabel } from '../types/obligationAccount'
 import type { ObligationAccount } from '../types/obligationAccount'
 import type { PlannedMovement } from '../types/plannedMovement'
 import type { Transaction } from '../types/transaction'
+import {
+  buildFinancialAccountsDashboardSummary,
+} from '../utils/financialAccount'
 import {
   buildObligationDashboardSummary,
 } from '../utils/obligationAccount'
@@ -24,9 +28,11 @@ import { getPaymentMethodLabel } from '../types/transaction'
 interface DashboardPageProps {
   transactions: Transaction[]
   categories: Category[]
+  financialAccounts: FinancialAccount[]
   obligationAccounts: ObligationAccount[]
   plannedMovements: PlannedMovement[]
   isLoadingTransactions: boolean
+  isLoadingFinancialAccounts: boolean
   isLoadingObligationAccounts: boolean
   isLoadingPlannedMovements: boolean
 }
@@ -57,9 +63,11 @@ function StatCard({
 export default function DashboardPage({
   transactions,
   categories,
+  financialAccounts,
   obligationAccounts,
   plannedMovements,
   isLoadingTransactions,
+  isLoadingFinancialAccounts,
   isLoadingObligationAccounts,
   isLoadingPlannedMovements,
 }: DashboardPageProps) {
@@ -75,6 +83,12 @@ export default function DashboardPage({
     personalBalanceTotal,
     availableLiquidityTotal,
   } = buildTransactionMetrics(transactions)
+  const {
+    accountSummaries,
+    trackedLiquidityTotal,
+    unassignedTrackedTransactionsCount,
+    negativeBalanceAccountsCount,
+  } = buildFinancialAccountsDashboardSummary(financialAccounts, transactions)
 
   const nextMonthItems = filterPlannedMovementsByMonth(
     plannedMovements,
@@ -226,6 +240,107 @@ export default function DashboardPage({
                 }
                 tone="text-violet-600"
               />
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-800">Cuentas</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Saldo actual por cuenta y cobertura de movimientos con liquidez.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <StatCard
+                label="Liquidez en cuentas"
+                value={
+                  isLoadingFinancialAccounts
+                    ? 'Cargando...'
+                    : formatCurrency(trackedLiquidityTotal)
+                }
+                tone={
+                  trackedLiquidityTotal >= 0 ? 'text-slate-800' : 'text-red-600'
+                }
+              />
+              <StatCard
+                label="Cuentas creadas"
+                value={
+                  isLoadingFinancialAccounts
+                    ? 'Cargando...'
+                    : financialAccounts.length.toLocaleString('es-AR')
+                }
+                tone="text-sky-600"
+              />
+              <StatCard
+                label="Movimientos sin cuenta"
+                value={
+                  isLoadingFinancialAccounts
+                    ? 'Cargando...'
+                    : unassignedTrackedTransactionsCount.toLocaleString('es-AR')
+                }
+                tone="text-amber-600"
+              />
+              <StatCard
+                label="Cuentas en negativo"
+                value={
+                  isLoadingFinancialAccounts
+                    ? 'Cargando...'
+                    : negativeBalanceAccountsCount.toLocaleString('es-AR')
+                }
+                tone="text-red-600"
+              />
+            </div>
+
+            {unassignedTrackedTransactionsCount > 0 && (
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                Hay movimientos que afectan tu liquidez y todavia no estan
+                asignados a una cuenta. Puedes completarlos desde Transacciones
+                para que el saldo por cuenta sea exacto.
+              </div>
+            )}
+
+            <div className="mt-6 rounded-2xl border border-slate-200 p-4">
+              <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Saldos por cuenta
+              </h4>
+
+              {isLoadingFinancialAccounts ? (
+                <p className="mt-3 text-sm text-slate-500">
+                  Cargando cuentas...
+                </p>
+              ) : accountSummaries.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">
+                  Aun no creaste cuentas para separar efectivo, banco o billeteras.
+                </p>
+              ) : (
+                <div className="mt-4 flex flex-col gap-3">
+                  {accountSummaries.slice(0, 4).map((account) => (
+                    <div
+                      key={account.id}
+                      className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 px-4 py-3"
+                    >
+                      <div>
+                        <p className="font-medium text-slate-800">
+                          {account.name}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {account.linkedTransactionsCount} movimiento(s)
+                          asignado(s)
+                        </p>
+                      </div>
+
+                      <span
+                        className={`font-semibold ${
+                          account.currentBalance >= 0
+                            ? 'text-slate-800'
+                            : 'text-red-600'
+                        }`}
+                      >
+                        {formatCurrency(account.currentBalance)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

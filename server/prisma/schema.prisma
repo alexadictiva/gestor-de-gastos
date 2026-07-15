@@ -20,6 +20,7 @@ model User {
   categories Category[]
   plannedMovements PlannedMovement[]
   obligationAccounts ObligationAccount[]
+  financialAccounts FinancialAccount[]
 
   @@index([telegramLinkCode])
 }
@@ -42,10 +43,13 @@ model Transaction {
   linkedObligationAccount   ObligationAccount? @relation("TransactionLinkedObligationAccount", fields: [linkedObligationAccountId], references: [id], onDelete: SetNull)
   linkedObligationPaymentId String?
   linkedObligationPayment   ObligationPayment? @relation("TransactionLinkedObligationPayment", fields: [linkedObligationPaymentId], references: [id], onDelete: SetNull)
+  financialAccountId String?
+  financialAccount FinancialAccount? @relation(fields: [financialAccountId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([linkedObligationAccountId])
   @@index([linkedObligationPaymentId])
+  @@index([financialAccountId])
 }
 
 model Category{
@@ -141,7 +145,28 @@ model ObligationPayment {
   obligationId String
   obligation   Obligation @relation(fields: [obligationId], references: [id], onDelete: Cascade)
   linkedTransactions Transaction[] @relation("TransactionLinkedObligationPayment")
+  financialAccountId String?
+  financialAccount FinancialAccount? @relation(fields: [financialAccountId], references: [id], onDelete: SetNull)
 
   @@index([obligationId])
   @@index([paymentDate])
+  @@index([financialAccountId])
+}
+
+model FinancialAccount {
+  id           String             @id @default(cuid())
+  name         String
+  type         String
+  initialBalance Float            @default(0)
+  notes        String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  obligationPayments ObligationPayment[]
+
+  @@index([userId])
+  @@unique([userId, name])
 }

@@ -85,6 +85,25 @@ function CreditCardIcon({ className = '' }: IconProps) {
   )
 }
 
+function WalletAccountIcon({ className = '' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h10A2.5 2.5 0 0 1 18 7.5V9H6.5A2.5 2.5 0 0 0 4 11.5v5A2.5 2.5 0 0 0 6.5 19H18v1.5A2.5 2.5 0 0 1 15.5 23h-10A2.5 2.5 0 0 1 3 20.5z" />
+      <path d="M20 9h-9.5A2.5 2.5 0 0 0 8 11.5v5a2.5 2.5 0 0 0 2.5 2.5H20a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1Z" />
+      <path d="M16.5 14h.01" />
+    </svg>
+  )
+}
+
 function CalendarIcon({ className = '' }: IconProps) {
   return (
     <svg
@@ -151,6 +170,7 @@ const navItems: SidebarNavItem[] = [
   { to: '/', label: 'Dashboard', icon: DashboardButtonIcon, end: true },
   { to: '/transacciones', label: 'Transacciones', icon: ReceiptIcon },
   { to: '/categorias', label: 'Categorias', icon: TagIcon },
+  { to: '/cuentas', label: 'Cuentas', icon: WalletAccountIcon },
   {
     to: '/tarjetas-prestamos',
     label: 'Tarjetas y Prestamos',

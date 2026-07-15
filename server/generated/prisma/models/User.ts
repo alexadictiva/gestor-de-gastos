@@ -210,6 +210,7 @@ export type UserWhereInput = {
   categories?: Prisma.CategoryListRelationFilter
   plannedMovements?: Prisma.PlannedMovementListRelationFilter
   obligationAccounts?: Prisma.ObligationAccountListRelationFilter
+  financialAccounts?: Prisma.FinancialAccountListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -225,6 +226,7 @@ export type UserOrderByWithRelationInput = {
   categories?: Prisma.CategoryOrderByRelationAggregateInput
   plannedMovements?: Prisma.PlannedMovementOrderByRelationAggregateInput
   obligationAccounts?: Prisma.ObligationAccountOrderByRelationAggregateInput
+  financialAccounts?: Prisma.FinancialAccountOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -243,6 +245,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   categories?: Prisma.CategoryListRelationFilter
   plannedMovements?: Prisma.PlannedMovementListRelationFilter
   obligationAccounts?: Prisma.ObligationAccountListRelationFilter
+  financialAccounts?: Prisma.FinancialAccountListRelationFilter
 }, "id" | "email" | "telegramChatId">
 
 export type UserOrderByWithAggregationInput = {
@@ -286,6 +289,7 @@ export type UserCreateInput = {
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -301,6 +305,7 @@ export type UserUncheckedCreateInput = {
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -316,6 +321,7 @@ export type UserUpdateInput = {
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -331,6 +337,7 @@ export type UserUncheckedUpdateInput = {
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -476,6 +483,20 @@ export type UserUpdateOneRequiredWithoutObligationAccountsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutObligationAccountsInput, Prisma.UserUpdateWithoutObligationAccountsInput>, Prisma.UserUncheckedUpdateWithoutObligationAccountsInput>
 }
 
+export type UserCreateNestedOneWithoutFinancialAccountsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFinancialAccountsInput, Prisma.UserUncheckedCreateWithoutFinancialAccountsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFinancialAccountsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutFinancialAccountsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFinancialAccountsInput, Prisma.UserUncheckedCreateWithoutFinancialAccountsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFinancialAccountsInput
+  upsert?: Prisma.UserUpsertWithoutFinancialAccountsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutFinancialAccountsInput, Prisma.UserUpdateWithoutFinancialAccountsInput>, Prisma.UserUncheckedUpdateWithoutFinancialAccountsInput>
+}
+
 export type UserCreateWithoutTransactionsInput = {
   id?: string
   name: string
@@ -488,6 +509,7 @@ export type UserCreateWithoutTransactionsInput = {
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTransactionsInput = {
@@ -502,6 +524,7 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTransactionsInput = {
@@ -532,6 +555,7 @@ export type UserUpdateWithoutTransactionsInput = {
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransactionsInput = {
@@ -546,6 +570,7 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCategoriesInput = {
@@ -560,6 +585,7 @@ export type UserCreateWithoutCategoriesInput = {
   transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCategoriesInput = {
@@ -574,6 +600,7 @@ export type UserUncheckedCreateWithoutCategoriesInput = {
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCategoriesInput = {
@@ -604,6 +631,7 @@ export type UserUpdateWithoutCategoriesInput = {
   transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCategoriesInput = {
@@ -618,6 +646,7 @@ export type UserUncheckedUpdateWithoutCategoriesInput = {
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPlannedMovementsInput = {
@@ -632,6 +661,7 @@ export type UserCreateWithoutPlannedMovementsInput = {
   transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPlannedMovementsInput = {
@@ -646,6 +676,7 @@ export type UserUncheckedCreateWithoutPlannedMovementsInput = {
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlannedMovementsInput = {
@@ -676,6 +707,7 @@ export type UserUpdateWithoutPlannedMovementsInput = {
   transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlannedMovementsInput = {
@@ -690,6 +722,7 @@ export type UserUncheckedUpdateWithoutPlannedMovementsInput = {
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutObligationAccountsInput = {
@@ -704,6 +737,7 @@ export type UserCreateWithoutObligationAccountsInput = {
   transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutObligationAccountsInput = {
@@ -718,6 +752,7 @@ export type UserUncheckedCreateWithoutObligationAccountsInput = {
   transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutObligationAccountsInput = {
@@ -748,6 +783,7 @@ export type UserUpdateWithoutObligationAccountsInput = {
   transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutObligationAccountsInput = {
@@ -762,6 +798,83 @@ export type UserUncheckedUpdateWithoutObligationAccountsInput = {
   transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
+  financialAccounts?: Prisma.FinancialAccountUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutFinancialAccountsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
+  createdAt?: Date | string
+  transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutFinancialAccountsInput = {
+  id?: string
+  name: string
+  email: string
+  password: string
+  telegramChatId?: string | null
+  telegramLinkCode?: string | null
+  telegramLinkCodeExpiresAt?: Date | string | null
+  createdAt?: Date | string
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedCreateNestedManyWithoutUserInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutFinancialAccountsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutFinancialAccountsInput, Prisma.UserUncheckedCreateWithoutFinancialAccountsInput>
+}
+
+export type UserUpsertWithoutFinancialAccountsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutFinancialAccountsInput, Prisma.UserUncheckedUpdateWithoutFinancialAccountsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutFinancialAccountsInput, Prisma.UserUncheckedCreateWithoutFinancialAccountsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutFinancialAccountsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutFinancialAccountsInput, Prisma.UserUncheckedUpdateWithoutFinancialAccountsInput>
+}
+
+export type UserUpdateWithoutFinancialAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutFinancialAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramLinkCodeExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  plannedMovements?: Prisma.PlannedMovementUncheckedUpdateManyWithoutUserNestedInput
+  obligationAccounts?: Prisma.ObligationAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -774,6 +887,7 @@ export type UserCountOutputType = {
   categories: number
   plannedMovements: number
   obligationAccounts: number
+  financialAccounts: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -781,6 +895,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   categories?: boolean | UserCountOutputTypeCountCategoriesArgs
   plannedMovements?: boolean | UserCountOutputTypeCountPlannedMovementsArgs
   obligationAccounts?: boolean | UserCountOutputTypeCountObligationAccountsArgs
+  financialAccounts?: boolean | UserCountOutputTypeCountFinancialAccountsArgs
 }
 
 /**
@@ -821,6 +936,13 @@ export type UserCountOutputTypeCountObligationAccountsArgs<ExtArgs extends runti
   where?: Prisma.ObligationAccountWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountFinancialAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FinancialAccountWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -835,6 +957,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
   plannedMovements?: boolean | Prisma.User$plannedMovementsArgs<ExtArgs>
   obligationAccounts?: boolean | Prisma.User$obligationAccountsArgs<ExtArgs>
+  financialAccounts?: boolean | Prisma.User$financialAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -877,6 +1000,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
   plannedMovements?: boolean | Prisma.User$plannedMovementsArgs<ExtArgs>
   obligationAccounts?: boolean | Prisma.User$obligationAccountsArgs<ExtArgs>
+  financialAccounts?: boolean | Prisma.User$financialAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -889,6 +1013,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     categories: Prisma.$CategoryPayload<ExtArgs>[]
     plannedMovements: Prisma.$PlannedMovementPayload<ExtArgs>[]
     obligationAccounts: Prisma.$ObligationAccountPayload<ExtArgs>[]
+    financialAccounts: Prisma.$FinancialAccountPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1297,6 +1422,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   categories<T extends Prisma.User$categoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$categoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   plannedMovements<T extends Prisma.User$plannedMovementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$plannedMovementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlannedMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   obligationAccounts<T extends Prisma.User$obligationAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$obligationAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ObligationAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  financialAccounts<T extends Prisma.User$financialAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$financialAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FinancialAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1818,6 +1944,30 @@ export type User$obligationAccountsArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.ObligationAccountScalarFieldEnum | Prisma.ObligationAccountScalarFieldEnum[]
+}
+
+/**
+ * User.financialAccounts
+ */
+export type User$financialAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FinancialAccount
+   */
+  select?: Prisma.FinancialAccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FinancialAccount
+   */
+  omit?: Prisma.FinancialAccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FinancialAccountInclude<ExtArgs> | null
+  where?: Prisma.FinancialAccountWhereInput
+  orderBy?: Prisma.FinancialAccountOrderByWithRelationInput | Prisma.FinancialAccountOrderByWithRelationInput[]
+  cursor?: Prisma.FinancialAccountWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FinancialAccountScalarFieldEnum | Prisma.FinancialAccountScalarFieldEnum[]
 }
 
 /**

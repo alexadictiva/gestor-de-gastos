@@ -22,6 +22,8 @@ import {
   NewAccountButtonIcon
 } from '../assets/icons'
 import { useAuth } from '../hooks/useAuth'
+import type { FinancialAccount } from '../types/financialAccount'
+import { getFinancialAccountTypeLabel } from '../types/financialAccount'
 import {
   createObligationAccountRequest,
   createObligationPaymentRequest,
@@ -58,6 +60,7 @@ import {
   getObligationStatusTone,
   sortObligationAccounts,
 } from '../utils/obligationAccount'
+import { sortFinancialAccounts } from '../utils/financialAccount'
 import { getPaymentMethodTone } from '../utils/transactionMetrics'
 
 
@@ -87,10 +90,12 @@ interface PaymentFormState {
   amount: string
   paymentDate: string
   paymentMethod: PaymentMethod
+  financialAccountId: string
   notes: string
 }
 
 interface TarjetasPrestamosPageProps {
+  financialAccounts: FinancialAccount[]
   obligationAccounts: ObligationAccount[]
   setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
   isLoadingObligationAccounts: boolean
@@ -167,6 +172,7 @@ function createInitialPaymentForm(): PaymentFormState {
     amount: '',
     paymentDate: getLocalDateInputValue(),
     paymentMethod: 'not_specified',
+    financialAccountId: '',
     notes: '',
   }
 }
@@ -270,6 +276,7 @@ function StatCard({
 }
 
 export default function TarjetasPrestamosPage({
+  financialAccounts,
   obligationAccounts,
   setObligationAccounts,
   isLoadingObligationAccounts,
@@ -315,6 +322,10 @@ export default function TarjetasPrestamosPage({
   const dashboardSummary = useMemo(
     () => buildObligationDashboardSummary(obligationAccounts),
     [obligationAccounts]
+  )
+  const financialAccountOptions = useMemo(
+    () => sortFinancialAccounts(financialAccounts),
+    [financialAccounts]
   )
   const canEditAccountType =
     !accountToEdit || accountToEdit.obligations.length === 0
@@ -407,10 +418,25 @@ export default function TarjetasPrestamosPage({
   ) => {
     const { name, value } = event.target
 
-    setPaymentForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setPaymentForm((prev) => {
+      if (name === 'paymentMethod') {
+        const nextPaymentMethod = value as PaymentMethod
+
+        return {
+          ...prev,
+          paymentMethod: nextPaymentMethod,
+          financialAccountId:
+            nextPaymentMethod === 'cash' || nextPaymentMethod === 'bank'
+              ? prev.financialAccountId
+              : '',
+        }
+      }
+
+      return {
+        ...prev,
+        [name]: value,
+      }
+    })
   }
 
   const openEditAccountForm = (account: ObligationAccount) => {
@@ -614,6 +640,18 @@ export default function TarjetasPrestamosPage({
       return
     }
 
+    if (
+      (paymentForm.paymentMethod === 'cash' ||
+        paymentForm.paymentMethod === 'bank') &&
+      financialAccountOptions.length > 0 &&
+      !paymentForm.financialAccountId
+    ) {
+      setErrorMessage(
+        'Selecciona la cuenta desde la que pagaste o en la que recibiste este movimiento'
+      )
+      return
+    }
+
     try {
       setActivePaymentObligationId(obligationId)
 
@@ -625,6 +663,11 @@ export default function TarjetasPrestamosPage({
           amount: Number(paymentForm.amount),
           paymentDate: paymentForm.paymentDate,
           paymentMethod: paymentForm.paymentMethod,
+          financialAccountId:
+            paymentForm.paymentMethod === 'cash' ||
+            paymentForm.paymentMethod === 'bank'
+              ? paymentForm.financialAccountId || null
+              : null,
           notes: paymentForm.notes.trim() || null,
         }
       )
@@ -1456,6 +1499,9 @@ export default function TarjetasPrestamosPage({
                         buildObligationFinancials(obligation)
                       const isPaymentFormOpen =
                         paymentFormObligationId === obligation.id
+                      const paymentNeedsFinancialAccount =
+                        paymentForm.paymentMethod === 'cash' ||
+                        paymentForm.paymentMethod === 'bank'
 
                       return (
                         <article
@@ -1674,6 +1720,50 @@ export default function TarjetasPrestamosPage({
                                   </select>
                                 </div>
 
+                                {paymentNeedsFinancialAccount && (
+                                  <div className="flex flex-col gap-2 md:col-span-3">
+                                    <label
+                                      htmlFor={`payment-account-${obligation.id}`}
+                                      className="text-sm font-medium text-slate-700"
+                                    >
+                                      {account.type === 'loan_receivable'
+                                        ? 'Cuenta de destino'
+                                        : 'Cuenta desde la que pagaste'}
+                                    </label>
+                                    <select
+                                      id={`payment-account-${obligation.id}`}
+                                      name="financialAccountId"
+                                      value={paymentForm.financialAccountId}
+                                      onChange={handlePaymentInputChange}
+                                      className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                                    >
+                                      <option value="">
+                                        {financialAccountOptions.length === 0
+                                          ? 'Primero crea una cuenta'
+                                          : 'Selecciona una cuenta'}
+                                      </option>
+                                      {financialAccountOptions.map((financialAccount) => (
+                                        <option
+                                          key={financialAccount.id}
+                                          value={financialAccount.id}
+                                        >
+                                          {financialAccount.name} ·{' '}
+                                          {getFinancialAccountTypeLabel(
+                                            financialAccount.type
+                                          )}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <p className="text-xs text-slate-500">
+                                      {financialAccountOptions.length === 0
+                                        ? 'Crea una cuenta desde el modulo Cuentas para reflejar este movimiento en tu liquidez.'
+                                        : account.type === 'loan_receivable'
+                                          ? 'La cuenta seleccionada aumentara su saldo con este cobro.'
+                                          : 'La cuenta seleccionada reducira su saldo con este abono.'}
+                                    </p>
+                                  </div>
+                                )}
+
                                 <div className="flex flex-col gap-2 md:col-span-3">
                                   <label
                                     htmlFor={`payment-notes-${obligation.id}`}
@@ -1750,6 +1840,15 @@ export default function TarjetasPrestamosPage({
                                           payment
                                         )}
                                       </p>
+                                      {(payment.financialAccount ??
+                                        payment.linkedTransactions?.[0]?.financialAccount) && (
+                                        <div className="mt-2">
+                                          <span className="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-xs font-medium text-cyan-700">
+                                            {(payment.financialAccount ??
+                                              payment.linkedTransactions?.[0]?.financialAccount)?.name}
+                                          </span>
+                                        </div>
+                                      )}
                                       {payment.notes && (
                                         <p className="mt-1 text-sm text-slate-500">
                                           {payment.notes}

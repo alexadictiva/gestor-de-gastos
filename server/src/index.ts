@@ -7,6 +7,7 @@ import transactionRoutes from './routes/transaction.routes'
 import categoryRoutes from './routes/category.routes'
 import obligationAccountRoutes from './routes/obligation-account.routes'
 import plannedMovementRoutes from './routes/planned-movement.routes'
+import financialAccountRoutes from './routes/financial-account.routes'
 
 const app = express()
 const PORT = 4000
@@ -44,6 +45,7 @@ app.use('/api/transactions', transactionRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/obligation-accounts', obligationAccountRoutes)
 app.use('/api/planned-movements', plannedMovementRoutes)
+app.use('/api/financial-accounts', financialAccountRoutes)
 
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en http://localhost:${PORT}`)

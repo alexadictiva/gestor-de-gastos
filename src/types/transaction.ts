@@ -1,3 +1,5 @@
+import type { FinancialAccount } from './financialAccount'
+
 export type TransactionType = 'income' | 'expense' | 'investments'
 export type PaymentMethod =
   | 'not_specified'
@@ -59,6 +61,8 @@ export interface Transaction {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: string
+  financialAccountId?: string | null
+  financialAccount?: FinancialAccount | null
   linkedObligationAccountId?: string | null
   linkedObligationPaymentId?: string | null
   createdAt?: string
@@ -74,6 +78,7 @@ export interface CreateTransactionPayload {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: string
+  financialAccountId?: string | null
   createLinkedObligationAccount?: boolean
   linkedObligationAccountName?: string | null
   linkedObligationInstallmentCount?: number | null
@@ -88,4 +93,5 @@ export interface UpdateTransactionPayload {
   paymentMethod: PaymentMethod
   reimbursementStatus: ReimbursementStatus
   date: string
+  financialAccountId?: string | null
 }

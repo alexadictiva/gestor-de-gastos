@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import type { Dispatch, SetStateAction } from 'react'
 import DashboardPage from '../pages/DashboardPage'
+import CuentasPage from '../pages/CuentasPage'
 import LoginPage from '../pages/LoginPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import TransaccionesPage from '../pages/TransaccionesPage'
@@ -10,6 +11,7 @@ import ResumenMensualPage from '../pages/ResumenMensualPage'
 import ConfiguracionPage from '../pages/ConfiguracionPage'
 import type { Transaction } from '../types/transaction'
 import type { Category } from '../types/category'
+import type { FinancialAccount } from '../types/financialAccount'
 import type { ObligationAccount } from '../types/obligationAccount'
 import type { PlannedMovement } from '../types/plannedMovement'
 import ProtectedRoute from '../components/auth/ProtectedRoute'
@@ -24,6 +26,9 @@ interface AppRouterProps {
   categories: Category[]
   setCategories: Dispatch<SetStateAction<Category[]>>
   isLoadingCategories: boolean
+  financialAccounts: FinancialAccount[]
+  setFinancialAccounts: Dispatch<SetStateAction<FinancialAccount[]>>
+  isLoadingFinancialAccounts: boolean
   obligationAccounts: ObligationAccount[]
   setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
   isLoadingObligationAccounts: boolean
@@ -39,6 +44,9 @@ export default function AppRouter({
   categories,
   setCategories,
   isLoadingCategories,
+  financialAccounts,
+  setFinancialAccounts,
+  isLoadingFinancialAccounts,
   obligationAccounts,
   setObligationAccounts,
   isLoadingObligationAccounts,
@@ -59,9 +67,11 @@ export default function AppRouter({
               <DashboardPage 
               transactions={transactions} 
               categories={categories}
+              financialAccounts={financialAccounts}
               obligationAccounts={obligationAccounts}
               plannedMovements={plannedMovements}
               isLoadingTransactions={isLoadingTransactions}
+              isLoadingFinancialAccounts={isLoadingFinancialAccounts}
               isLoadingObligationAccounts={isLoadingObligationAccounts}
               isLoadingPlannedMovements={isLoadingPlannedMovements} />
             </ProtectedRoute>
@@ -77,6 +87,7 @@ export default function AppRouter({
                 setTransactions={setTransactions}
                 isLoadingTransactions={isLoadingTransactions}
                 categories={categories}
+                financialAccounts={financialAccounts}
                 setObligationAccounts={setObligationAccounts}
               />
             </ProtectedRoute>
@@ -124,10 +135,25 @@ export default function AppRouter({
         />
 
         <Route
+          path="/cuentas"
+          element={
+            <ProtectedRoute>
+              <CuentasPage
+                financialAccounts={financialAccounts}
+                setFinancialAccounts={setFinancialAccounts}
+                transactions={transactions}
+                isLoadingFinancialAccounts={isLoadingFinancialAccounts}
+              />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/tarjetas-prestamos"
           element={
             <ProtectedRoute>
               <TarjetasPrestamosPage
+                financialAccounts={financialAccounts}
                 obligationAccounts={obligationAccounts}
                 setObligationAccounts={setObligationAccounts}
                 isLoadingObligationAccounts={isLoadingObligationAccounts}

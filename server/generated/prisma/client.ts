@@ -76,3 +76,8 @@ export type Obligation = Prisma.ObligationModel
  * 
  */
 export type ObligationPayment = Prisma.ObligationPaymentModel
+/**
+ * Model FinancialAccount
+ * 
+ */
+export type FinancialAccount = Prisma.FinancialAccountModel

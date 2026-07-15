@@ -390,7 +390,8 @@ export const ModelName = {
   PlannedMovement: 'PlannedMovement',
   ObligationAccount: 'ObligationAccount',
   Obligation: 'Obligation',
-  ObligationPayment: 'ObligationPayment'
+  ObligationPayment: 'ObligationPayment',
+  FinancialAccount: 'FinancialAccount'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -406,7 +407,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "transaction" | "category" | "plannedMovement" | "obligationAccount" | "obligation" | "obligationPayment"
+    modelProps: "user" | "transaction" | "category" | "plannedMovement" | "obligationAccount" | "obligation" | "obligationPayment" | "financialAccount"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -928,6 +929,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FinancialAccount: {
+      payload: Prisma.$FinancialAccountPayload<ExtArgs>
+      fields: Prisma.FinancialAccountFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FinancialAccountFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FinancialAccountFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>
+        }
+        findFirst: {
+          args: Prisma.FinancialAccountFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FinancialAccountFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>
+        }
+        findMany: {
+          args: Prisma.FinancialAccountFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>[]
+        }
+        create: {
+          args: Prisma.FinancialAccountCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>
+        }
+        createMany: {
+          args: Prisma.FinancialAccountCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FinancialAccountCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>[]
+        }
+        delete: {
+          args: Prisma.FinancialAccountDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>
+        }
+        update: {
+          args: Prisma.FinancialAccountUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>
+        }
+        deleteMany: {
+          args: Prisma.FinancialAccountDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FinancialAccountUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FinancialAccountUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>[]
+        }
+        upsert: {
+          args: Prisma.FinancialAccountUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FinancialAccountPayload>
+        }
+        aggregate: {
+          args: Prisma.FinancialAccountAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFinancialAccount>
+        }
+        groupBy: {
+          args: Prisma.FinancialAccountGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FinancialAccountGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FinancialAccountCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FinancialAccountCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -991,7 +1066,8 @@ export const TransactionScalarFieldEnum = {
   updatedAt: 'updatedAt',
   userId: 'userId',
   linkedObligationAccountId: 'linkedObligationAccountId',
-  linkedObligationPaymentId: 'linkedObligationPaymentId'
+  linkedObligationPaymentId: 'linkedObligationPaymentId',
+  financialAccountId: 'financialAccountId'
 } as const
 
 export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
@@ -1075,10 +1151,25 @@ export const ObligationPaymentScalarFieldEnum = {
   notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  obligationId: 'obligationId'
+  obligationId: 'obligationId',
+  financialAccountId: 'financialAccountId'
 } as const
 
 export type ObligationPaymentScalarFieldEnum = (typeof ObligationPaymentScalarFieldEnum)[keyof typeof ObligationPaymentScalarFieldEnum]
+
+
+export const FinancialAccountScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  initialBalance: 'initialBalance',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  userId: 'userId'
+} as const
+
+export type FinancialAccountScalarFieldEnum = (typeof FinancialAccountScalarFieldEnum)[keyof typeof FinancialAccountScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1239,6 +1330,7 @@ export type GlobalOmitConfig = {
   obligationAccount?: Prisma.ObligationAccountOmit
   obligation?: Prisma.ObligationOmit
   obligationPayment?: Prisma.ObligationPaymentOmit
+  financialAccount?: Prisma.FinancialAccountOmit
 }
 
 /* Types for Logging */
