@@ -243,6 +243,15 @@ function getPaymentActionLabel(type: ObligationAccountType) {
   return type === 'loan_receivable' ? 'Registrar cobro' : 'Registrar abono'
 }
 
+const iconButtonClass =
+  'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50'
+
+const dangerIconButtonClass =
+  'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50'
+
+const primaryIconButtonClass =
+  'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60'
+
 function StatCard({
   label,
   value,
@@ -788,9 +797,15 @@ export default function TarjetasPrestamosPage({
                 setAccountToEdit(null)
                 setShowAccountForm(true)
               }}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              title={showAccountForm ? 'Cerrar formulario de cuenta' : 'Nueva cuenta'}
+              aria-label={showAccountForm ? 'Cerrar formulario de cuenta' : 'Nueva cuenta'}
+              className={primaryIconButtonClass}
             >
-              {showAccountForm ? <CloseDebtButtonIcon/> : <NewAccountButtonIcon/>}
+              {showAccountForm ? (
+                <CloseDebtButtonIcon className="h-4 w-4" />
+              ) : (
+                <NewAccountButtonIcon className="h-4 w-4" />
+              )}
             </button>
           </div>
         </section>
@@ -1148,13 +1163,12 @@ export default function TarjetasPrestamosPage({
                       onClick={() => toggleAccountAccordion(account.id)}
                       title={isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
                       aria-label={isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
+                      className={iconButtonClass}
                     >
                       <span className="relative inline-flex h-5 w-5 items-center justify-center">
-                        
                         {isExpanded ? (
                           <ViewButtonIcon className="h-4 w-4" />
-                        ) : (                          
+                        ) : (
                           <NotViewButtonIcon className="h-4 w-4" />
                         )}
                       </span>
@@ -1165,7 +1179,7 @@ export default function TarjetasPrestamosPage({
                       onClick={() => openEditAccountForm(account)}
                       title="Editar cuenta"
                       aria-label="Editar cuenta"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
+                      className={iconButtonClass}
                     >
                       <EditButtonIcon className="h-4 w-4" />
                     </button>
@@ -1188,11 +1202,28 @@ export default function TarjetasPrestamosPage({
                           )
                         )
                       }}
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                      disabled={!isExpanded}
+                      title={
+                        !isExpanded
+                          ? 'Abre el detalle para crear una obligacion'
+                          : obligationFormAccountId === account.id
+                            ? 'Cerrar formulario de obligacion'
+                            : 'Nueva obligacion'
+                      }
+                      aria-label={
+                        !isExpanded
+                          ? 'Abre el detalle para crear una obligacion'
+                          : obligationFormAccountId === account.id
+                            ? 'Cerrar formulario de obligacion'
+                            : 'Nueva obligacion'
+                      }
+                      className={iconButtonClass}
                     >
-                      {obligationFormAccountId === account.id
-                        ? <CloseDebtButtonIcon/>
-                        : <NewDebtButtonIcon/>}
+                      {obligationFormAccountId === account.id ? (
+                        <CloseDebtButtonIcon className="h-4 w-4" />
+                      ) : (
+                        <NewDebtButtonIcon className="h-4 w-4" />
+                      )}
                     </button>
 
                     <button
@@ -1206,7 +1237,7 @@ export default function TarjetasPrestamosPage({
                       }
                       title="Eliminar cuenta"
                       aria-label="Eliminar cuenta"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 hover:bg-red-200"
+                      className={dangerIconButtonClass}
                     >
                       <DeleteButtonIcon className="h-4 w-4" />
                     </button>
@@ -1478,7 +1509,7 @@ export default function TarjetasPrestamosPage({
                                 }
                                 title="Editar obligacion"
                                 aria-label="Editar obligacion"
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
+                                className={iconButtonClass}
                               >
                                 <EditButtonIcon className="h-4 w-4" />
                               </button>
@@ -1507,13 +1538,13 @@ export default function TarjetasPrestamosPage({
                                       ? 'Cerrar movimiento'
                                       : getPaymentActionLabel(account.type)
                                   }
-                                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
+                                  className={iconButtonClass}
                                 >
                                   {isPaymentFormOpen
                                     ? <CloseButtonIcon className="h-4 w-4" />
                                     : account.type === 'loan_receivable'
                                       ? <RegisterCollectionButtonIcon className="h-4 w-4" />
-                                      : <RegisterPaymentButtonIcon className="h-5 w-5" />}
+                                      : <RegisterPaymentButtonIcon className="h-4 w-4" />}
                                 </button>
                               )}
 
@@ -1528,7 +1559,7 @@ export default function TarjetasPrestamosPage({
                                 }
                                 title="Eliminar obligacion"
                                 aria-label="Eliminar obligacion"
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 hover:bg-red-200"
+                                className={dangerIconButtonClass}
                               >
                                 <DeleteButtonIcon className="h-4 w-4" />
                               </button>
@@ -1737,7 +1768,7 @@ export default function TarjetasPrestamosPage({
                                       }
                                       title="Eliminar abono"
                                       aria-label="Eliminar abono"
-                                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
+                                      className={dangerIconButtonClass}
                                     >
                                       <DeleteButtonIcon className="h-4 w-4" />
                                     </button>
