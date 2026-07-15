@@ -1,10 +1,13 @@
 import type { SVGProps } from 'react'
 
-export interface AppIconProps extends SVGProps<SVGSVGElement> {
+export interface IconAssetProps extends SVGProps<SVGSVGElement> {
   className?: string
 }
 
-export function DashIcon({ className = '', ...props }: AppIconProps) {
+export function DashboardButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 25 24"
@@ -45,7 +48,10 @@ export function DashIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function ConfigIcon({ className = '', ...props }: AppIconProps) {
+export function SettingsButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 22 22"
@@ -72,7 +78,10 @@ export function ConfigIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function ViewIcon({ className = '', ...props }: AppIconProps) {
+export function ViewButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 17 13"
@@ -99,7 +108,47 @@ export function ViewIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function EditIcon({ className = '', ...props }: AppIconProps) {
+export function NotViewButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
+  return (
+    <svg
+  viewBox="0 0 17 13"
+  fill="none"
+  className={className}
+  aria-hidden="true"
+  {...props}
+>
+  <path
+    d="M1.20104 7.06035C1.09728 6.89092 1.0454 6.80621 1.01636 6.67554C0.994547 6.57739 0.994547 6.42261 1.01636 6.32446C1.0454 6.19379 1.09728 6.10908 1.20104 5.93965C2.05845 4.53952 4.61063 1 8.5 1C12.3894 1 14.9415 4.53952 15.799 5.93964C15.9027 6.10908 15.9546 6.19379 15.9836 6.32446C16.0055 6.42261 16.0055 6.57739 15.9836 6.67554C15.9546 6.80621 15.9027 6.89092 15.799 7.06035C14.9415 8.46048 12.3894 12 8.5 12C4.61063 12 2.05846 8.46048 1.20104 7.06035Z"
+    stroke="currentColor"
+    strokeWidth="0.81"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+  <path
+    d="M8.5 8.85714C9.76231 8.85714 10.7856 7.80181 10.7856 6.5C10.7856 5.19819 9.76231 4.14286 8.5 4.14286C7.23769 4.14286 6.21438 5.19819 6.21438 6.5C6.21438 7.80181 7.23769 8.85714 8.5 8.85714Z"
+    stroke="currentColor"
+    strokeWidth="0.81"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+  <path
+    d="M2 11L15 2"
+    stroke="currentColor"
+    strokeWidth="0.81"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+</svg>
+  )
+}
+
+export function EditButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 19 21"
@@ -147,40 +196,27 @@ export function EditIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function RegisterPaymentIcon({
+export function RegisterPaymentButtonIcon({
   className = '',
   ...props
-}: AppIconProps) {
+}: IconAssetProps) {
   return (
-    <svg
-      viewBox="0 0 29 16"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-      {...props}
-    >
-      <path
-        d="M14 10.5L14 13.8569C14 13.9806 14 14.0425 14.0416 14.1557C14.0666 14.2235 14.1636 14.3697 14.2167 14.4195C14.3054 14.5026 14.3361 14.5159 14.3975 14.5425C14.8588 14.7424 15.7859 15 17.5 15C20.3 15 22.4 13.625 24.5 13.625C25.1696 13.625 25.768 13.6949 26.2725 13.7901C26.9934 13.9261 27.3538 13.9942 27.5324 13.9324C27.714 13.8697 27.8076 13.7937 27.9046 13.6304C28 13.4698 28 13.1574 28 12.5327V5.14314C28 5.01938 28 4.95751 27.9584 4.84431C27.9334 4.77646 27.8364 4.63031 27.7833 4.58051C27.6946 4.49741 27.6639 4.48411 27.6025 4.45749C27.1412 4.25765 26.2141 4 24.5 4C23.207 4 23.0634 4.18439 22 4.5M16.8 8.8125V11.5625M25.2 7.4375V10.1875M22.75 10.1875C22.75 11.1367 21.9665 11.9062 21 11.9062C20.0335 11.9062 19.25 11.1367 19.25 10.1875C19.25 9.23826 20.0335 8.46875 21 8.46875C21.9665 8.46875 22.75 9.23826 22.75 10.1875Z"
-        stroke="currentColor"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M5 2.91285H7.61029C7.95063 2.91285 8.28888 2.87235 8.61881 2.79135L11.3769 2.12112C11.9753 1.97533 12.5988 1.96115 13.2035 2.0786L16.253 2.67189C17.0585 2.82881 17.9192 2.93506 18.5 3.5L20.5608 5.1886C21.1769 5.78695 21.1769 6.75788 20.5608 7.35725C20.006 7.89688 19.1276 7.95762 18.5 7.5L15.9626 6.35515C15.6025 6.09191 15.1643 5.95017 14.7137 5.95017H12.2855L13.8311 5.95024C14.7022 5.95024 15.4079 6.63667 15.4079 7.48409V7.79085C15.4079 8.4945 14.9156 9.10804 14.2141 9.27813L11.8286 9.85826C11.4404 9.95242 11.0428 10 10.6431 10C9.67833 10 7.93189 9.20119 7.93189 9.20119L5 7.97512M1 8.4L1 2.6C1 2.03995 1 1.75992 1.10899 1.54601C1.20487 1.35785 1.35785 1.20487 1.54601 1.109C1.75992 1 2.03995 1 2.6 1H3.4C3.96005 1 4.24008 1 4.45399 1.10899C4.64215 1.20487 4.79513 1.35785 4.89101 1.54601C5 1.75992 5 2.03995 5 2.6V8.4C5 8.96005 5 9.24008 4.89101 9.45399C4.79513 9.64215 4.64215 9.79513 4.45399 9.89101C4.24008 10 3.96005 10 3.4 10L2.6 10C2.03995 10 1.75992 10 1.54601 9.89101C1.35785 9.79513 1.20487 9.64215 1.10899 9.45399C1 9.24008 1 8.96005 1 8.4Z"
-        stroke="currentColor"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg viewBox="0 0 512 512" className={className} aria-hidden="true" {...props}>
+      <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M166 66 C183 58 199 77 218 70 C243 60 264 60 289 70 C311 79 333 79 357 69 L307 187 L205 187 Z" stroke-width="18"/>
+        <path d="M205 187 C177 218 139 249 111 292 C82 337 61 384 65 427 C69 470 91 493 132 498 L380 498 C421 493 443 470 447 427 C451 384 430 337 401 292 C373 249 335 218 307 187 Z" stroke-width="18"/>
+        <path d="M205 187 H307" stroke-width="18"/>
+        <path d="M257 265 V447" stroke-width="18"/>
+        <path d="M306 313 C302 286 284 272 258 272 C229 272 211 289 211 315 C211 342 229 354 258 361 C288 368 307 380 307 409 C307 437 287 454 258 454 C228 454 209 437 206 410" stroke-width="18"/>
+      </g>
     </svg>
   )
 }
 
-export function RegisterCollectionIcon({
+export function RegisterCollectionButtonIcon({
   className = '',
   ...props
-}: AppIconProps) {
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 23 23"
@@ -200,55 +236,26 @@ export function RegisterCollectionIcon({
   )
 }
 
-export function TrashIcon({ className = '', ...props }: AppIconProps) {
+export function DeleteButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-      {...props}
-    >
-      <path
-        d="M3 6h18"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 6V4h8v2"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M19 6l-1 14H6L5 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10 11v6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M14 11v6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width="24" height="22" viewBox="0 0 24 22" fill="none" className={className} aria-hidden="true" {...props}>
+      <path d="M3.08704 5.34698L4.72887 18.1663C4.93758 19.7849 6.31504 21 7.9476 21H16.2495C17.896 21 19.2827 19.7663 19.4729 18.1292L19.8207 15.1191" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20.062 13.046L20.9525 5.34698" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9.69165 18.3272V8.02173" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14.348 8.02173V18.3272" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15.4889 5.00255V2.87373C15.4889 1.83947 14.6494 1 13.6152 1H10.4196C9.38537 1 8.5459 1.83947 8.5459 2.87373V5.00255" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M1 5.05911H9.6915H23.0395" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   )
 }
 
-export function FilterIcon({ className = '', ...props }: AppIconProps) {
+export function FilterButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -282,7 +289,10 @@ export function FilterIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function FilterOffIcon({ className = '', ...props }: AppIconProps) {
+export function ClearFilterButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -323,7 +333,10 @@ export function FilterOffIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function ChevronDownIcon({ className = '', ...props }: AppIconProps) {
+export function ChevronDownButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -343,7 +356,10 @@ export function ChevronDownIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function ChevronUpIcon({ className = '', ...props }: AppIconProps) {
+export function ChevronUpButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -363,7 +379,10 @@ export function ChevronUpIcon({ className = '', ...props }: AppIconProps) {
   )
 }
 
-export function CloseIcon({ className = '', ...props }: AppIconProps) {
+export function CloseButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -386,6 +405,52 @@ export function CloseIcon({ className = '', ...props }: AppIconProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  )
+}
+
+export function CloseDebtButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
+  return (   
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className={className} aria-hidden="true" {...props}>
+      <circle cx="9" cy="9" r="8.57" stroke="currentColor" stroke-width="0.86"/>
+      <g transform="rotate(45 9 9)">
+        <path d="M9.125 4.77881V13.9712" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" />
+        <path d="M13.7212 9.375L4.5288 9.375" stroke="currentColor" stroke-width="0.86" stroke-linecap="round" />
+      </g>
+    </svg>
+  )
+}
+
+export function NewDebtButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
+  return (   
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className={className} {...props}>
+      <circle cx="9" cy="9" r="8.57" stroke="currentColor" stroke-width="0.86"/>
+      <path d="M9.125 4.77881V13.9712" stroke="currentColor" stroke-width="0.86" stroke-linecap="round"/>
+      <path d="M13.7212 9.375L4.5288 9.375" stroke="currentColor" stroke-width="0.86" stroke-linecap="round"/>
+    </svg>
+  )
+}
+
+
+export function NewAccountButtonIcon({
+  className = '',
+  ...props
+}: IconAssetProps) {
+  return (   
+    <svg width="25" height="25" viewBox="0 0 25 25" fill="none" className={className} {...props}>
+      <path d="M20.9192 23.3394C19.5848 23.9467 18.0111 23.9882 16.5755 23.321C13.9896 22.1154 12.8669 19.0372 14.077 16.4513C15.2872 13.8607 18.3654 12.7472 20.9514 13.9528C23.5373 15.1583 24.66 18.2366 23.4499 20.8271C23.2198 21.324 22.9161 21.7657 22.5618 22.1476" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18.7656 16.4277V20.8458" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20.9751 18.6367H16.5571" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18.793 7.7041V11.961" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M11.6198 18.6367H2.62885C1.7316 18.6367 1 17.9097 1 17.0079V2.96935C1 1.88345 1.88345 1 2.96935 1H13.4695C13.856 1 14.2241 1.15184 14.4956 1.42332L18.0017 4.9295C18.1996 5.12735 18.057 5.46325 17.7809 5.46325H15.2272C15.2272 5.46325 14.0861 5.38962 14.3851 4.15648" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5.84521 14.1367H11.6612" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5.84521 10.1201H14.1091" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   )
 }

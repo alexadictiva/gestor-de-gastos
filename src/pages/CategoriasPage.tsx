@@ -1,7 +1,7 @@
 import { useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
-import { EditIcon, TrashIcon } from '../components/ui/AppIcons'
+import { DeleteButtonIcon, EditButtonIcon } from '../assets/icons'
 import { useAuth } from '../hooks/useAuth'
 import type { Category, CategoryType } from '../types/category'
 import type { Transaction } from '../types/transaction'
@@ -380,7 +380,7 @@ export default function CategoriasPage({
                             aria-label="Editar categoria"
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"
                           >
-                            <EditIcon className="h-4 w-4" />
+                            <EditButtonIcon className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
@@ -389,7 +389,7 @@ export default function CategoriasPage({
                             aria-label="Eliminar categoria"
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
                           >
-                            <TrashIcon className="h-4 w-4" />
+                            <DeleteButtonIcon className="h-4 w-4" />
                           </button>
                         </div>
                       </td>

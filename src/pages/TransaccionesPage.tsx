@@ -10,11 +10,11 @@ import {
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
 import {
-  EditIcon,
-  FilterIcon,
-  FilterOffIcon,
-  TrashIcon,
-} from '../components/ui/AppIcons'
+  ClearFilterButtonIcon,
+  DeleteButtonIcon,
+  EditButtonIcon,
+  FilterButtonIcon,
+} from '../assets/icons'
 import { useAuth } from '../hooks/useAuth'
 import {
   PAYMENT_METHOD_OPTIONS,
@@ -1482,7 +1482,7 @@ export default function TransaccionesPage({
                     : 'border-slate-300 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                <FilterIcon className="h-4 w-4" />
+                <FilterButtonIcon className="h-4 w-4" />
                 {activeFiltersCount > 0 && (
                   <span className="ml-2 inline-flex rounded-full bg-sky-600 px-2 py-0.5 text-xs font-semibold text-white">
                     {activeFiltersCount}
@@ -1498,7 +1498,7 @@ export default function TransaccionesPage({
                   aria-label="Limpiar filtros"
                   className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
                 >
-                  <FilterOffIcon className="h-4 w-4" />
+                  <ClearFilterButtonIcon className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -1852,9 +1852,9 @@ export default function TransaccionesPage({
                       >
                         {getSignedTransactionAmountLabel(transaction)}
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 text-slate-700">
                         <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getPaymentMethodTone(transaction.paymentMethod)}`}
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium  ${getPaymentMethodTone(transaction.paymentMethod)}`}
                         >
                           {getPaymentMethodLabel(transaction.paymentMethod)}
                         </span>
@@ -1891,7 +1891,7 @@ export default function TransaccionesPage({
                               )}
                               className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                              <EditIcon className="h-4 w-4" />
+                              <EditButtonIcon className="h-4 w-4" />
                             </button>
                           </span>
 
@@ -1902,7 +1902,7 @@ export default function TransaccionesPage({
                             aria-label="Eliminar"
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
                           >
-                            <TrashIcon className="h-4 w-4" />
+                            <DeleteButtonIcon className="h-4 w-4" />
                           </button>
                         </div>
                       </td>

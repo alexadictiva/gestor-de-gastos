@@ -2,11 +2,11 @@ import type { ComponentType } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import {
-  CloseIcon,
-  ConfigIcon,
-  DashIcon,
-  type AppIconProps as IconProps,
-} from '../ui/AppIcons'
+  CloseButtonIcon,
+  DashboardButtonIcon,
+  SettingsButtonIcon,
+  type IconAssetProps as IconProps,
+} from '../../assets/icons'
 
 interface SidebarNavItem {
   to: string
@@ -22,19 +22,9 @@ interface SidebarProps {
 
 function WalletIcon({ className = '' }: IconProps) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h10A2.5 2.5 0 0 1 18 7.5V9H6.5A2.5 2.5 0 0 0 4 11.5v5A2.5 2.5 0 0 0 6.5 19H18v1.5A2.5 2.5 0 0 1 15.5 23h-10A2.5 2.5 0 0 1 3 20.5z" />
-      <path d="M20 9h-9.5A2.5 2.5 0 0 0 8 11.5v5a2.5 2.5 0 0 0 2.5 2.5H20a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1Z" />
-      <path d="M16.5 14h.01" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className={className} aria-hidden="true">
+      <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path>
+      <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path>
     </svg>
   )
 }
@@ -158,7 +148,7 @@ function LogoutIcon({ className = '' }: IconProps) {
 }
 
 const navItems: SidebarNavItem[] = [
-  { to: '/', label: 'Dashboard', icon: DashIcon, end: true },
+  { to: '/', label: 'Dashboard', icon: DashboardButtonIcon, end: true },
   { to: '/transacciones', label: 'Transacciones', icon: ReceiptIcon },
   { to: '/categorias', label: 'Categorias', icon: TagIcon },
   {
@@ -214,7 +204,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           className="app-sidebar-close"
           aria-label="Cerrar menu"
         >
-          <CloseIcon className="h-5 w-5" />
+          <CloseButtonIcon className="h-5 w-5" />
         </button>
       </div>
 
@@ -258,7 +248,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             `app-sidebar-action ${isActive ? 'app-nav-link--active' : ''}`
           }
         >
-          <ConfigIcon className="app-nav-icon" />
+          <SettingsButtonIcon className="app-nav-icon" />
           <span>Configuracion</span>
         </NavLink>
 

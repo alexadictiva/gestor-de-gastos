@@ -10,15 +10,17 @@ import {
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
 import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CloseIcon,
-  EditIcon,
-  RegisterCollectionIcon,
-  RegisterPaymentIcon,
-  TrashIcon,
-  ViewIcon,
-} from '../components/ui/AppIcons'
+  CloseButtonIcon,
+  DeleteButtonIcon,
+  EditButtonIcon,
+  RegisterCollectionButtonIcon,
+  RegisterPaymentButtonIcon,
+  ViewButtonIcon,
+  NotViewButtonIcon,
+  CloseDebtButtonIcon, 
+  NewDebtButtonIcon,
+  NewAccountButtonIcon
+} from '../assets/icons'
 import { useAuth } from '../hooks/useAuth'
 import {
   createObligationAccountRequest,
@@ -57,6 +59,7 @@ import {
   sortObligationAccounts,
 } from '../utils/obligationAccount'
 import { getPaymentMethodTone } from '../utils/transactionMetrics'
+
 
 interface AccountFormState {
   name: string
@@ -787,7 +790,7 @@ export default function TarjetasPrestamosPage({
               }}
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
-              {showAccountForm ? 'Cerrar formulario' : 'Nueva cuenta'}
+              {showAccountForm ? <CloseDebtButtonIcon/> : <NewAccountButtonIcon/>}
             </button>
           </div>
         </section>
@@ -1093,7 +1096,7 @@ export default function TarjetasPrestamosPage({
                       </span>
                     </div>
 
-                    <div className="mt-1 flex flex-wrap gap-4 text-sm text-slate-500">
+                    <div className="mt-1 flex flex-wrap gap-2 text-sm text-slate-500 max-w-[900px]">
                       {account.type === 'credit_card' && account.creditLimit && (
                         <span>Limite: {formatCurrency(account.creditLimit)}</span>
                       )}
@@ -1148,11 +1151,11 @@ export default function TarjetasPrestamosPage({
                       className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                     >
                       <span className="relative inline-flex h-5 w-5 items-center justify-center">
-                        <ViewIcon className="h-4 w-4" />
+                        
                         {isExpanded ? (
-                          <ChevronUpIcon className="absolute -right-2 -top-2 h-3 w-3 rounded-full bg-white text-slate-600" />
-                        ) : (
-                          <ChevronDownIcon className="absolute -right-2 -top-2 h-3 w-3 rounded-full bg-white text-slate-600" />
+                          <ViewButtonIcon className="h-4 w-4" />
+                        ) : (                          
+                          <NotViewButtonIcon className="h-4 w-4" />
                         )}
                       </span>
                     </button>
@@ -1164,7 +1167,7 @@ export default function TarjetasPrestamosPage({
                       aria-label="Editar cuenta"
                       className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                     >
-                      <EditIcon className="h-4 w-4" />
+                      <EditButtonIcon className="h-4 w-4" />
                     </button>
 
                     <button
@@ -1188,8 +1191,8 @@ export default function TarjetasPrestamosPage({
                       className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
                     >
                       {obligationFormAccountId === account.id
-                        ? 'Cerrar obligacion'
-                        : 'Nueva obligacion'}
+                        ? <CloseDebtButtonIcon/>
+                        : <NewDebtButtonIcon/>}
                     </button>
 
                     <button
@@ -1205,7 +1208,7 @@ export default function TarjetasPrestamosPage({
                       aria-label="Eliminar cuenta"
                       className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 hover:bg-red-200"
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      <DeleteButtonIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -1477,7 +1480,7 @@ export default function TarjetasPrestamosPage({
                                 aria-label="Editar obligacion"
                                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                               >
-                                <EditIcon className="h-4 w-4" />
+                                <EditButtonIcon className="h-4 w-4" />
                               </button>
 
                               {obligationFinancials.remainingAmount > 0.01 && (
@@ -1507,10 +1510,10 @@ export default function TarjetasPrestamosPage({
                                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
                                 >
                                   {isPaymentFormOpen
-                                    ? <CloseIcon className="h-4 w-4" />
+                                    ? <CloseButtonIcon className="h-4 w-4" />
                                     : account.type === 'loan_receivable'
-                                      ? <RegisterCollectionIcon className="h-4 w-4" />
-                                      : <RegisterPaymentIcon className="h-4 w-4" />}
+                                      ? <RegisterCollectionButtonIcon className="h-4 w-4" />
+                                      : <RegisterPaymentButtonIcon className="h-5 w-5" />}
                                 </button>
                               )}
 
@@ -1527,7 +1530,7 @@ export default function TarjetasPrestamosPage({
                                 aria-label="Eliminar obligacion"
                                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-600 hover:bg-red-200"
                               >
-                                <TrashIcon className="h-4 w-4" />
+                                <DeleteButtonIcon className="h-4 w-4" />
                               </button>
                             </div>
                           </div>
@@ -1736,7 +1739,7 @@ export default function TarjetasPrestamosPage({
                                       aria-label="Eliminar abono"
                                       className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200"
                                     >
-                                      <TrashIcon className="h-4 w-4" />
+                                      <DeleteButtonIcon className="h-4 w-4" />
                                     </button>
                                   </div>
                                 ))}

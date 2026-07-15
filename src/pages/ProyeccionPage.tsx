@@ -8,7 +8,7 @@ import {
 } from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
-import { EditIcon, TrashIcon } from '../components/ui/AppIcons'
+import { DeleteButtonIcon, EditButtonIcon } from '../assets/icons'
 import { useAuth } from '../hooks/useAuth'
 import {
   convertPlannedMovementToTransactionRequest,
@@ -924,7 +924,7 @@ export default function ProyeccionPage({
                                     aria-label="Editar movimiento proyectado"
                                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
                                   >
-                                    <EditIcon className="h-4 w-4" />
+                                    <EditButtonIcon className="h-4 w-4" />
                                   </button>
                                 )}
 
@@ -937,7 +937,7 @@ export default function ProyeccionPage({
                                     aria-label="Eliminar movimiento proyectado"
                                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60"
                                   >
-                                    <TrashIcon className="h-4 w-4" />
+                                    <DeleteButtonIcon className="h-4 w-4" />
                                   </button>
                                 )}
                               </div>
