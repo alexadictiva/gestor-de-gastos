@@ -15,6 +15,7 @@ import {
   createPlannedMovementRequest,
   deletePlannedMovementRequest,
   duplicateRecurringPlannedMovementsRequest,
+  revertPlannedMovementConversionRequest,
   updatePlannedMovementStatusRequest,
   updatePlannedMovementRequest,
 } from '../services/plannedMovementService'
@@ -34,7 +35,7 @@ import {
   buildPlannedMovementMetrics,
   filterPlannedMovementsByMonth,
   formatMonthLabel,
-  getNextMonthKey,
+  getCurrentMonthKey,
   shiftMonthKey,
 } from '../utils/plannedMovement'
 import { getPaymentMethodTone } from '../utils/transactionMetrics'
@@ -154,12 +155,12 @@ export default function ProyeccionPage({
   setTransactions,
 }: ProyeccionPageProps) {
   const { token } = useAuth()
-  const nextMonthKey = useMemo(() => getNextMonthKey(), [])
+  const currentMonthKey = useMemo(() => getCurrentMonthKey(), [])
 
-  const [selectedMonth, setSelectedMonth] = useState(nextMonthKey)
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthKey)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<PlannedMovementForm>(
-    createInitialForm(nextMonthKey)
+    createInitialForm(currentMonthKey)
   )
   const [plannedMovementToEdit, setPlannedMovementToEdit] =
     useState<PlannedMovement | null>(null)
@@ -171,7 +172,11 @@ export default function ProyeccionPage({
   const [plannedMovementToDelete, setPlannedMovementToDelete] = useState<
     string | null
   >(null)
+  const [isRevertModalOpen, setIsRevertModalOpen] = useState(false)
+  const [plannedMovementToRevert, setPlannedMovementToRevert] =
+    useState<PlannedMovement | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isReverting, setIsReverting] = useState(false)
   const [activeStatusItemId, setActiveStatusItemId] = useState<string | null>(
     null
   )
@@ -198,8 +203,8 @@ export default function ProyeccionPage({
     setSuccessMessage('')
   }
 
-  const resetFormState = () => {
-    setForm(createInitialForm(selectedMonth))
+  const resetFormState = (monthKey = selectedMonth) => {
+    setForm(createInitialForm(monthKey))
     setPlannedMovementToEdit(null)
     setShowForm(false)
   }
@@ -288,6 +293,7 @@ export default function ProyeccionPage({
         dueDate: form.dueDate,
         isRecurring: form.isRecurring,
       }
+      const targetMonthKey = payload.dueDate.slice(0, 7)
 
       if (plannedMovementToEdit) {
         const updatedItem = await updatePlannedMovementRequest(
@@ -305,7 +311,11 @@ export default function ProyeccionPage({
         setSuccessMessage('Movimiento proyectado creado correctamente')
       }
 
-      resetFormState()
+      if (selectedMonth !== targetMonthKey) {
+        setSelectedMonth(targetMonthKey)
+      }
+
+      resetFormState(targetMonthKey)
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message)
@@ -428,6 +438,57 @@ export default function ProyeccionPage({
     setIsDeleteModalOpen(false)
   }
 
+  const openRevertModal = (plannedMovement: PlannedMovement) => {
+    setPlannedMovementToRevert(plannedMovement)
+    setIsRevertModalOpen(true)
+  }
+
+  const closeRevertModal = () => {
+    setPlannedMovementToRevert(null)
+    setIsRevertModalOpen(false)
+  }
+
+  const confirmRevertConversion = async () => {
+    if (!plannedMovementToRevert || !token) {
+      return
+    }
+
+    try {
+      setIsReverting(true)
+      clearFeedback()
+
+      const { plannedMovement: updatedItem, deletedTransactionId } =
+        await revertPlannedMovementConversionRequest(
+          token,
+          plannedMovementToRevert.id
+        )
+
+      setPlannedMovements((prev) => replacePlannedMovementItem(prev, updatedItem))
+
+      if (deletedTransactionId) {
+        setTransactions((prev) =>
+          sortTransactions(
+            prev.filter((transaction) => transaction.id !== deletedTransactionId)
+          )
+        )
+      }
+
+      closeRevertModal()
+      openEditForm(updatedItem)
+      setSuccessMessage(
+        'Se deshizo el paso a real. Ahora puedes corregir la proyeccion y volver a guardarla.'
+      )
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message)
+      } else {
+        setErrorMessage('No se pudo deshacer el paso a real')
+      }
+    } finally {
+      setIsReverting(false)
+    }
+  }
+
   const confirmDelete = async () => {
     if (!plannedMovementToDelete || !token) {
       return
@@ -504,13 +565,13 @@ export default function ProyeccionPage({
                 Mes siguiente
               </button>
 
-              {selectedMonth !== nextMonthKey && (
+              {selectedMonth !== currentMonthKey && (
                 <button
                   type="button"
-                  onClick={() => setSelectedMonth(nextMonthKey)}
+                  onClick={() => setSelectedMonth(currentMonthKey)}
                   className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
                 >
-                  Volver al proximo mes
+                  Volver al mes actual
                 </button>
               )}
             </div>
@@ -736,6 +797,10 @@ export default function ProyeccionPage({
                         onChange={handleChange}
                         className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
                       />
+                      <p className="text-xs text-slate-500">
+                        La tabla muestra solo el mes seleccionado. Si guardas una
+                        fecha de otro mes, te llevaremos automaticamente a ese mes.
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-3 md:col-span-2">
@@ -762,7 +827,7 @@ export default function ProyeccionPage({
                     <div className="flex justify-end gap-3 md:col-span-2">
                       <button
                         type="button"
-                        onClick={resetFormState}
+                        onClick={() => resetFormState()}
                         className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
                       >
                         Cancelar
@@ -915,6 +980,17 @@ export default function ProyeccionPage({
                                   </button>
                                 )}
 
+                                {item.linkedTransactionId && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openRevertModal(item)}
+                                    disabled={isBusy}
+                                    className="rounded-lg bg-amber-100 px-3 py-1 text-sm font-medium text-amber-700 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    Corregir
+                                  </button>
+                                )}
+
                                 {canEditProjection && (
                                   <button
                                     type="button"
@@ -952,6 +1028,45 @@ export default function ProyeccionPage({
             </section>
           </>
         )}
+
+        <Modal
+          isOpen={isRevertModalOpen}
+          onClose={closeRevertModal}
+          title="Corregir proyeccion pasada a real"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-slate-600">
+              Se eliminara la transaccion real vinculada y esta proyeccion
+              volvera a estado pendiente para que puedas editarla o borrarla.
+            </p>
+
+            {plannedMovementToRevert && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                Movimiento: <span className="font-semibold">{plannedMovementToRevert.title}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeRevertModal}
+                disabled={isReverting}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmRevertConversion}
+                disabled={isReverting}
+                className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isReverting ? 'Revirtiendo...' : 'Deshacer paso a real'}
+              </button>
+            </div>
+          </div>
+        </Modal>
 
         <Modal
           isOpen={isDeleteModalOpen}

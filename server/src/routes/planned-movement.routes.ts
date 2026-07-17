@@ -681,6 +681,107 @@ router.post('/:id/convert', authMiddleware, async (req: AuthRequest, res) => {
   }
 })
 
+router.post('/:id/revert-conversion', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        ok: false,
+        message: 'Usuario no autenticado',
+      })
+    }
+
+    const plannedMovementId = req.params.id
+
+    if (typeof plannedMovementId !== 'string' || !plannedMovementId.trim()) {
+      return res.status(400).json({
+        ok: false,
+        message: 'ID de movimiento proyectado invalido',
+      })
+    }
+
+    const existingPlannedMovement = await prisma.plannedMovement.findFirst({
+      where: {
+        id: plannedMovementId,
+        userId: req.user.userId,
+      },
+    })
+
+    if (!existingPlannedMovement) {
+      return res.status(404).json({
+        ok: false,
+        message: 'Movimiento proyectado no encontrado',
+      })
+    }
+
+    if (!existingPlannedMovement.linkedTransactionId) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Este movimiento proyectado todavia no fue pasado a real',
+      })
+    }
+
+    const linkedTransaction = await prisma.transaction.findFirst({
+      where: {
+        id: existingPlannedMovement.linkedTransactionId,
+        userId: req.user.userId,
+      },
+    })
+
+    if (
+      linkedTransaction &&
+      (linkedTransaction.linkedObligationAccountId ||
+        linkedTransaction.linkedObligationPaymentId)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        message:
+          'La transaccion vinculada ya tiene relaciones adicionales y no puede revertirse desde Proyeccion',
+      })
+    }
+
+    const result = await prisma.$transaction(async (transactionClient) => {
+      if (linkedTransaction) {
+        await transactionClient.transaction.delete({
+          where: {
+            id: linkedTransaction.id,
+          },
+        })
+      }
+
+      const plannedMovement = await transactionClient.plannedMovement.update({
+        where: {
+          id: plannedMovementId,
+        },
+        data: {
+          status: 'pending',
+          completedAt: null,
+          linkedTransactionId: null,
+        },
+      })
+
+      return {
+        plannedMovement,
+        deletedTransactionId: linkedTransaction?.id ?? null,
+      }
+    })
+
+    return res.json({
+      ok: true,
+      message:
+        'Se deshizo el paso a real. Ahora puedes corregir la proyeccion nuevamente.',
+      plannedMovement: result.plannedMovement,
+      deletedTransactionId: result.deletedTransactionId,
+    })
+  } catch (error) {
+    console.error('Error revirtiendo conversion de planned movement:', error)
+
+    return res.status(500).json({
+      ok: false,
+      message: 'Error interno del servidor',
+    })
+  }
+})
+
 router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
   try {
     if (!req.user) {

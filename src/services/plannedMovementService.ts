@@ -39,6 +39,13 @@ interface ConvertPlannedMovementResponse {
   transaction: Transaction
 }
 
+interface RevertPlannedMovementConversionResponse {
+  ok: boolean
+  message: string
+  plannedMovement: PlannedMovement
+  deletedTransactionId?: string | null
+}
+
 export async function getPlannedMovementsRequest(
   token: string
 ): Promise<PlannedMovement[]> {
@@ -156,6 +163,37 @@ export async function convertPlannedMovementToTransactionRequest(
   return {
     plannedMovement: data.plannedMovement,
     transaction: data.transaction,
+  }
+}
+
+export async function revertPlannedMovementConversionRequest(
+  token: string,
+  plannedMovementId: string
+): Promise<{
+  plannedMovement: PlannedMovement
+  deletedTransactionId?: string | null
+}> {
+  const response = await fetch(
+    `${API_URL}/planned-movements/${plannedMovementId}/revert-conversion`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+
+  const data: RevertPlannedMovementConversionResponse = await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || 'Error al deshacer el paso a real del movimiento proyectado'
+    )
+  }
+
+  return {
+    plannedMovement: data.plannedMovement,
+    deletedTransactionId: data.deletedTransactionId ?? null,
   }
 }
 

@@ -24,6 +24,13 @@ export function buildMonthKey(year: number, month: number) {
   return `${year}-${String(month).padStart(2, '0')}`
 }
 
+export function getCurrentMonthKey(referenceDate = new Date()) {
+  return buildMonthKey(
+    referenceDate.getFullYear(),
+    referenceDate.getMonth() + 1
+  )
+}
+
 export function getNextMonthKey(referenceDate = new Date()) {
   const nextMonthDate = new Date(
     referenceDate.getFullYear(),
