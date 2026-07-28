@@ -10,9 +10,50 @@ import plannedMovementRoutes from './routes/planned-movement.routes'
 import financialAccountRoutes from './routes/financial-account.routes'
 
 const app = express()
-const PORT = 4000
 
-app.use(cors())
+function parsePort(rawPort?: string) {
+  const parsedPort = Number(rawPort ?? '4000')
+
+  if (!Number.isInteger(parsedPort) || parsedPort <= 0) {
+    throw new Error('PORT no es valido')
+  }
+
+  return parsedPort
+}
+
+function getAllowedOrigins() {
+  const rawOrigins =
+    process.env.CORS_ORIGIN?.trim() || process.env.FRONTEND_URL?.trim() || ''
+
+  if (!rawOrigins) {
+    return []
+  }
+
+  return rawOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+}
+
+const PORT = parsePort(process.env.PORT)
+const HOST = process.env.HOST?.trim() || '0.0.0.0'
+const allowedOrigins = getAllowedOrigins()
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.length === 0) {
+        return callback(null, true)
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+
+      return callback(new Error('Origen no permitido por CORS'))
+    },
+  })
+)
 app.use(express.json())
 
 app.get('/', (_req, res) => {
@@ -47,7 +88,7 @@ app.use('/api/obligation-accounts', obligationAccountRoutes)
 app.use('/api/planned-movements', plannedMovementRoutes)
 app.use('/api/financial-accounts', financialAccountRoutes)
 
-app.listen(PORT, () => {
-  console.log(`Servidor backend corriendo en http://localhost:${PORT}`)
+app.listen(PORT, HOST, () => {
+  console.log(`Servidor backend corriendo en puerto ${PORT}`)
   void startTelegramPolling()
 })

@@ -644,6 +644,7 @@ export type PlannedMovementCreateOrConnectWithoutUserInput = {
 
 export type PlannedMovementCreateManyUserInputEnvelope = {
   data: Prisma.PlannedMovementCreateManyUserInput | Prisma.PlannedMovementCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type PlannedMovementUpsertWithWhereUniqueWithoutUserInput = {
@@ -1522,6 +1523,7 @@ export type PlannedMovementCreateManyArgs<ExtArgs extends runtime.Types.Extensio
    * The data used to create many PlannedMovements.
    */
   data: Prisma.PlannedMovementCreateManyInput | Prisma.PlannedMovementCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1540,6 +1542,7 @@ export type PlannedMovementCreateManyAndReturnArgs<ExtArgs extends runtime.Types
    * The data used to create many PlannedMovements.
    */
   data: Prisma.PlannedMovementCreateManyInput | Prisma.PlannedMovementCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

@@ -780,6 +780,7 @@ export type TransactionCreateOrConnectWithoutUserInput = {
 
 export type TransactionCreateManyUserInputEnvelope = {
   data: Prisma.TransactionCreateManyUserInput | Prisma.TransactionCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type TransactionUpsertWithWhereUniqueWithoutUserInput = {
@@ -857,6 +858,7 @@ export type TransactionCreateOrConnectWithoutLinkedObligationAccountInput = {
 
 export type TransactionCreateManyLinkedObligationAccountInputEnvelope = {
   data: Prisma.TransactionCreateManyLinkedObligationAccountInput | Prisma.TransactionCreateManyLinkedObligationAccountInput[]
+  skipDuplicates?: boolean
 }
 
 export type TransactionUpsertWithWhereUniqueWithoutLinkedObligationAccountInput = {
@@ -914,6 +916,7 @@ export type TransactionCreateOrConnectWithoutLinkedObligationPaymentInput = {
 
 export type TransactionCreateManyLinkedObligationPaymentInputEnvelope = {
   data: Prisma.TransactionCreateManyLinkedObligationPaymentInput | Prisma.TransactionCreateManyLinkedObligationPaymentInput[]
+  skipDuplicates?: boolean
 }
 
 export type TransactionUpsertWithWhereUniqueWithoutLinkedObligationPaymentInput = {
@@ -971,6 +974,7 @@ export type TransactionCreateOrConnectWithoutFinancialAccountInput = {
 
 export type TransactionCreateManyFinancialAccountInputEnvelope = {
   data: Prisma.TransactionCreateManyFinancialAccountInput | Prisma.TransactionCreateManyFinancialAccountInput[]
+  skipDuplicates?: boolean
 }
 
 export type TransactionUpsertWithWhereUniqueWithoutFinancialAccountInput = {
@@ -2045,6 +2049,7 @@ export type TransactionCreateManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * The data used to create many Transactions.
    */
   data: Prisma.TransactionCreateManyInput | Prisma.TransactionCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -2063,6 +2068,7 @@ export type TransactionCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Ext
    * The data used to create many Transactions.
    */
   data: Prisma.TransactionCreateManyInput | Prisma.TransactionCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

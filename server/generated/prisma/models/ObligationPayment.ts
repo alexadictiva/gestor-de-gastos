@@ -658,6 +658,7 @@ export type ObligationPaymentCreateOrConnectWithoutObligationInput = {
 
 export type ObligationPaymentCreateManyObligationInputEnvelope = {
   data: Prisma.ObligationPaymentCreateManyObligationInput | Prisma.ObligationPaymentCreateManyObligationInput[]
+  skipDuplicates?: boolean
 }
 
 export type ObligationPaymentUpsertWithWhereUniqueWithoutObligationInput = {
@@ -722,6 +723,7 @@ export type ObligationPaymentCreateOrConnectWithoutFinancialAccountInput = {
 
 export type ObligationPaymentCreateManyFinancialAccountInputEnvelope = {
   data: Prisma.ObligationPaymentCreateManyFinancialAccountInput | Prisma.ObligationPaymentCreateManyFinancialAccountInput[]
+  skipDuplicates?: boolean
 }
 
 export type ObligationPaymentUpsertWithWhereUniqueWithoutFinancialAccountInput = {
@@ -1621,6 +1623,7 @@ export type ObligationPaymentCreateManyArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many ObligationPayments.
    */
   data: Prisma.ObligationPaymentCreateManyInput | Prisma.ObligationPaymentCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1639,6 +1642,7 @@ export type ObligationPaymentCreateManyAndReturnArgs<ExtArgs extends runtime.Typ
    * The data used to create many ObligationPayments.
    */
   data: Prisma.ObligationPaymentCreateManyInput | Prisma.ObligationPaymentCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

@@ -6,8 +6,7 @@ import type {
   TelegramLinkCodeResponse,
   UpdateProfileResponse,
 } from '../types/auth'
-
-const API_URL = 'http://localhost:4000/api'
+import { API_URL } from '../config/api'
 
 interface LoginPayload {
   email: string

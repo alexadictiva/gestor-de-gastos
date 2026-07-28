@@ -3,8 +3,7 @@ import type {
   FinancialAccount,
   UpdateFinancialAccountPayload,
 } from '../types/financialAccount'
-
-const API_URL = 'http://localhost:4000/api'
+import { API_URL } from '../config/api'
 
 interface FinancialAccountsResponse {
   ok: boolean

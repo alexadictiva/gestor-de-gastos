@@ -3,8 +3,7 @@ import type {
   CreateCategoryPayload,
   UpdateCategoryPayload,
 } from '../types/category'
-
-const API_URL = 'http://localhost:4000/api'
+import { API_URL } from '../config/api'
 
 interface CategoriesResponse {
   ok: boolean

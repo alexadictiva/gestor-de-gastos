@@ -4,8 +4,7 @@ import type {
   UpdateTransactionPayload,
 } from '../types/transaction'
 import type { ObligationAccount } from '../types/obligationAccount'
-
-const API_URL = 'http://localhost:4000/api'
+import { API_URL } from '../config/api'
 
 interface TransactionsResponse {
   ok: boolean

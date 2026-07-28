@@ -714,6 +714,7 @@ export type ObligationAccountCreateOrConnectWithoutUserInput = {
 
 export type ObligationAccountCreateManyUserInputEnvelope = {
   data: Prisma.ObligationAccountCreateManyUserInput | Prisma.ObligationAccountCreateManyUserInput[]
+  skipDuplicates?: boolean
 }
 
 export type ObligationAccountUpsertWithWhereUniqueWithoutUserInput = {
@@ -1801,6 +1802,7 @@ export type ObligationAccountCreateManyArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many ObligationAccounts.
    */
   data: Prisma.ObligationAccountCreateManyInput | Prisma.ObligationAccountCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1819,6 +1821,7 @@ export type ObligationAccountCreateManyAndReturnArgs<ExtArgs extends runtime.Typ
    * The data used to create many ObligationAccounts.
    */
   data: Prisma.ObligationAccountCreateManyInput | Prisma.ObligationAccountCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

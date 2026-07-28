@@ -40,7 +40,7 @@ Hoy la app permite:
 - Express 5
 - TypeScript
 - Prisma ORM
-- SQLite
+- PostgreSQL
 - JWT
 - bcryptjs
 - CORS
@@ -48,20 +48,21 @@ Hoy la app permite:
 
 ### Base de datos
 
-- SQLite local
+- Supabase Postgres
 - Prisma configurado con `prisma.config.ts`
-- adapter `@prisma/adapter-better-sqlite3`
+- adapter `@prisma/adapter-pg`
 - cliente generado en `server/generated/prisma`
 
 ## Arquitectura y decisiones actuales
 
 - frontend y backend viven en el mismo repo, pero se ejecutan por separado
 - el token JWT se guarda en `localStorage`
-- la base local se encuentra en `server/dev.db`
-- el backend usa autenticacion propia, no Supabase
+- el backend usa autenticacion propia; Supabase se usa como base de datos, no como Auth
 - `Transaction.category` sigue siendo un `string`; todavia no existe `categoryId`
 - la carpeta `server/.env` debe permanecer fuera de Git
-- el frontend hoy consume el backend desde `http://localhost:4000/api` mediante constantes en `src/services`
+- el frontend consume el backend mediante `VITE_API_URL` y cae a `http://localhost:4000/api` solo en desarrollo local
+- el backend ya soporta `PORT`, `HOST` y `CORS_ORIGIN` para despliegue
+- el backend ahora apunta a PostgreSQL y las migraciones legacy de SQLite quedaron archivadas en `server/prisma/migrations_sqlite_archive`
 
 ## Modulos implementados
 
@@ -367,6 +368,7 @@ control-gastos/
       prisma/
     prisma/
       migrations/
+      migrations_sqlite_archive/
       schema.prisma
     src/
       lib/
@@ -374,7 +376,6 @@ control-gastos/
       routes/
       index.ts
     .env
-    dev.db
     prisma.config.ts
     package.json
 ```
@@ -389,6 +390,8 @@ Desde la raiz del proyecto:
 npm install
 npm run dev
 npm run build
+npm run build:server
+npm run build:all
 npm run preview
 ```
 
@@ -398,8 +401,12 @@ Desde `server/`:
 
 ```bash
 npm install
+npm run build
+npm run start
+npm run typecheck
 npm run prisma:generate
 npm run prisma:migrate
+npm run prisma:deploy
 npm run dev
 ```
 
@@ -417,12 +424,14 @@ npm install
 
 ### 2. Crear `server/.env`
 
-Ejemplo orientativo:
+Usa `server/.env.example` como base:
 
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://prisma.[PROJECT-REF]:[YOUR-PASSWORD]@[DB-REGION].pooler.supabase.com:5432/postgres"
 JWT_SECRET="cambia-esto-por-un-secreto-seguro"
 JWT_EXPIRES_IN="7d"
+PORT="4000"
+CORS_ORIGIN="http://localhost:5173"
 
 SMTP_HOST=""
 SMTP_PORT="587"
@@ -437,19 +446,54 @@ TELEGRAM_BOT_USERNAME=""
 
 Notas:
 
+- para este proyecto ahora se recomienda usar Supabase en modo server-based con el pooler de sesion en puerto `5432`
 - si no completas SMTP, la recuperacion de contrasena funciona en modo consola
 - si no completas Telegram, la app igual funciona pero sin bot
 - no subas `server/.env` al repositorio
 
-### 3. Preparar Prisma
+### 3. Preparar Supabase para Prisma
 
 ```bash
 cd server
 npm run prisma:generate
-npm run prisma:migrate
+npm run prisma:deploy
 ```
 
-### 4. Ejecutar backend
+Antes del primer deploy, en Supabase conviene crear un usuario propio para Prisma desde el SQL Editor:
+
+```sql
+create user "prisma" with password 'custom_password' bypassrls createdb;
+grant "prisma" to "postgres";
+grant usage on schema public to prisma;
+grant create on schema public to prisma;
+grant all on all tables in schema public to prisma;
+grant all on all routines in schema public to prisma;
+grant all on all sequences in schema public to prisma;
+alter default privileges for role postgres in schema public grant all on tables to prisma;
+alter default privileges for role postgres in schema public grant all on routines to prisma;
+alter default privileges for role postgres in schema public grant all on sequences to prisma;
+```
+
+Notas:
+
+- en Supabase, abre `Connect` y copia el connection string de **Supavisor Session mode** que termina en `5432`
+- cambia el usuario `postgres.[PROJECT-REF]` por `prisma.[PROJECT-REF]`
+- usa la contrasena del usuario `prisma` que acabas de crear
+
+### 4. Crear `.env` en la raiz para el frontend
+
+Usa `.env.example` como base:
+
+```env
+VITE_API_URL=http://localhost:4000
+```
+
+Notas:
+
+- puedes usar solo el dominio base, por ejemplo `https://tu-backend.onrender.com`
+- el frontend le agrega `/api` automaticamente si hace falta
+
+### 5. Ejecutar backend
 
 ```bash
 cd server
@@ -462,7 +506,7 @@ Backend por defecto:
 http://localhost:4000
 ```
 
-### 5. Ejecutar frontend
+### 6. Ejecutar frontend
 
 En otra terminal:
 
@@ -476,6 +520,80 @@ Frontend por defecto:
 http://localhost:5173
 ```
 
+## Despliegue
+
+El repo ya queda preparado para desplegar con:
+
+- frontend en Vercel
+- backend en Render
+- base de datos en Supabase
+
+### Flujo recomendado: Supabase + Render + Vercel
+
+Se incluyo `render.yaml` en la raiz para crear solo el backend `control-gastos-api` en Render.
+
+Variables importantes del backend en Render:
+
+- `DATABASE_URL` apuntando al pooler de sesion de Supabase
+- `JWT_SECRET` generado automaticamente
+- `JWT_EXPIRES_IN=7d`
+- `CORS_ORIGIN` con tu dominio de Vercel
+- `SMTP_*` y `TELEGRAM_*` quedan como `sync: false` para que cargues tus secretos desde el panel
+
+Pasos:
+
+```bash
+git push origin tu-rama
+```
+
+#### 1. Configurar Supabase
+
+1. Crea o usa tu proyecto en Supabase.
+2. En `SQL Editor`, crea el usuario `prisma`.
+3. En `Connect`, copia el string de **Supavisor Session mode** con puerto `5432`.
+4. Guarda ese valor para `DATABASE_URL`.
+
+#### 2. Publicar backend en Render
+
+1. Crear un Blueprint apuntando al repo.
+2. Revisar que tome `render.yaml`.
+3. Completar estas variables en `control-gastos-api`:
+   `DATABASE_URL`, `CORS_ORIGIN`, `SMTP_*`, `TELEGRAM_*`.
+4. Desplegar el servicio.
+5. Copiar la URL publica del backend, por ejemplo `https://control-gastos-api.onrender.com`.
+
+#### 3. Publicar frontend en Vercel
+
+Se incluyo `vercel.json` para resolver el enrutado SPA con React Router.
+
+1. despliega el backend primero
+2. crea la variable `VITE_API_URL` en Vercel con la URL publica del backend
+3. vuelve a desplegar el frontend
+
+Ejemplo:
+
+```env
+VITE_API_URL=https://control-gastos-api.onrender.com
+```
+
+#### 4. Ajustar CORS en Render
+
+Una vez que Vercel te de la URL final del frontend, configura en Render:
+
+```env
+CORS_ORIGIN=https://tu-app.vercel.app
+```
+
+Si luego agregas un dominio personalizado, reemplaza ese valor por tu dominio final.
+
+### Archivos de deploy incluidos
+
+- `.env.example`
+- `server/.env.example`
+- `public/_redirects`
+- `vercel.json`
+- `render.yaml`
+
 ## Sincronizacion de datos
 
 El frontend:
@@ -488,11 +606,11 @@ Esto ayuda a reflejar rapidamente los movimientos creados desde Telegram.
 
 ## Limitaciones conocidas
 
-- el frontend tiene la URL del backend hardcodeada en `src/services`
 - `Transaction.category` aun no referencia `Category` por id
 - no hay suite de tests automatizados todavia
-- la app esta pensada para entorno local o de aprendizaje, no para produccion directa
-- GitHub Pages solo serviria el frontend estatico; para que la app funcione completa necesitas desplegar tambien el backend y actualizar las URLs de los servicios
+- Render free puede dormir el backend si no hay trafico
+- GitHub Pages solo serviria el frontend estatico; para la app completa necesitas tambien el backend
+- `server/dev.db` ya estaba trackeado en Git antes de esta puesta a punto; conviene sacarlo del historial o al menos dejar de versionarlo si no quieres subir datos locales
 
 ## Archivos clave
 
@@ -524,5 +642,5 @@ Esto ayuda a reflejar rapidamente los movimientos creados desde Telegram.
 Documentacion actualizada tomando como referencia el estado real del proyecto y build local correcto con:
 
 ```bash
-npm run build
+npm run build:all
 ```
