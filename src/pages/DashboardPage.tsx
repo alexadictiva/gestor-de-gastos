@@ -1,5 +1,7 @@
 import DashboardLayout from '../components/layout/DashboardLayout'
+import GettingStartedChecklist from '../components/ui/GettingStartedChecklist'
 import VoiceAssistant from '../components/ui/VoiceAssistant'
+import { Link } from 'react-router-dom'
 import type { Category } from '../types/category'
 import type { FinancialAccount } from '../types/financialAccount'
 import { getObligationAccountTypeLabel } from '../types/obligationAccount'
@@ -111,6 +113,43 @@ export default function DashboardPage({
     receivableCollectionsThisMonthTotal,
     upcomingOpenObligations,
   } = buildObligationDashboardSummary(obligationAccounts)
+  const hasCategories = categories.length > 0
+  const hasFinancialAccounts = financialAccounts.length > 0
+  const hasTransactions = transactions.length > 0
+  const shouldShowGettingStarted =
+    !hasTransactions || !hasCategories || !hasFinancialAccounts
+  const gettingStartedSteps = [
+    {
+      id: 'categories',
+      title: 'Crea tu primera categoria',
+      description:
+        'Las categorias ordenan tus ingresos, gastos e inversiones. Sin eso, no podras clasificar movimientos.',
+      isComplete: hasCategories,
+      to: '/categorias',
+      actionLabel: 'Ir a Categorias',
+    },
+    {
+      id: 'accounts',
+      title: 'Carga al menos una cuenta',
+      description:
+        'Agrega banco, efectivo o billetera para que la app pueda mostrar tu liquidez real desde el inicio.',
+      isComplete: hasFinancialAccounts,
+      to: '/cuentas',
+      actionLabel: 'Ir a Cuentas',
+    },
+    {
+      id: 'transactions',
+      title: 'Registra tu primera transaccion',
+      description:
+        'Con categorias y cuentas listas, ya puedes empezar a cargar movimientos y activar el resto del panel.',
+      isComplete: hasTransactions,
+      to:
+        hasCategories && hasFinancialAccounts && !hasTransactions
+          ? '/transacciones'
+          : undefined,
+      actionLabel: 'Registrar movimiento',
+    },
+  ]
 
   return (
     <DashboardLayout>
@@ -121,6 +160,15 @@ export default function DashboardPage({
             Revisa tu liquidez, tus consumos y el estado general de tu economia.
           </p>
         </div>
+
+        {shouldShowGettingStarted && (
+          <GettingStartedChecklist
+            title="Configura tu cuenta para empezar sin perderte"
+            description="Si alguien se registra por primera vez, estos son los tres pasos minimos para que luego agregar transacciones, usar Telegram y leer el dashboard sea mucho mas claro."
+            steps={gettingStartedSteps}
+            footerNote="Cuando completes esto, podras cargar movimientos reales, ver tus resumenes y empezar a proyectar el mes siguiente."
+          />
+        )}
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           <StatCard
@@ -308,9 +356,20 @@ export default function DashboardPage({
                   Cargando cuentas...
                 </p>
               ) : accountSummaries.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">
-                  Aun no creaste cuentas para separar efectivo, banco o billeteras.
-                </p>
+                <div className="mt-3 flex flex-col gap-3 text-sm text-slate-500">
+                  <p>
+                    Aun no creaste cuentas para separar efectivo, banco o
+                    billeteras.
+                  </p>
+                  <div>
+                    <Link
+                      to="/cuentas"
+                      className="inline-flex rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                    >
+                      Crear mi primera cuenta
+                    </Link>
+                  </div>
+                </div>
               ) : (
                 <div className="mt-4 flex flex-col gap-3">
                   {accountSummaries.slice(0, 4).map((account) => (

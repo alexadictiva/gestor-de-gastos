@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 
 interface DashboardLayoutProps {
@@ -47,12 +46,7 @@ function MenuIcon() {
 export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
-  const location = useLocation()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-
-  useEffect(() => {
-    setIsSidebarOpen(false)
-  }, [location.pathname])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

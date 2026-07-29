@@ -44,3 +44,10 @@ export interface TelegramLinkCodeResponse {
   expiresAt: string
   botUsername: string | null
 }
+
+export interface TelegramStatusResponse {
+  ok: boolean
+  configured: boolean
+  botUsername: string | null
+  message: string
+}

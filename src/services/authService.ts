@@ -4,6 +4,7 @@ import type {
   MeResponse,
   RegisterResponse,
   TelegramLinkCodeResponse,
+  TelegramStatusResponse,
   UpdateProfileResponse,
 } from '../types/auth'
 import { API_URL } from '../config/api'
@@ -143,6 +144,25 @@ export async function generateTelegramLinkCodeRequest(
 
   if (!response.ok) {
     throw new Error(data.message || 'Error al generar el codigo de Telegram')
+  }
+
+  return data
+}
+
+export async function getTelegramStatusRequest(
+  token: string
+): Promise<TelegramStatusResponse> {
+  const response = await fetch(`${API_URL}/auth/telegram/status`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Error al obtener el estado de Telegram')
   }
 
   return data

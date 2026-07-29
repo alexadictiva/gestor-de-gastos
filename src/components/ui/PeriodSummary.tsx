@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { Category } from '../../types/category'
 import DonutChart, { type DonutChartSegment } from './DonutChart'
 import {
@@ -258,10 +258,6 @@ export default function PeriodSummary({
 }: PeriodSummaryProps) {
   const currentRange = useMemo(() => getCurrentRange(period), [period])
   const [referenceDate, setReferenceDate] = useState(() => new Date())
-
-  useEffect(() => {
-    setReferenceDate(new Date())
-  }, [period])
 
   const range = useMemo(
     () => getRangeForReferenceDate(period, referenceDate),

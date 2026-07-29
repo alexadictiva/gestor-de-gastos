@@ -37,6 +37,25 @@ type ParseTelegramResult =
   | { transaction: ParsedTelegramTransaction }
   | { error: string }
 
+export interface TelegramIntegrationStatus {
+  configured: boolean
+  botUsername: string | null
+  message: string
+}
+
+interface TelegramChat {
+  id?: number | string
+}
+
+interface TelegramMessage {
+  chat?: TelegramChat
+  text?: string
+}
+
+interface TelegramUpdate {
+  message?: TelegramMessage
+}
+
 type TelegramMetadataResult =
   | {
       details: string
@@ -70,6 +89,28 @@ function getTelegramFormatsHelpMessage() {
 
 function getTelegramToken() {
   return process.env.TELEGRAM_BOT_TOKEN?.trim() || ''
+}
+
+export function getTelegramIntegrationStatus(): TelegramIntegrationStatus {
+  const botToken = getTelegramToken()
+  const botUsername = process.env.TELEGRAM_BOT_USERNAME?.trim() || null
+
+  if (!botToken) {
+    return {
+      configured: false,
+      botUsername,
+      message:
+        'Falta configurar TELEGRAM_BOT_TOKEN en el backend para poder generar codigos y recibir mensajes del bot.',
+    }
+  }
+
+  return {
+    configured: true,
+    botUsername,
+    message: botUsername
+      ? `Telegram listo para vincular cuentas con @${botUsername}.`
+      : 'Telegram listo para vincular cuentas. Si quieres mostrar el alias del bot en la app, agrega TELEGRAM_BOT_USERNAME.',
+  }
 }
 
 function getTelegramApiUrl(path: string) {
@@ -835,7 +876,7 @@ async function handleTransactionMessage(chatId: string, text: string) {
   )
 }
 
-async function processTelegramUpdate(update: any) {
+async function processTelegramUpdate(update: TelegramUpdate) {
   const message = update?.message
   const chatId = message?.chat?.id ? String(message.chat.id) : ''
   const text = typeof message?.text === 'string' ? message.text.trim() : ''

@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken'
 import type { SignOptions } from 'jsonwebtoken'
 import { authMiddleware, type AuthRequest } from '../middlewares/auth.middleware'
 import { sendPasswordRecoveryEmail } from '../lib/mailer'
+import { getTelegramIntegrationStatus } from '../lib/telegram'
 
 const router = Router()
 const authUserSelect = {
@@ -414,6 +415,37 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res) => {
   }
 })
 
+router.get(
+  '/telegram/status',
+  authMiddleware,
+  async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          ok: false,
+          message: 'Usuario no autenticado',
+        })
+      }
+
+      const status = getTelegramIntegrationStatus()
+
+      return res.json({
+        ok: true,
+        configured: status.configured,
+        botUsername: status.botUsername,
+        message: status.message,
+      })
+    } catch (error) {
+      console.error('Error en /telegram/status:', error)
+
+      return res.status(500).json({
+        ok: false,
+        message: 'No se pudo obtener el estado de Telegram',
+      })
+    }
+  }
+)
+
 router.post(
   '/telegram/link-code',
   authMiddleware,
@@ -426,10 +458,15 @@ router.post(
         })
       }
 
-      if (!process.env.TELEGRAM_BOT_TOKEN) {
+      const status = getTelegramIntegrationStatus()
+
+      if (!status.configured) {
         return res.status(503).json({
           ok: false,
           message: 'Telegram no esta configurado en el backend',
+          configured: false,
+          botUsername: status.botUsername,
+          details: status.message,
         })
       }
 
@@ -464,7 +501,7 @@ router.post(
         message: 'Codigo generado correctamente',
         code,
         expiresAt: expiresAt.toISOString(),
-        botUsername: process.env.TELEGRAM_BOT_USERNAME || null,
+        botUsername: status.botUsername,
       })
     } catch (error) {
       console.error('Error en /telegram/link-code:', error)

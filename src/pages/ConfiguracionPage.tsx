@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
 import {
   generateTelegramLinkCodeRequest,
+  getTelegramStatusRequest,
   meRequest,
   unlinkTelegramRequest,
   updateProfileRequest,
@@ -63,9 +64,14 @@ export default function ConfiguracionPage() {
   const [telegramLinkCode, setTelegramLinkCode] = useState('')
   const [telegramLinkExpiresAt, setTelegramLinkExpiresAt] = useState('')
   const [telegramBotUsername, setTelegramBotUsername] = useState('')
+  const [telegramBackendConfigured, setTelegramBackendConfigured] = useState<
+    boolean | null
+  >(null)
+  const [telegramBackendMessage, setTelegramBackendMessage] = useState('')
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [isSavingPassword, setIsSavingPassword] = useState(false)
   const [isGeneratingTelegramCode, setIsGeneratingTelegramCode] = useState(false)
+  const [isLoadingTelegramStatus, setIsLoadingTelegramStatus] = useState(false)
   const [isRefreshingTelegramStatus, setIsRefreshingTelegramStatus] =
     useState(false)
   const [isUnlinkingTelegram, setIsUnlinkingTelegram] = useState(false)
@@ -84,6 +90,51 @@ export default function ConfiguracionPage() {
 
     return new Date(telegramLinkExpiresAt).toLocaleString('es-AR')
   }, [telegramLinkExpiresAt])
+
+  useEffect(() => {
+    let isCancelled = false
+
+    async function loadTelegramStatus() {
+      if (!token) {
+        setTelegramBackendConfigured(null)
+        setTelegramBackendMessage('')
+        setTelegramBotUsername('')
+        return
+      }
+
+      try {
+        setIsLoadingTelegramStatus(true)
+        const response = await getTelegramStatusRequest(token)
+
+        if (isCancelled) {
+          return
+        }
+
+        setTelegramBackendConfigured(response.configured)
+        setTelegramBackendMessage(response.message)
+        setTelegramBotUsername(response.botUsername || '')
+      } catch {
+        if (isCancelled) {
+          return
+        }
+
+        setTelegramBackendConfigured(null)
+        setTelegramBackendMessage(
+          'No se pudo verificar ahora mismo el estado de Telegram en el backend.'
+        )
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingTelegramStatus(false)
+        }
+      }
+    }
+
+    void loadTelegramStatus()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [token])
 
   const clearTelegramFeedback = () => {
     setTelegramError('')
@@ -194,6 +245,13 @@ export default function ConfiguracionPage() {
       return
     }
 
+    if (telegramBackendConfigured === false) {
+      setTelegramError(
+        telegramBackendMessage || 'Telegram no esta configurado en el backend'
+      )
+      return
+    }
+
     try {
       setIsGeneratingTelegramCode(true)
       const response = await generateTelegramLinkCodeRequest(token)
@@ -214,6 +272,7 @@ export default function ConfiguracionPage() {
     }
   }
 
+  /*
   const handleRefreshTelegramStatus = async () => {
     clearTelegramFeedback()
 
@@ -224,13 +283,73 @@ export default function ConfiguracionPage() {
 
     try {
       setIsRefreshingTelegramStatus(true)
-      const response = await meRequest(token)
-      updateSession(response.user, token)
-      setTelegramSuccess(
-        response.user.telegramConnected
-          ? 'Telegram ya esta vinculado a tu cuenta.'
+      const [meResponse, telegramStatusResponse] = await Promise.all([
+        meRequest(token),
+        getTelegramStatusRequest(token),
+      ])
+
+      updateSession(meResponse.user, token)
+      setTelegramBackendConfigured(telegramStatusResponse.configured)
+      setTelegramBackendMessage(telegramStatusResponse.message)
+      setTelegramBotUsername(telegramStatusResponse.botUsername || '')
+      if (!telegramStatusResponse.configured) {
+        setTelegramSuccess(telegramStatusResponse.message)
+        return
+      }
+
+      if (meResponse.user.telegramConnected) {
+        setTelegramSuccess('Telegram ya esta vinculado a tu cuenta.')
+        return
+      }
+
+      setTelegramSuccess('Bot disponible. Aun no detecte una vinculacion activa.')
           : 'Aun no detecté una vinculación activa.'
       )
+    } catch (error) {
+      if (error instanceof Error) {
+        setTelegramError(error.message)
+      } else {
+        setTelegramError('No se pudo actualizar el estado de Telegram')
+      }
+    } finally {
+      setIsRefreshingTelegramStatus(false)
+    }
+  }
+
+  }
+  */
+
+  const handleRefreshTelegramStatus = async () => {
+    clearTelegramFeedback()
+
+    if (!token) {
+      setTelegramError('No hay sesion activa')
+      return
+    }
+
+    try {
+      setIsRefreshingTelegramStatus(true)
+      const [meResponse, telegramStatusResponse] = await Promise.all([
+        meRequest(token),
+        getTelegramStatusRequest(token),
+      ])
+
+      updateSession(meResponse.user, token)
+      setTelegramBackendConfigured(telegramStatusResponse.configured)
+      setTelegramBackendMessage(telegramStatusResponse.message)
+      setTelegramBotUsername(telegramStatusResponse.botUsername || '')
+
+      if (!telegramStatusResponse.configured) {
+        setTelegramSuccess(telegramStatusResponse.message)
+        return
+      }
+
+      if (meResponse.user.telegramConnected) {
+        setTelegramSuccess('Telegram ya esta vinculado a tu cuenta.')
+        return
+      }
+
+      setTelegramSuccess('Bot disponible. Aun no detecte una vinculacion activa.')
     } catch (error) {
       if (error instanceof Error) {
         setTelegramError(error.message)
@@ -568,6 +687,21 @@ export default function ConfiguracionPage() {
             </div>
           )}
 
+          {isLoadingTelegramStatus && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Verificando estado del bot de Telegram...
+            </div>
+          )}
+
+          {!isLoadingTelegramStatus && telegramBackendConfigured === false && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <p className="font-medium">
+                El bot todavia no esta listo en este backend.
+              </p>
+              <p className="mt-1 text-xs">{telegramBackendMessage}</p>
+            </div>
+          )}
+
           <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
             <div className="rounded-2xl border border-slate-200 p-5">
               <h3 className="text-base font-semibold text-slate-800">
@@ -603,7 +737,11 @@ export default function ConfiguracionPage() {
                 <button
                   type="button"
                   onClick={handleGenerateTelegramCode}
-                  disabled={isGeneratingTelegramCode}
+                  disabled={
+                    isGeneratingTelegramCode ||
+                    isLoadingTelegramStatus ||
+                    telegramBackendConfigured === false
+                  }
                   className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isGeneratingTelegramCode
@@ -614,7 +752,11 @@ export default function ConfiguracionPage() {
                 <button
                   type="button"
                   onClick={handleRefreshTelegramStatus}
-                  disabled={isRefreshingTelegramStatus || !token}
+                  disabled={
+                    isRefreshingTelegramStatus ||
+                    isLoadingTelegramStatus ||
+                    !token
+                  }
                   className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isRefreshingTelegramStatus
@@ -635,6 +777,14 @@ export default function ConfiguracionPage() {
                   </button>
                 )}
               </div>
+
+              {!isLoadingTelegramStatus &&
+                telegramBackendConfigured === true &&
+                telegramBackendMessage && (
+                  <p className="mt-4 text-xs text-slate-500">
+                    {telegramBackendMessage}
+                  </p>
+                )}
             </div>
 
             <div className="rounded-2xl border border-slate-200 p-5">

@@ -7,8 +7,10 @@ import {
   type FormEvent,
   type SetStateAction,
 } from 'react'
+import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import Modal from '../components/layout/Modal'
+import GettingStartedChecklist from '../components/ui/GettingStartedChecklist'
 import {
   ClearFilterButtonIcon,
   DeleteButtonIcon,
@@ -401,6 +403,42 @@ export default function TransaccionesPage({
   const canLinkToObligationAccount =
     isIncome || (isExpense && isFinancingPaymentMethod)
   const financialAccountOptions = sortFinancialAccounts(financialAccounts)
+  const hasCategories = categories.length > 0
+  const hasFinancialAccounts = financialAccountOptions.length > 0
+  const hasTransactions = transactions.length > 0
+  const requiresInitialSetup = !hasTransactions && (!hasCategories || !hasFinancialAccounts)
+  const gettingStartedSteps = [
+    {
+      id: 'categories',
+      title: 'Crea tu primera categoria',
+      description:
+        'Necesitas al menos una categoria para clasificar el movimiento que vas a registrar.',
+      isComplete: hasCategories,
+      to: '/categorias',
+      actionLabel: 'Crear categorias',
+    },
+    {
+      id: 'accounts',
+      title: 'Carga una cuenta',
+      description:
+        'Agrega tu banco, efectivo o billetera para que la app pueda reflejar tu liquidez real desde el primer movimiento.',
+      isComplete: hasFinancialAccounts,
+      to: '/cuentas',
+      actionLabel: 'Crear cuenta',
+    },
+    {
+      id: 'first-transaction',
+      title: 'Vuelve aqui y registra tu primer movimiento',
+      description:
+        'Cuando ya tengas categorias y cuentas, esta vista quedara lista para empezar a cargar transacciones.',
+      isComplete: hasTransactions,
+      to:
+        hasCategories && hasFinancialAccounts && !hasTransactions
+          ? '/transacciones'
+          : undefined,
+      actionLabel: 'Ya puedo registrar',
+    },
+  ]
 
   const refreshTransactions = async () => {
     if (!token) {
@@ -462,10 +500,7 @@ export default function TransaccionesPage({
     })
   }, [
     transactions,
-    filters.category,
-    filters.type,
-    filters.paymentMethod,
-    filters.reimbursementStatus,
+    filters,
   ])
 
   useEffect(() => {
@@ -626,6 +661,14 @@ export default function TransaccionesPage({
   }
 
   const openCreateForm = () => {
+    if (requiresInitialSetup) {
+      setErrorMessage(
+        'Antes de registrar tu primera transaccion, crea al menos una categoria y una cuenta.'
+      )
+      setShowForm(false)
+      return
+    }
+
     setErrorMessage('')
     setForm(createInitialForm())
     setTransactionToEdit(null)
@@ -1191,11 +1234,21 @@ export default function TransaccionesPage({
 
               openCreateForm()
             }}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            disabled={!showForm && requiresInitialSetup}
+            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {showForm ? 'Cerrar formulario' : 'Nueva transaccion'}
           </button>
         </div>
+
+        {requiresInitialSetup && (
+          <GettingStartedChecklist
+            title="Antes de tu primera transaccion"
+            description="Esta guia evita que un usuario nuevo llegue al formulario sin entender por que todavia no puede cargar bien sus movimientos."
+            steps={gettingStartedSteps}
+            footerNote="En cuanto tengas al menos una categoria y una cuenta, vuelve a esta pantalla y el boton de nueva transaccion quedara habilitado."
+          />
+        )}
 
         {errorMessage && (
           <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -1294,8 +1347,14 @@ export default function TransaccionesPage({
 
                 {availableCategories.length === 0 && (
                   <p className="text-xs text-slate-500">
-                    No tienes categorias para este tipo. Crea una desde la
-                    seccion Categorias.
+                    No tienes categorias para este tipo.{' '}
+                    <Link
+                      to="/categorias"
+                      className="font-medium text-sky-700 underline underline-offset-2"
+                    >
+                      Crea una desde Categorias
+                    </Link>
+                    .
                   </p>
                 )}
               </div>
@@ -1333,13 +1392,25 @@ export default function TransaccionesPage({
 
                   <p className="text-xs text-slate-500">
                     {financialAccountOptions.length === 0
-                      ? 'Crea tu primera cuenta desde la seccion Cuentas para separar banco, efectivo y billeteras.'
+                      ? ''
                       : isIncome
                         ? 'Esta cuenta aumentara su saldo con este ingreso.'
                         : form.type === 'investments'
                           ? 'Esta cuenta reducira su saldo por la inversion registrada.'
                           : 'Esta cuenta reducira su saldo con este gasto o pago.'}
                   </p>
+
+                  {financialAccountOptions.length === 0 && (
+                    <p className="text-xs text-slate-500">
+                      <Link
+                        to="/cuentas"
+                        className="font-medium text-sky-700 underline underline-offset-2"
+                      >
+                        Crea tu primera cuenta
+                      </Link>{' '}
+                      para separar banco, efectivo y billeteras antes de seguir.
+                    </p>
+                  )}
                 </div>
               )}
 
