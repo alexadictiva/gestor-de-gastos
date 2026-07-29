@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import type { Dispatch, SetStateAction } from 'react'
 import DashboardPage from '../pages/DashboardPage'
 import CuentasPage from '../pages/CuentasPage'
+import LandingPage from '../pages/LandingPage'
 import LoginPage from '../pages/LoginPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import TransaccionesPage from '../pages/TransaccionesPage'
@@ -57,11 +58,12 @@ export default function AppRouter({
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/registro" element={<RegisterPage />} />
 
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardPage 

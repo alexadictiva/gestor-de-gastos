@@ -27,7 +27,7 @@ export default function LoginPage() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -42,7 +42,7 @@ export default function LoginPage() {
     try {
       setIsSubmitting(true)
       await login(email, password)
-      navigate('/')
+      navigate('/dashboard')
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message)

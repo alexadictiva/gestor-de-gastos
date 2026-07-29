@@ -24,7 +24,7 @@ export default function RegisterPage() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

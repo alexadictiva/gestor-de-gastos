@@ -167,7 +167,7 @@ function LogoutIcon({ className = '' }: IconProps) {
 }
 
 const navItems: SidebarNavItem[] = [
-  { to: '/', label: 'Dashboard', icon: DashboardButtonIcon, end: true },
+  { to: '/dashboard', label: 'Dashboard', icon: DashboardButtonIcon, end: true },
   { to: '/transacciones', label: 'Transacciones', icon: ReceiptIcon },
   { to: '/categorias', label: 'Categorias', icon: TagIcon },
   { to: '/cuentas', label: 'Cuentas', icon: WalletAccountIcon },
