@@ -318,6 +318,8 @@ export default function TarjetasPrestamosPage({
   >(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [collapsedAccountIds, setCollapsedAccountIds] = useState<string[]>([])
+  const [hasInitializedCollapsedAccounts, setHasInitializedCollapsedAccounts] =
+    useState(false)
 
   const dashboardSummary = useMemo(
     () => buildObligationDashboardSummary(obligationAccounts),
@@ -329,6 +331,10 @@ export default function TarjetasPrestamosPage({
   )
   const canEditAccountType =
     !accountToEdit || accountToEdit.obligations.length === 0
+  const shouldShowInstallmentRecalculationHint =
+    !!accountToEdit &&
+    accountToEdit.obligations.length > 0 &&
+    supportsInstallmentPlan(accountForm.type)
   const isAccountExpanded = (accountId: string) =>
     !collapsedAccountIds.includes(accountId)
 
@@ -350,6 +356,19 @@ export default function TarjetasPrestamosPage({
       window.clearTimeout(timeoutId)
     }
   }, [successMessage])
+
+  useEffect(() => {
+    if (isLoadingObligationAccounts || hasInitializedCollapsedAccounts) {
+      return
+    }
+
+    setCollapsedAccountIds(obligationAccounts.map((account) => account.id))
+    setHasInitializedCollapsedAccounts(true)
+  }, [
+    hasInitializedCollapsedAccounts,
+    isLoadingObligationAccounts,
+    obligationAccounts,
+  ])
 
   const resetAccountForm = () => {
     setAccountForm(createInitialAccountForm())
@@ -898,6 +917,14 @@ export default function TarjetasPrestamosPage({
               <p className="mt-2 text-sm text-amber-700">
                 El tipo no puede cambiarse porque esta cuenta ya tiene obligaciones
                 cargadas.
+              </p>
+            )}
+
+            {shouldShowInstallmentRecalculationHint && (
+              <p className="mt-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                Si corriges el monto total o las cuotas pactadas, vamos a
+                redistribuir el capital entre las obligaciones actuales. Los
+                intereses, vencimientos y abonos ya cargados se conservan.
               </p>
             )}
 
