@@ -41,6 +41,8 @@ model Transaction {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedObligationAccountId String?
   linkedObligationAccount   ObligationAccount? @relation("TransactionLinkedObligationAccount", fields: [linkedObligationAccountId], references: [id], onDelete: SetNull)
+  linkedObligationId String?
+  linkedObligation   Obligation? @relation("TransactionLinkedObligation", fields: [linkedObligationId], references: [id], onDelete: SetNull)
   linkedObligationPaymentId String?
   linkedObligationPayment   ObligationPayment? @relation("TransactionLinkedObligationPayment", fields: [linkedObligationPaymentId], references: [id], onDelete: SetNull)
   financialAccountId String?
@@ -48,6 +50,7 @@ model Transaction {
 
   @@index([userId])
   @@index([linkedObligationAccountId])
+  @@index([linkedObligationId])
   @@index([linkedObligationPaymentId])
   @@index([financialAccountId])
 }
@@ -115,6 +118,7 @@ model Obligation {
   id              String              @id @default(cuid())
   title           String
   referenceMonth  String?
+  sourceType      String?
   principalAmount Float
   interestAmount  Float               @default(0)
   minimumPayment  Float?
@@ -126,11 +130,13 @@ model Obligation {
 
   accountId       String
   account         ObligationAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  linkedTransactions Transaction[]    @relation("TransactionLinkedObligation")
   payments        ObligationPayment[]
 
   @@index([accountId])
   @@index([dueDate])
   @@index([status])
+  @@index([accountId, referenceMonth, sourceType])
 }
 
 model ObligationPayment {

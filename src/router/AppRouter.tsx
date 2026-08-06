@@ -90,6 +90,7 @@ export default function AppRouter({
                 isLoadingTransactions={isLoadingTransactions}
                 categories={categories}
                 financialAccounts={financialAccounts}
+                obligationAccounts={obligationAccounts}
                 setObligationAccounts={setObligationAccounts}
               />
             </ProtectedRoute>

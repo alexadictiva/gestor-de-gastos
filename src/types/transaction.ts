@@ -64,6 +64,7 @@ export interface Transaction {
   financialAccountId?: string | null
   financialAccount?: FinancialAccount | null
   linkedObligationAccountId?: string | null
+  linkedObligationId?: string | null
   linkedObligationPaymentId?: string | null
   createdAt?: string
   updatedAt?: string
@@ -80,6 +81,7 @@ export interface CreateTransactionPayload {
   date: string
   financialAccountId?: string | null
   createLinkedObligationAccount?: boolean
+  linkedCreditCardAccountId?: string | null
   linkedObligationAccountName?: string | null
   linkedObligationInstallmentCount?: number | null
   linkedObligationFirstDueDate?: string | null
@@ -94,4 +96,5 @@ export interface UpdateTransactionPayload {
   reimbursementStatus: ReimbursementStatus
   date: string
   financialAccountId?: string | null
+  linkedCreditCardAccountId?: string | null
 }

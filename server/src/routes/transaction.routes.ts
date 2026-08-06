@@ -14,6 +14,7 @@ import {
 } from '../middlewares/auth.middleware'
 
 const router = Router()
+const GENERATED_CREDIT_CARD_STATEMENT_SOURCE = 'credit_card_statement'
 
 type LinkedObligationAccountType = 'credit_card' | 'loan_payable'
 
@@ -26,6 +27,15 @@ interface ValidatedTransactionInput {
   reimbursementStatus: ReimbursementStatus
   date: Date
   financialAccountId: string | null
+}
+
+interface CreditCardStatementLinkTarget {
+  id: string
+  name: string
+  type: string
+  closingDay: number | null
+  dueDay: number | null
+  userId: string
 }
 
 function buildObligationAccountInclude() {
@@ -218,6 +228,66 @@ function buildReferenceMonthFromDate(date: Date) {
   return `${year}-${month}`
 }
 
+function buildDateFromMonthReference(
+  referenceMonth: string,
+  monthOffset: number,
+  day: number
+) {
+  const [rawYear, rawMonth] = referenceMonth.split('-').map(Number)
+  const targetMonthStart = new Date(
+    Date.UTC(rawYear, rawMonth - 1 + monthOffset, 1)
+  )
+  const safeYear = targetMonthStart.getUTCFullYear()
+  const safeMonthIndex = targetMonthStart.getUTCMonth()
+  const lastDayOfMonth = new Date(
+    Date.UTC(safeYear, safeMonthIndex + 1, 0)
+  ).getUTCDate()
+  const safeDay = Math.min(day, lastDayOfMonth)
+
+  return new Date(Date.UTC(safeYear, safeMonthIndex, safeDay))
+}
+
+function buildCreditCardStatementReferenceMonth(
+  transactionDate: Date,
+  closingDay: number | null
+) {
+  const transactionDay = transactionDate.getUTCDate()
+
+  if (closingDay && transactionDay > closingDay) {
+    return buildReferenceMonthFromDate(
+      new Date(
+        Date.UTC(
+          transactionDate.getUTCFullYear(),
+          transactionDate.getUTCMonth() + 1,
+          1
+        )
+      )
+    )
+  }
+
+  return buildReferenceMonthFromDate(transactionDate)
+}
+
+function buildCreditCardStatementDueDate(
+  referenceMonth: string,
+  dueDay: number | null,
+  fallbackDate: Date
+) {
+  return buildDateFromMonthReference(
+    referenceMonth,
+    1,
+    dueDay ?? fallbackDate.getUTCDate()
+  )
+}
+
+function buildCreditCardStatementTitle(referenceMonth: string) {
+  return `Resumen ${referenceMonth}`
+}
+
+function buildCreditCardStatementNotes(accountName: string, referenceMonth: string) {
+  return `Generada automaticamente desde consumos con tarjeta para ${accountName} en el periodo ${referenceMonth}`
+}
+
 function buildInstallmentDueDate(sourceDate: Date, installmentIndex: number) {
   const sourceDay = sourceDate.getUTCDate()
   const targetYear = sourceDate.getUTCFullYear()
@@ -275,6 +345,65 @@ function buildObligationTotals(obligation: {
     remainingAmount,
     nextStatus: remainingAmount <= 0.01 ? 'settled' : 'open',
   }
+}
+
+async function validateLinkedCreditCardAccountInput(
+  body: Record<string, unknown>,
+  userId: string,
+  transaction: ValidatedTransactionInput
+) {
+  const trimmedValue = String(body.linkedCreditCardAccountId ?? '').trim()
+
+  if (!trimmedValue) {
+    return {
+      data: null,
+    }
+  }
+
+  if (transaction.type !== 'expense' || transaction.paymentMethod !== 'credit') {
+    return {
+      error:
+        'Solo puedes vincular una tarjeta existente en gastos pagados con tarjeta',
+    }
+  }
+
+  const selectedAccount = await prisma.obligationAccount.findFirst({
+    where: {
+      id: trimmedValue,
+      userId,
+      type: 'credit_card',
+    },
+  })
+
+  if (!selectedAccount) {
+    return {
+      error: 'La tarjeta seleccionada no es valida',
+    }
+  }
+
+  return {
+    data: selectedAccount,
+  }
+}
+
+async function findGeneratedCreditCardStatement(params: {
+  transactionClient: Omit<
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends' | '$use'
+  >
+  accountId: string
+  referenceMonth: string
+}) {
+  return params.transactionClient.obligation.findFirst({
+    where: {
+      accountId: params.accountId,
+      referenceMonth: params.referenceMonth,
+      sourceType: GENERATED_CREDIT_CARD_STATEMENT_SOURCE,
+    },
+    include: {
+      payments: true,
+    },
+  })
 }
 
 async function validateTransactionInput(
@@ -524,9 +653,32 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
+    const linkedCreditCardValidation =
+      await validateLinkedCreditCardAccountInput(
+        req.body,
+        userId,
+        validation.data
+      )
+
+    if ('error' in linkedCreditCardValidation) {
+      return res.status(400).json({
+        ok: false,
+        message: linkedCreditCardValidation.error,
+      })
+    }
+
+    if (linkedValidation.data && linkedCreditCardValidation.data) {
+      return res.status(400).json({
+        ok: false,
+        message:
+          'Elige si quieres crear una deuda nueva o acumular este consumo en una tarjeta existente, pero no ambas cosas a la vez',
+      })
+    }
+
     const transactionResult = await prisma.$transaction(
       async (transactionClient) => {
         let linkedObligationAccount = null
+        let linkedObligationId: string | null = null
 
         if (linkedValidation.data) {
           const createdAccount = await transactionClient.obligationAccount.create({
@@ -578,11 +730,89 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
           )
         }
 
+        if (linkedCreditCardValidation.data) {
+          const referenceMonth = buildCreditCardStatementReferenceMonth(
+            validation.data.date,
+            linkedCreditCardValidation.data.closingDay
+          )
+          const dueDate = buildCreditCardStatementDueDate(
+            referenceMonth,
+            linkedCreditCardValidation.data.dueDay,
+            validation.data.date
+          )
+          const existingStatement = await findGeneratedCreditCardStatement({
+            transactionClient,
+            accountId: linkedCreditCardValidation.data.id,
+            referenceMonth,
+          })
+
+          if (existingStatement) {
+            const nextPrincipalAmount = roundAmount(
+              existingStatement.principalAmount + validation.data.amount
+            )
+            const { nextStatus } = buildObligationTotals({
+              principalAmount: nextPrincipalAmount,
+              interestAmount: existingStatement.interestAmount,
+              payments: existingStatement.payments,
+            })
+
+            const updatedStatement = await transactionClient.obligation.update({
+              where: {
+                id: existingStatement.id,
+              },
+              data: {
+                title: buildCreditCardStatementTitle(referenceMonth),
+                principalAmount: nextPrincipalAmount,
+                dueDate,
+                status: nextStatus,
+                sourceType: GENERATED_CREDIT_CARD_STATEMENT_SOURCE,
+                notes: buildCreditCardStatementNotes(
+                  linkedCreditCardValidation.data.name,
+                  referenceMonth
+                ),
+              },
+            })
+
+            linkedObligationId = updatedStatement.id
+          } else {
+            const createdStatement = await transactionClient.obligation.create({
+              data: {
+                title: buildCreditCardStatementTitle(referenceMonth),
+                referenceMonth,
+                sourceType: GENERATED_CREDIT_CARD_STATEMENT_SOURCE,
+                principalAmount: validation.data.amount,
+                interestAmount: 0,
+                minimumPayment: null,
+                dueDate,
+                status: 'open',
+                notes: buildCreditCardStatementNotes(
+                  linkedCreditCardValidation.data.name,
+                  referenceMonth
+                ),
+                accountId: linkedCreditCardValidation.data.id,
+              },
+            })
+
+            linkedObligationId = createdStatement.id
+          }
+
+          linkedObligationAccount = await transactionClient.obligationAccount.findFirst(
+            {
+              where: {
+                id: linkedCreditCardValidation.data.id,
+                userId,
+              },
+              include: buildObligationAccountInclude(),
+            }
+          )
+        }
+
         const transaction = await transactionClient.transaction.create({
           data: {
             ...validation.data,
             userId,
             linkedObligationAccountId: linkedObligationAccount?.id ?? null,
+            linkedObligationId,
           },
           include: buildTransactionInclude(),
         })
@@ -643,8 +873,43 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
+    const linkedStatementObligation = transaction.linkedObligationId
+      ? await prisma.obligation.findUnique({
+          where: {
+            id: transaction.linkedObligationId,
+          },
+          include: {
+            account: true,
+            payments: true,
+          },
+        })
+      : null
+
+    if (
+      linkedStatementObligation &&
+      linkedStatementObligation.account.userId === userId
+    ) {
+      const nextPrincipalAmount = roundAmount(
+        Math.max(linkedStatementObligation.principalAmount - transaction.amount, 0)
+      )
+      const nextTotals = buildObligationTotals({
+        principalAmount: nextPrincipalAmount,
+        interestAmount: linkedStatementObligation.interestAmount,
+        payments: linkedStatementObligation.payments,
+      })
+
+      if (nextTotals.paidAmount > nextTotals.totalAmount + 0.01) {
+        return res.status(400).json({
+          ok: false,
+          message:
+            'No puedes eliminar este consumo porque el resumen de tarjeta ya tiene abonos registrados por encima del nuevo total. Corrige primero esos abonos desde Tarjetas y Prestamos.',
+        })
+      }
+    }
+
     const deletedLinkedObligationAccountId =
       transaction.linkedObligationAccountId ?? null
+    const linkedObligationId = transaction.linkedObligationId ?? null
     const linkedObligationPaymentId =
       transaction.linkedObligationPaymentId ?? null
 
@@ -710,6 +975,70 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res) => {
           {
             where: {
               id: linkedPayment.obligation.accountId,
+              userId,
+            },
+            include: buildObligationAccountInclude(),
+          }
+        )
+        return
+      }
+
+      if (linkedObligationId) {
+        const linkedObligation = await transactionClient.obligation.findUnique({
+          where: {
+            id: linkedObligationId,
+          },
+          include: {
+            account: true,
+            payments: true,
+          },
+        })
+
+        await transactionClient.transaction.delete({
+          where: {
+            id: transactionId,
+          },
+        })
+
+        if (!linkedObligation || linkedObligation.account.userId !== userId) {
+          return
+        }
+
+        const nextPrincipalAmount = roundAmount(
+          Math.max(linkedObligation.principalAmount - transaction.amount, 0)
+        )
+        const nextTotals = buildObligationTotals({
+          principalAmount: nextPrincipalAmount,
+          interestAmount: linkedObligation.interestAmount,
+          payments: linkedObligation.payments,
+        })
+
+        if (
+          nextPrincipalAmount <= 0.01 &&
+          linkedObligation.interestAmount <= 0.01 &&
+          linkedObligation.payments.length === 0
+        ) {
+          await transactionClient.obligation.delete({
+            where: {
+              id: linkedObligationId,
+            },
+          })
+        } else {
+          await transactionClient.obligation.update({
+            where: {
+              id: linkedObligationId,
+            },
+            data: {
+              principalAmount: nextPrincipalAmount,
+              status: nextTotals.nextStatus,
+            },
+          })
+        }
+
+        updatedObligationAccount = await transactionClient.obligationAccount.findFirst(
+          {
+            where: {
+              id: linkedObligation.accountId,
               userId,
             },
             include: buildObligationAccountInclude(),
@@ -820,14 +1149,22 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
-    if (
-      existingTransaction.linkedObligationAccountId ||
-      existingTransaction.linkedObligationPaymentId
-    ) {
+    if (existingTransaction.linkedObligationPaymentId) {
       return res.status(400).json({
         ok: false,
         message:
           'Esta transaccion esta vinculada a Tarjetas y Prestamos y debe editarse desde ese modulo',
+      })
+    }
+
+    if (
+      existingTransaction.linkedObligationAccountId &&
+      !existingTransaction.linkedObligationId
+    ) {
+      return res.status(400).json({
+        ok: false,
+        message:
+          'Esta transaccion creo una deuda completa en Tarjetas y Prestamos y debe editarse desde ese modulo',
       })
     }
 
@@ -866,12 +1203,238 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res) => {
       })
     }
 
-    const transaction = await prisma.transaction.update({
-      where: {
-        id: transactionId,
-      },
-      data: validation.data,
-      include: buildTransactionInclude(),
+    const linkedCreditCardValidation =
+      await validateLinkedCreditCardAccountInput(
+        req.body,
+        req.user.userId,
+        validation.data
+      )
+
+    if ('error' in linkedCreditCardValidation) {
+      return res.status(400).json({
+        ok: false,
+        message: linkedCreditCardValidation.error,
+      })
+    }
+
+    const existingStatementObligation = existingTransaction.linkedObligationId
+      ? await prisma.obligation.findUnique({
+          where: {
+            id: existingTransaction.linkedObligationId,
+          },
+          include: {
+            account: true,
+            payments: true,
+          },
+        })
+      : null
+
+    if (
+      existingStatementObligation &&
+      existingStatementObligation.account.userId !== req.user.userId
+    ) {
+      return res.status(404).json({
+        ok: false,
+        message: 'La obligacion vinculada ya no esta disponible',
+      })
+    }
+
+    const nextStatementReferenceMonth = linkedCreditCardValidation.data
+      ? buildCreditCardStatementReferenceMonth(
+          validation.data.date,
+          linkedCreditCardValidation.data.closingDay
+        )
+      : null
+
+    const nextStatement =
+      linkedCreditCardValidation.data && nextStatementReferenceMonth
+        ? await prisma.obligation.findFirst({
+            where: {
+              accountId: linkedCreditCardValidation.data.id,
+              referenceMonth: nextStatementReferenceMonth,
+              sourceType: GENERATED_CREDIT_CARD_STATEMENT_SOURCE,
+            },
+            include: {
+              payments: true,
+            },
+          })
+        : null
+
+    const isSameStatementTarget = Boolean(
+      existingStatementObligation &&
+        nextStatement &&
+        existingStatementObligation.id === nextStatement.id
+    )
+
+    if (existingStatementObligation) {
+      const nextPrincipalAmount = roundAmount(
+        Math.max(
+          existingStatementObligation.principalAmount -
+            existingTransaction.amount +
+            (isSameStatementTarget ? validation.data.amount : 0),
+          0
+        )
+      )
+      const nextTotals = buildObligationTotals({
+        principalAmount: nextPrincipalAmount,
+        interestAmount: existingStatementObligation.interestAmount,
+        payments: existingStatementObligation.payments,
+      })
+
+      if (nextTotals.paidAmount > nextTotals.totalAmount + 0.01) {
+        return res.status(400).json({
+          ok: false,
+          message:
+            'No puedes guardar este cambio porque el resumen de tarjeta ya tiene abonos registrados por encima del nuevo total. Corrige primero esos abonos desde Tarjetas y Prestamos.',
+        })
+      }
+    }
+
+    const transaction = await prisma.$transaction(async (transactionClient) => {
+      let nextLinkedObligationAccountId: string | null = null
+      let nextLinkedObligationId: string | null = null
+
+      if (existingStatementObligation) {
+        const nextPrincipalAmount = roundAmount(
+          Math.max(
+            existingStatementObligation.principalAmount -
+              existingTransaction.amount +
+              (isSameStatementTarget ? validation.data.amount : 0),
+            0
+          )
+        )
+        const nextTotals = buildObligationTotals({
+          principalAmount: nextPrincipalAmount,
+          interestAmount: existingStatementObligation.interestAmount,
+          payments: existingStatementObligation.payments,
+        })
+
+        if (
+          isSameStatementTarget &&
+          linkedCreditCardValidation.data &&
+          nextStatementReferenceMonth
+        ) {
+          await transactionClient.obligation.update({
+            where: {
+              id: existingStatementObligation.id,
+            },
+            data: {
+              title: buildCreditCardStatementTitle(nextStatementReferenceMonth),
+              principalAmount: nextPrincipalAmount,
+              dueDate: buildCreditCardStatementDueDate(
+                nextStatementReferenceMonth,
+                linkedCreditCardValidation.data.dueDay,
+                validation.data.date
+              ),
+              status: nextTotals.nextStatus,
+              sourceType: GENERATED_CREDIT_CARD_STATEMENT_SOURCE,
+              notes: buildCreditCardStatementNotes(
+                linkedCreditCardValidation.data.name,
+                nextStatementReferenceMonth
+              ),
+            },
+          })
+
+          nextLinkedObligationAccountId = linkedCreditCardValidation.data.id
+          nextLinkedObligationId = existingStatementObligation.id
+        } else if (
+          nextPrincipalAmount <= 0.01 &&
+          existingStatementObligation.interestAmount <= 0.01 &&
+          existingStatementObligation.payments.length === 0
+        ) {
+          await transactionClient.obligation.delete({
+            where: {
+              id: existingStatementObligation.id,
+            },
+          })
+        } else {
+          await transactionClient.obligation.update({
+            where: {
+              id: existingStatementObligation.id,
+            },
+            data: {
+              principalAmount: nextPrincipalAmount,
+              status: nextTotals.nextStatus,
+            },
+          })
+        }
+      }
+
+      if (
+        linkedCreditCardValidation.data &&
+        nextStatementReferenceMonth &&
+        !isSameStatementTarget
+      ) {
+        const dueDate = buildCreditCardStatementDueDate(
+          nextStatementReferenceMonth,
+          linkedCreditCardValidation.data.dueDay,
+          validation.data.date
+        )
+
+        if (nextStatement) {
+          const nextPrincipalAmount = roundAmount(
+            nextStatement.principalAmount + validation.data.amount
+          )
+          const nextTotals = buildObligationTotals({
+            principalAmount: nextPrincipalAmount,
+            interestAmount: nextStatement.interestAmount,
+            payments: nextStatement.payments,
+          })
+
+          const updatedStatement = await transactionClient.obligation.update({
+            where: {
+              id: nextStatement.id,
+            },
+            data: {
+              title: buildCreditCardStatementTitle(nextStatementReferenceMonth),
+              principalAmount: nextPrincipalAmount,
+              dueDate,
+              status: nextTotals.nextStatus,
+              sourceType: GENERATED_CREDIT_CARD_STATEMENT_SOURCE,
+              notes: buildCreditCardStatementNotes(
+                linkedCreditCardValidation.data.name,
+                nextStatementReferenceMonth
+              ),
+            },
+          })
+
+          nextLinkedObligationAccountId = linkedCreditCardValidation.data.id
+          nextLinkedObligationId = updatedStatement.id
+        } else {
+          const createdStatement = await transactionClient.obligation.create({
+            data: {
+              title: buildCreditCardStatementTitle(nextStatementReferenceMonth),
+              referenceMonth: nextStatementReferenceMonth,
+              sourceType: GENERATED_CREDIT_CARD_STATEMENT_SOURCE,
+              principalAmount: validation.data.amount,
+              interestAmount: 0,
+              minimumPayment: null,
+              dueDate,
+              status: 'open',
+              notes: buildCreditCardStatementNotes(
+                linkedCreditCardValidation.data.name,
+                nextStatementReferenceMonth
+              ),
+              accountId: linkedCreditCardValidation.data.id,
+            },
+          })
+
+          nextLinkedObligationAccountId = linkedCreditCardValidation.data.id
+          nextLinkedObligationId = createdStatement.id
+        }
+      }
+
+      return transactionClient.transaction.update({
+        where: {
+          id: transactionId,
+        },
+        data: {
+          ...validation.data,
+          linkedObligationAccountId: nextLinkedObligationAccountId,
+          linkedObligationId: nextLinkedObligationId,
+        },
+        include: buildTransactionInclude(),
+      })
     })
 
     return res.json({

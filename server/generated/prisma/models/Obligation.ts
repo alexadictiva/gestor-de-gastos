@@ -42,6 +42,7 @@ export type ObligationMinAggregateOutputType = {
   id: string | null
   title: string | null
   referenceMonth: string | null
+  sourceType: string | null
   principalAmount: number | null
   interestAmount: number | null
   minimumPayment: number | null
@@ -57,6 +58,7 @@ export type ObligationMaxAggregateOutputType = {
   id: string | null
   title: string | null
   referenceMonth: string | null
+  sourceType: string | null
   principalAmount: number | null
   interestAmount: number | null
   minimumPayment: number | null
@@ -72,6 +74,7 @@ export type ObligationCountAggregateOutputType = {
   id: number
   title: number
   referenceMonth: number
+  sourceType: number
   principalAmount: number
   interestAmount: number
   minimumPayment: number
@@ -101,6 +104,7 @@ export type ObligationMinAggregateInputType = {
   id?: true
   title?: true
   referenceMonth?: true
+  sourceType?: true
   principalAmount?: true
   interestAmount?: true
   minimumPayment?: true
@@ -116,6 +120,7 @@ export type ObligationMaxAggregateInputType = {
   id?: true
   title?: true
   referenceMonth?: true
+  sourceType?: true
   principalAmount?: true
   interestAmount?: true
   minimumPayment?: true
@@ -131,6 +136,7 @@ export type ObligationCountAggregateInputType = {
   id?: true
   title?: true
   referenceMonth?: true
+  sourceType?: true
   principalAmount?: true
   interestAmount?: true
   minimumPayment?: true
@@ -233,6 +239,7 @@ export type ObligationGroupByOutputType = {
   id: string
   title: string
   referenceMonth: string | null
+  sourceType: string | null
   principalAmount: number
   interestAmount: number
   minimumPayment: number | null
@@ -271,6 +278,7 @@ export type ObligationWhereInput = {
   id?: Prisma.StringFilter<"Obligation"> | string
   title?: Prisma.StringFilter<"Obligation"> | string
   referenceMonth?: Prisma.StringNullableFilter<"Obligation"> | string | null
+  sourceType?: Prisma.StringNullableFilter<"Obligation"> | string | null
   principalAmount?: Prisma.FloatFilter<"Obligation"> | number
   interestAmount?: Prisma.FloatFilter<"Obligation"> | number
   minimumPayment?: Prisma.FloatNullableFilter<"Obligation"> | number | null
@@ -281,6 +289,7 @@ export type ObligationWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Obligation"> | Date | string
   accountId?: Prisma.StringFilter<"Obligation"> | string
   account?: Prisma.XOR<Prisma.ObligationAccountScalarRelationFilter, Prisma.ObligationAccountWhereInput>
+  linkedTransactions?: Prisma.TransactionListRelationFilter
   payments?: Prisma.ObligationPaymentListRelationFilter
 }
 
@@ -288,6 +297,7 @@ export type ObligationOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   referenceMonth?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceType?: Prisma.SortOrderInput | Prisma.SortOrder
   principalAmount?: Prisma.SortOrder
   interestAmount?: Prisma.SortOrder
   minimumPayment?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -298,6 +308,7 @@ export type ObligationOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   accountId?: Prisma.SortOrder
   account?: Prisma.ObligationAccountOrderByWithRelationInput
+  linkedTransactions?: Prisma.TransactionOrderByRelationAggregateInput
   payments?: Prisma.ObligationPaymentOrderByRelationAggregateInput
 }
 
@@ -308,6 +319,7 @@ export type ObligationWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.ObligationWhereInput | Prisma.ObligationWhereInput[]
   title?: Prisma.StringFilter<"Obligation"> | string
   referenceMonth?: Prisma.StringNullableFilter<"Obligation"> | string | null
+  sourceType?: Prisma.StringNullableFilter<"Obligation"> | string | null
   principalAmount?: Prisma.FloatFilter<"Obligation"> | number
   interestAmount?: Prisma.FloatFilter<"Obligation"> | number
   minimumPayment?: Prisma.FloatNullableFilter<"Obligation"> | number | null
@@ -318,6 +330,7 @@ export type ObligationWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Obligation"> | Date | string
   accountId?: Prisma.StringFilter<"Obligation"> | string
   account?: Prisma.XOR<Prisma.ObligationAccountScalarRelationFilter, Prisma.ObligationAccountWhereInput>
+  linkedTransactions?: Prisma.TransactionListRelationFilter
   payments?: Prisma.ObligationPaymentListRelationFilter
 }, "id">
 
@@ -325,6 +338,7 @@ export type ObligationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   referenceMonth?: Prisma.SortOrderInput | Prisma.SortOrder
+  sourceType?: Prisma.SortOrderInput | Prisma.SortOrder
   principalAmount?: Prisma.SortOrder
   interestAmount?: Prisma.SortOrder
   minimumPayment?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -348,6 +362,7 @@ export type ObligationScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Obligation"> | string
   title?: Prisma.StringWithAggregatesFilter<"Obligation"> | string
   referenceMonth?: Prisma.StringNullableWithAggregatesFilter<"Obligation"> | string | null
+  sourceType?: Prisma.StringNullableWithAggregatesFilter<"Obligation"> | string | null
   principalAmount?: Prisma.FloatWithAggregatesFilter<"Obligation"> | number
   interestAmount?: Prisma.FloatWithAggregatesFilter<"Obligation"> | number
   minimumPayment?: Prisma.FloatNullableWithAggregatesFilter<"Obligation"> | number | null
@@ -363,6 +378,7 @@ export type ObligationCreateInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -372,6 +388,7 @@ export type ObligationCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   account: Prisma.ObligationAccountCreateNestedOneWithoutObligationsInput
+  linkedTransactions?: Prisma.TransactionCreateNestedManyWithoutLinkedObligationInput
   payments?: Prisma.ObligationPaymentCreateNestedManyWithoutObligationInput
 }
 
@@ -379,6 +396,7 @@ export type ObligationUncheckedCreateInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -388,6 +406,7 @@ export type ObligationUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   accountId: string
+  linkedTransactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLinkedObligationInput
   payments?: Prisma.ObligationPaymentUncheckedCreateNestedManyWithoutObligationInput
 }
 
@@ -395,6 +414,7 @@ export type ObligationUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -404,6 +424,7 @@ export type ObligationUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   account?: Prisma.ObligationAccountUpdateOneRequiredWithoutObligationsNestedInput
+  linkedTransactions?: Prisma.TransactionUpdateManyWithoutLinkedObligationNestedInput
   payments?: Prisma.ObligationPaymentUpdateManyWithoutObligationNestedInput
 }
 
@@ -411,6 +432,7 @@ export type ObligationUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -420,6 +442,7 @@ export type ObligationUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  linkedTransactions?: Prisma.TransactionUncheckedUpdateManyWithoutLinkedObligationNestedInput
   payments?: Prisma.ObligationPaymentUncheckedUpdateManyWithoutObligationNestedInput
 }
 
@@ -427,6 +450,7 @@ export type ObligationCreateManyInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -442,6 +466,7 @@ export type ObligationUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -456,6 +481,7 @@ export type ObligationUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -465,6 +491,11 @@ export type ObligationUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
+}
+
+export type ObligationNullableScalarRelationFilter = {
+  is?: Prisma.ObligationWhereInput | null
+  isNot?: Prisma.ObligationWhereInput | null
 }
 
 export type ObligationListRelationFilter = {
@@ -481,6 +512,7 @@ export type ObligationCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   referenceMonth?: Prisma.SortOrder
+  sourceType?: Prisma.SortOrder
   principalAmount?: Prisma.SortOrder
   interestAmount?: Prisma.SortOrder
   minimumPayment?: Prisma.SortOrder
@@ -502,6 +534,7 @@ export type ObligationMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   referenceMonth?: Prisma.SortOrder
+  sourceType?: Prisma.SortOrder
   principalAmount?: Prisma.SortOrder
   interestAmount?: Prisma.SortOrder
   minimumPayment?: Prisma.SortOrder
@@ -517,6 +550,7 @@ export type ObligationMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
   referenceMonth?: Prisma.SortOrder
+  sourceType?: Prisma.SortOrder
   principalAmount?: Prisma.SortOrder
   interestAmount?: Prisma.SortOrder
   minimumPayment?: Prisma.SortOrder
@@ -537,6 +571,22 @@ export type ObligationSumOrderByAggregateInput = {
 export type ObligationScalarRelationFilter = {
   is?: Prisma.ObligationWhereInput
   isNot?: Prisma.ObligationWhereInput
+}
+
+export type ObligationCreateNestedOneWithoutLinkedTransactionsInput = {
+  create?: Prisma.XOR<Prisma.ObligationCreateWithoutLinkedTransactionsInput, Prisma.ObligationUncheckedCreateWithoutLinkedTransactionsInput>
+  connectOrCreate?: Prisma.ObligationCreateOrConnectWithoutLinkedTransactionsInput
+  connect?: Prisma.ObligationWhereUniqueInput
+}
+
+export type ObligationUpdateOneWithoutLinkedTransactionsNestedInput = {
+  create?: Prisma.XOR<Prisma.ObligationCreateWithoutLinkedTransactionsInput, Prisma.ObligationUncheckedCreateWithoutLinkedTransactionsInput>
+  connectOrCreate?: Prisma.ObligationCreateOrConnectWithoutLinkedTransactionsInput
+  upsert?: Prisma.ObligationUpsertWithoutLinkedTransactionsInput
+  disconnect?: Prisma.ObligationWhereInput | boolean
+  delete?: Prisma.ObligationWhereInput | boolean
+  connect?: Prisma.ObligationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ObligationUpdateToOneWithWhereWithoutLinkedTransactionsInput, Prisma.ObligationUpdateWithoutLinkedTransactionsInput>, Prisma.ObligationUncheckedUpdateWithoutLinkedTransactionsInput>
 }
 
 export type ObligationCreateNestedManyWithoutAccountInput = {
@@ -595,10 +645,11 @@ export type ObligationUpdateOneRequiredWithoutPaymentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ObligationUpdateToOneWithWhereWithoutPaymentsInput, Prisma.ObligationUpdateWithoutPaymentsInput>, Prisma.ObligationUncheckedUpdateWithoutPaymentsInput>
 }
 
-export type ObligationCreateWithoutAccountInput = {
+export type ObligationCreateWithoutLinkedTransactionsInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -607,6 +658,91 @@ export type ObligationCreateWithoutAccountInput = {
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  account: Prisma.ObligationAccountCreateNestedOneWithoutObligationsInput
+  payments?: Prisma.ObligationPaymentCreateNestedManyWithoutObligationInput
+}
+
+export type ObligationUncheckedCreateWithoutLinkedTransactionsInput = {
+  id?: string
+  title: string
+  referenceMonth?: string | null
+  sourceType?: string | null
+  principalAmount: number
+  interestAmount?: number
+  minimumPayment?: number | null
+  dueDate: Date | string
+  status?: string
+  notes?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  accountId: string
+  payments?: Prisma.ObligationPaymentUncheckedCreateNestedManyWithoutObligationInput
+}
+
+export type ObligationCreateOrConnectWithoutLinkedTransactionsInput = {
+  where: Prisma.ObligationWhereUniqueInput
+  create: Prisma.XOR<Prisma.ObligationCreateWithoutLinkedTransactionsInput, Prisma.ObligationUncheckedCreateWithoutLinkedTransactionsInput>
+}
+
+export type ObligationUpsertWithoutLinkedTransactionsInput = {
+  update: Prisma.XOR<Prisma.ObligationUpdateWithoutLinkedTransactionsInput, Prisma.ObligationUncheckedUpdateWithoutLinkedTransactionsInput>
+  create: Prisma.XOR<Prisma.ObligationCreateWithoutLinkedTransactionsInput, Prisma.ObligationUncheckedCreateWithoutLinkedTransactionsInput>
+  where?: Prisma.ObligationWhereInput
+}
+
+export type ObligationUpdateToOneWithWhereWithoutLinkedTransactionsInput = {
+  where?: Prisma.ObligationWhereInput
+  data: Prisma.XOR<Prisma.ObligationUpdateWithoutLinkedTransactionsInput, Prisma.ObligationUncheckedUpdateWithoutLinkedTransactionsInput>
+}
+
+export type ObligationUpdateWithoutLinkedTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
+  interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
+  minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  dueDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  account?: Prisma.ObligationAccountUpdateOneRequiredWithoutObligationsNestedInput
+  payments?: Prisma.ObligationPaymentUpdateManyWithoutObligationNestedInput
+}
+
+export type ObligationUncheckedUpdateWithoutLinkedTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
+  interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
+  minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  dueDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  payments?: Prisma.ObligationPaymentUncheckedUpdateManyWithoutObligationNestedInput
+}
+
+export type ObligationCreateWithoutAccountInput = {
+  id?: string
+  title: string
+  referenceMonth?: string | null
+  sourceType?: string | null
+  principalAmount: number
+  interestAmount?: number
+  minimumPayment?: number | null
+  dueDate: Date | string
+  status?: string
+  notes?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  linkedTransactions?: Prisma.TransactionCreateNestedManyWithoutLinkedObligationInput
   payments?: Prisma.ObligationPaymentCreateNestedManyWithoutObligationInput
 }
 
@@ -614,6 +750,7 @@ export type ObligationUncheckedCreateWithoutAccountInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -622,6 +759,7 @@ export type ObligationUncheckedCreateWithoutAccountInput = {
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  linkedTransactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLinkedObligationInput
   payments?: Prisma.ObligationPaymentUncheckedCreateNestedManyWithoutObligationInput
 }
 
@@ -658,6 +796,7 @@ export type ObligationScalarWhereInput = {
   id?: Prisma.StringFilter<"Obligation"> | string
   title?: Prisma.StringFilter<"Obligation"> | string
   referenceMonth?: Prisma.StringNullableFilter<"Obligation"> | string | null
+  sourceType?: Prisma.StringNullableFilter<"Obligation"> | string | null
   principalAmount?: Prisma.FloatFilter<"Obligation"> | number
   interestAmount?: Prisma.FloatFilter<"Obligation"> | number
   minimumPayment?: Prisma.FloatNullableFilter<"Obligation"> | number | null
@@ -673,6 +812,7 @@ export type ObligationCreateWithoutPaymentsInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -682,12 +822,14 @@ export type ObligationCreateWithoutPaymentsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   account: Prisma.ObligationAccountCreateNestedOneWithoutObligationsInput
+  linkedTransactions?: Prisma.TransactionCreateNestedManyWithoutLinkedObligationInput
 }
 
 export type ObligationUncheckedCreateWithoutPaymentsInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -697,6 +839,7 @@ export type ObligationUncheckedCreateWithoutPaymentsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   accountId: string
+  linkedTransactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutLinkedObligationInput
 }
 
 export type ObligationCreateOrConnectWithoutPaymentsInput = {
@@ -719,6 +862,7 @@ export type ObligationUpdateWithoutPaymentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -728,12 +872,14 @@ export type ObligationUpdateWithoutPaymentsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   account?: Prisma.ObligationAccountUpdateOneRequiredWithoutObligationsNestedInput
+  linkedTransactions?: Prisma.TransactionUpdateManyWithoutLinkedObligationNestedInput
 }
 
 export type ObligationUncheckedUpdateWithoutPaymentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -743,12 +889,14 @@ export type ObligationUncheckedUpdateWithoutPaymentsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accountId?: Prisma.StringFieldUpdateOperationsInput | string
+  linkedTransactions?: Prisma.TransactionUncheckedUpdateManyWithoutLinkedObligationNestedInput
 }
 
 export type ObligationCreateManyAccountInput = {
   id?: string
   title: string
   referenceMonth?: string | null
+  sourceType?: string | null
   principalAmount: number
   interestAmount?: number
   minimumPayment?: number | null
@@ -763,6 +911,7 @@ export type ObligationUpdateWithoutAccountInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -771,6 +920,7 @@ export type ObligationUpdateWithoutAccountInput = {
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  linkedTransactions?: Prisma.TransactionUpdateManyWithoutLinkedObligationNestedInput
   payments?: Prisma.ObligationPaymentUpdateManyWithoutObligationNestedInput
 }
 
@@ -778,6 +928,7 @@ export type ObligationUncheckedUpdateWithoutAccountInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -786,6 +937,7 @@ export type ObligationUncheckedUpdateWithoutAccountInput = {
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  linkedTransactions?: Prisma.TransactionUncheckedUpdateManyWithoutLinkedObligationNestedInput
   payments?: Prisma.ObligationPaymentUncheckedUpdateManyWithoutObligationNestedInput
 }
 
@@ -793,6 +945,7 @@ export type ObligationUncheckedUpdateManyWithoutAccountInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   referenceMonth?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   principalAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   interestAmount?: Prisma.FloatFieldUpdateOperationsInput | number
   minimumPayment?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -809,10 +962,12 @@ export type ObligationUncheckedUpdateManyWithoutAccountInput = {
  */
 
 export type ObligationCountOutputType = {
+  linkedTransactions: number
   payments: number
 }
 
 export type ObligationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  linkedTransactions?: boolean | ObligationCountOutputTypeCountLinkedTransactionsArgs
   payments?: boolean | ObligationCountOutputTypeCountPaymentsArgs
 }
 
@@ -829,6 +984,13 @@ export type ObligationCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.E
 /**
  * ObligationCountOutputType without action
  */
+export type ObligationCountOutputTypeCountLinkedTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TransactionWhereInput
+}
+
+/**
+ * ObligationCountOutputType without action
+ */
 export type ObligationCountOutputTypeCountPaymentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ObligationPaymentWhereInput
 }
@@ -838,6 +1000,7 @@ export type ObligationSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   id?: boolean
   title?: boolean
   referenceMonth?: boolean
+  sourceType?: boolean
   principalAmount?: boolean
   interestAmount?: boolean
   minimumPayment?: boolean
@@ -848,6 +1011,7 @@ export type ObligationSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   updatedAt?: boolean
   accountId?: boolean
   account?: boolean | Prisma.ObligationAccountDefaultArgs<ExtArgs>
+  linkedTransactions?: boolean | Prisma.Obligation$linkedTransactionsArgs<ExtArgs>
   payments?: boolean | Prisma.Obligation$paymentsArgs<ExtArgs>
   _count?: boolean | Prisma.ObligationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["obligation"]>
@@ -856,6 +1020,7 @@ export type ObligationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   id?: boolean
   title?: boolean
   referenceMonth?: boolean
+  sourceType?: boolean
   principalAmount?: boolean
   interestAmount?: boolean
   minimumPayment?: boolean
@@ -872,6 +1037,7 @@ export type ObligationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   id?: boolean
   title?: boolean
   referenceMonth?: boolean
+  sourceType?: boolean
   principalAmount?: boolean
   interestAmount?: boolean
   minimumPayment?: boolean
@@ -888,6 +1054,7 @@ export type ObligationSelectScalar = {
   id?: boolean
   title?: boolean
   referenceMonth?: boolean
+  sourceType?: boolean
   principalAmount?: boolean
   interestAmount?: boolean
   minimumPayment?: boolean
@@ -899,9 +1066,10 @@ export type ObligationSelectScalar = {
   accountId?: boolean
 }
 
-export type ObligationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "referenceMonth" | "principalAmount" | "interestAmount" | "minimumPayment" | "dueDate" | "status" | "notes" | "createdAt" | "updatedAt" | "accountId", ExtArgs["result"]["obligation"]>
+export type ObligationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "referenceMonth" | "sourceType" | "principalAmount" | "interestAmount" | "minimumPayment" | "dueDate" | "status" | "notes" | "createdAt" | "updatedAt" | "accountId", ExtArgs["result"]["obligation"]>
 export type ObligationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   account?: boolean | Prisma.ObligationAccountDefaultArgs<ExtArgs>
+  linkedTransactions?: boolean | Prisma.Obligation$linkedTransactionsArgs<ExtArgs>
   payments?: boolean | Prisma.Obligation$paymentsArgs<ExtArgs>
   _count?: boolean | Prisma.ObligationCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -916,12 +1084,14 @@ export type $ObligationPayload<ExtArgs extends runtime.Types.Extensions.Internal
   name: "Obligation"
   objects: {
     account: Prisma.$ObligationAccountPayload<ExtArgs>
+    linkedTransactions: Prisma.$TransactionPayload<ExtArgs>[]
     payments: Prisma.$ObligationPaymentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     title: string
     referenceMonth: string | null
+    sourceType: string | null
     principalAmount: number
     interestAmount: number
     minimumPayment: number | null
@@ -1326,6 +1496,7 @@ readonly fields: ObligationFieldRefs;
 export interface Prisma__ObligationClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   account<T extends Prisma.ObligationAccountDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ObligationAccountDefaultArgs<ExtArgs>>): Prisma.Prisma__ObligationAccountClient<runtime.Types.Result.GetResult<Prisma.$ObligationAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  linkedTransactions<T extends Prisma.Obligation$linkedTransactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Obligation$linkedTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   payments<T extends Prisma.Obligation$paymentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Obligation$paymentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ObligationPaymentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1359,6 +1530,7 @@ export interface ObligationFieldRefs {
   readonly id: Prisma.FieldRef<"Obligation", 'String'>
   readonly title: Prisma.FieldRef<"Obligation", 'String'>
   readonly referenceMonth: Prisma.FieldRef<"Obligation", 'String'>
+  readonly sourceType: Prisma.FieldRef<"Obligation", 'String'>
   readonly principalAmount: Prisma.FieldRef<"Obligation", 'Float'>
   readonly interestAmount: Prisma.FieldRef<"Obligation", 'Float'>
   readonly minimumPayment: Prisma.FieldRef<"Obligation", 'Float'>
@@ -1766,6 +1938,30 @@ export type ObligationDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Limit how many Obligations to delete.
    */
   limit?: number
+}
+
+/**
+ * Obligation.linkedTransactions
+ */
+export type Obligation$linkedTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Transaction
+   */
+  select?: Prisma.TransactionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Transaction
+   */
+  omit?: Prisma.TransactionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TransactionInclude<ExtArgs> | null
+  where?: Prisma.TransactionWhereInput
+  orderBy?: Prisma.TransactionOrderByWithRelationInput | Prisma.TransactionOrderByWithRelationInput[]
+  cursor?: Prisma.TransactionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TransactionScalarFieldEnum | Prisma.TransactionScalarFieldEnum[]
 }
 
 /**

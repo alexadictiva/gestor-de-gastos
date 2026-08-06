@@ -104,6 +104,7 @@ export const TransactionScalarFieldEnum = {
   updatedAt: 'updatedAt',
   userId: 'userId',
   linkedObligationAccountId: 'linkedObligationAccountId',
+  linkedObligationId: 'linkedObligationId',
   linkedObligationPaymentId: 'linkedObligationPaymentId',
   financialAccountId: 'financialAccountId'
 } as const
@@ -167,6 +168,7 @@ export const ObligationScalarFieldEnum = {
   id: 'id',
   title: 'title',
   referenceMonth: 'referenceMonth',
+  sourceType: 'sourceType',
   principalAmount: 'principalAmount',
   interestAmount: 'interestAmount',
   minimumPayment: 'minimumPayment',

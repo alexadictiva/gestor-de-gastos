@@ -65,6 +65,7 @@ interface TransactionForm {
   date: string
   financialAccountId: string
   createLinkedObligationAccount: boolean
+  linkedCreditCardAccountId: string
   linkedObligationAccountName: string
   linkedObligationInstallmentCount: string
   linkedObligationFirstDueDate: string
@@ -76,6 +77,7 @@ interface TransaccionesPageProps {
   isLoadingTransactions: boolean
   categories: Category[]
   financialAccounts: FinancialAccount[]
+  obligationAccounts: ObligationAccount[]
   setObligationAccounts: Dispatch<SetStateAction<ObligationAccount[]>>
 }
 
@@ -117,6 +119,7 @@ function createInitialForm(): TransactionForm {
     date: '',
     financialAccountId: '',
     createLinkedObligationAccount: false,
+    linkedCreditCardAccountId: '',
     linkedObligationAccountName: '',
     linkedObligationInstallmentCount: '',
     linkedObligationFirstDueDate: getLocalDateInputValue(),
@@ -296,6 +299,13 @@ function getLinkedAccountBadge(transaction: Transaction) {
     return null
   }
 
+  if (transaction.linkedObligationId && transaction.paymentMethod === 'credit') {
+    return {
+      label: 'Consumo acumulado en el resumen mensual de tu tarjeta',
+      className: 'bg-violet-100 text-violet-700',
+    }
+  }
+
   if (transaction.type === 'income') {
     return {
       label: 'Prestamo recibido vinculado a Tarjetas y Prestamos',
@@ -352,12 +362,20 @@ function isLinkedTransaction(transaction: Transaction) {
   )
 }
 
+function isExternallyManagedLinkedTransaction(transaction: Transaction) {
+  return Boolean(
+    transaction.linkedObligationPaymentId ||
+      (transaction.linkedObligationAccountId && !transaction.linkedObligationId)
+  )
+}
+
 export default function TransaccionesPage({
   transactions,
   setTransactions,
   isLoadingTransactions,
   categories,
   financialAccounts,
+  obligationAccounts,
   setObligationAccounts,
 }: TransaccionesPageProps) {
   const { token } = useAuth()
@@ -394,15 +412,17 @@ export default function TransaccionesPage({
   const isExpense = form.type === 'expense'
   const isIncome = form.type === 'income'
   const isReimbursable = form.reimbursementStatus !== 'not_applicable'
-  const isFinancingPaymentMethod =
-    form.paymentMethod === 'credit' || form.paymentMethod === 'loan'
   const canSelectFinancialAccount = transactionSupportsFinancialAccount({
     type: form.type,
     paymentMethod: form.paymentMethod,
   })
-  const canLinkToObligationAccount =
-    isIncome || (isExpense && isFinancingPaymentMethod)
+  const canLinkCreditCardTransaction = isExpense && form.paymentMethod === 'credit'
+  const canCreateStandaloneDebtAccount =
+    isIncome || (isExpense && form.paymentMethod === 'loan')
   const financialAccountOptions = sortFinancialAccounts(financialAccounts)
+  const creditCardAccountOptions = sortObligationAccounts(
+    obligationAccounts.filter((account) => account.type === 'credit_card')
+  )
   const hasCategories = categories.length > 0
   const hasFinancialAccounts = financialAccountOptions.length > 0
   const hasTransactions = transactions.length > 0
@@ -511,6 +531,7 @@ export default function TransaccionesPage({
 
   const resetLinkedObligationFields = () => ({
     createLinkedObligationAccount: false,
+    linkedCreditCardAccountId: '',
     linkedObligationAccountName: '',
     linkedObligationInstallmentCount: '',
     linkedObligationFirstDueDate: getLocalDateInputValue(),
@@ -543,7 +564,7 @@ export default function TransaccionesPage({
           financialAccountId: nextCanSelectFinancialAccount
             ? prev.financialAccountId
             : '',
-          ...(nextType === 'investments' ? resetLinkedObligationFields() : {}),
+          ...(nextType !== 'expense' ? resetLinkedObligationFields() : {}),
         }
       }
 
@@ -562,9 +583,18 @@ export default function TransaccionesPage({
           financialAccountId: nextCanSelectFinancialAccount
             ? prev.financialAccountId
             : '',
-          ...(nextPaymentMethod === 'credit' || nextPaymentMethod === 'loan'
-            ? {}
-            : resetLinkedObligationFields()),
+          ...(nextPaymentMethod === 'credit'
+            ? {
+                createLinkedObligationAccount: false,
+                linkedObligationAccountName: '',
+                linkedObligationInstallmentCount: '',
+                linkedObligationFirstDueDate: getLocalDateInputValue(),
+              }
+            : nextPaymentMethod === 'loan'
+              ? {
+                  linkedCreditCardAccountId: '',
+                }
+              : resetLinkedObligationFields()),
         }
       }
 
@@ -676,10 +706,7 @@ export default function TransaccionesPage({
   }
 
   const openEditForm = (transaction: Transaction) => {
-    if (
-      transaction.linkedObligationAccountId ||
-      transaction.linkedObligationPaymentId
-    ) {
+    if (isExternallyManagedLinkedTransaction(transaction)) {
       setErrorMessage(
         'Las transacciones vinculadas a Tarjetas y Prestamos se administran desde ese modulo'
       )
@@ -697,6 +724,9 @@ export default function TransaccionesPage({
       reimbursementStatus: transaction.reimbursementStatus,
       date: transaction.date.slice(0, 10),
       financialAccountId: transaction.financialAccountId ?? '',
+      linkedCreditCardAccountId: transaction.linkedObligationId
+        ? transaction.linkedObligationAccountId ?? ''
+        : '',
       createLinkedObligationAccount: false,
       linkedObligationAccountName: '',
       linkedObligationInstallmentCount: '',
@@ -776,11 +806,7 @@ export default function TransaccionesPage({
       return
     }
 
-    if (
-      !transactionToEdit &&
-      form.createLinkedObligationAccount &&
-      !canLinkToObligationAccount
-    ) {
+    if (!transactionToEdit && form.createLinkedObligationAccount && !canCreateStandaloneDebtAccount) {
       setErrorMessage(
         'Solo puedes vincular a Tarjetas y Prestamos un ingreso que represente un prestamo recibido o un gasto pagado con tarjeta o prestamo'
       )
@@ -796,6 +822,18 @@ export default function TransaccionesPage({
       setErrorMessage(
         'Completa las cuotas y la fecha de la primera cuota para crear la deuda vinculada'
       )
+      return
+    }
+
+    if (
+      isExpense &&
+      form.paymentMethod === 'credit' &&
+      form.linkedCreditCardAccountId &&
+      !creditCardAccountOptions.some(
+        (account) => account.id === form.linkedCreditCardAccountId
+      )
+    ) {
+      setErrorMessage('La tarjeta seleccionada ya no esta disponible')
       return
     }
 
@@ -826,19 +864,28 @@ export default function TransaccionesPage({
         financialAccountId: canSelectFinancialAccount
           ? form.financialAccountId || null
           : null,
+        linkedCreditCardAccountId:
+          isExpense && form.paymentMethod === 'credit'
+            ? form.linkedCreditCardAccountId || null
+            : null,
         ...(transactionToEdit
           ? {}
           : {
-              createLinkedObligationAccount: form.createLinkedObligationAccount,
+              createLinkedObligationAccount:
+                canCreateStandaloneDebtAccount &&
+                form.createLinkedObligationAccount,
               linkedObligationAccountName:
+                canCreateStandaloneDebtAccount &&
                 form.createLinkedObligationAccount
                   ? form.linkedObligationAccountName.trim() || null
                   : null,
               linkedObligationInstallmentCount:
+                canCreateStandaloneDebtAccount &&
                 form.createLinkedObligationAccount
                   ? parsedInstallmentCount
                   : null,
               linkedObligationFirstDueDate:
+                canCreateStandaloneDebtAccount &&
                 form.createLinkedObligationAccount
                   ? form.linkedObligationFirstDueDate
                   : null,
@@ -852,13 +899,20 @@ export default function TransaccionesPage({
           payload
         )
 
-        setTransactions((prev) =>
-          prev.map((transaction) =>
-            transaction.id === updatedTransaction.id
-              ? updatedTransaction
-              : transaction
+        if (
+          transactionToEdit.linkedObligationId ||
+          Boolean(payload.linkedCreditCardAccountId)
+        ) {
+          await refreshTransactionsAndAccounts()
+        } else {
+          setTransactions((prev) =>
+            prev.map((transaction) =>
+              transaction.id === updatedTransaction.id
+                ? updatedTransaction
+                : transaction
+            )
           )
-        )
+        }
       } else {
         const { transaction: savedTransaction, linkedObligationAccount } =
           await createTransactionRequest(token, payload)
@@ -1510,7 +1564,44 @@ export default function TransaccionesPage({
                 </div>
               )}
 
-              {!transactionToEdit && canLinkToObligationAccount && (
+              {canLinkCreditCardTransaction && (
+                <div className="transaction-link-panel flex flex-col gap-4 rounded-2xl p-4 md:col-span-2">
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="linkedCreditCardAccountId"
+                      className="transaction-link-panel__label text-sm font-medium"
+                    >
+                      Vincular este consumo a una tarjeta cargada
+                    </label>
+                    <select
+                      id="linkedCreditCardAccountId"
+                      name="linkedCreditCardAccountId"
+                      value={form.linkedCreditCardAccountId}
+                      onChange={handleChange}
+                      className="rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-slate-500"
+                    >
+                      <option value="">
+                        {creditCardAccountOptions.length > 0
+                          ? 'No acumularlo en Tarjetas y Prestamos'
+                          : 'Primero crea una tarjeta en Tarjetas y Prestamos'}
+                      </option>
+                      {creditCardAccountOptions.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <p className="transaction-link-panel__copy text-xs">
+                    {creditCardAccountOptions.length > 0
+                      ? 'Si eliges una tarjeta, este gasto se sumara automaticamente al resumen del periodo que corresponda segun la fecha del consumo y el cierre de esa tarjeta.'
+                      : 'Todavia no tienes tarjetas de credito cargadas en el otro modulo. Puedes registrar el gasto ahora y vincular futuros consumos cuando la tarjeta ya exista.'}
+                  </p>
+                </div>
+              )}
+
+              {!transactionToEdit && canCreateStandaloneDebtAccount && (
                 <div className="transaction-link-panel flex flex-col gap-4 rounded-2xl p-4 md:col-span-2">
                   <label className="transaction-link-panel__label flex items-center gap-3 text-sm font-medium">
                     <input
@@ -1526,14 +1617,12 @@ export default function TransaccionesPage({
                     />
                     {isIncome
                       ? 'Registrar tambien este ingreso como prestamo por pagar'
-                      : 'Registrar tambien esta compra en Tarjetas y Prestamos'}
+                      : 'Registrar tambien esta compra como prestamo por pagar'}
                   </label>
 
                   <p className="transaction-link-panel__copy text-xs">
                     {isIncome
                       ? 'Se creara una deuda vinculada para que este ingreso aumente tu liquidez hoy y puedas seguir sus cuotas desde el otro modulo.'
-                      : form.paymentMethod === 'credit'
-                      ? 'Se creara una cuenta vinculada de tarjeta con sus cuotas para que no tengas que cargar la deuda por separado.'
                       : 'Se creara una cuenta vinculada de prestamo por pagar con sus cuotas para que puedas seguir la deuda desde el otro modulo.'}
                   </p>
 
@@ -2092,8 +2181,7 @@ export default function TransaccionesPage({
                         <div className="flex items-center gap-2">
                           <span
                             title={
-                              transaction.linkedObligationAccountId ||
-                              transaction.linkedObligationPaymentId
+                              isExternallyManagedLinkedTransaction(transaction)
                                 ? 'Edita este movimiento desde Tarjetas y Prestamos para no desincronizar el control de deuda'
                                 : 'Editar'
                             }
@@ -2102,9 +2190,8 @@ export default function TransaccionesPage({
                               type="button"
                               onClick={() => openEditForm(transaction)}
                               aria-label="Editar"
-                              disabled={Boolean(
-                                transaction.linkedObligationAccountId ||
-                                  transaction.linkedObligationPaymentId
+                              disabled={isExternallyManagedLinkedTransaction(
+                                transaction
                               )}
                               className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                             >
@@ -2385,7 +2472,9 @@ export default function TransaccionesPage({
         >
           <div className="flex flex-col gap-4">
             <p className="text-slate-600">
-              {transactionPendingDelete?.linkedObligationAccountId
+              {transactionPendingDelete?.linkedObligationId
+                ? 'Seguro que quieres eliminar esta transaccion? Tambien se descontara del resumen mensual de la tarjeta vinculada en Tarjetas y Prestamos.'
+                : transactionPendingDelete?.linkedObligationAccountId
                 ? 'Seguro que quieres eliminar esta transaccion? Tambien se eliminara la cuenta vinculada en Tarjetas y Prestamos con sus cuotas y movimientos.'
                 : transactionPendingDelete?.linkedObligationPaymentId
                   ? 'Seguro que quieres eliminar esta transaccion? Tambien se eliminara el abono o cobro vinculado en Tarjetas y Prestamos.'
